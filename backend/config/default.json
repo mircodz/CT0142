@@ -1,0 +1,17 @@
+{
+  "elastic": {
+      "chat_index_name": "battleship-chat",
+      "nodes": [ "http://localhost:9200" ]
+  },
+  "app": {
+      "name": "battleship",
+      "port": 6969
+  },
+  "mongo": {
+      "url": "mongodb://localhost:27017/battleship"
+  },
+  "jwtSecret": "porcodio",
+  "loki": {
+      "url": "http://localhost:3100"
+  }
+}
