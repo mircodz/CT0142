@@ -29,6 +29,15 @@ services:
       default:
         ipv4_address: 172.22.0.2
     restart: always
+    logging:
+      driver: loki
+      options:
+        loki-url: http://172.22.0.5:3100/loki/api/v1/push
+        loki-pipeline-stages: |
+          - regex:
+              expression: '(level|lvl|severity)=(?P<level>\w+)'
+          - labels:
+              level:
 
 
   backend:
@@ -40,6 +49,15 @@ services:
       default:
         ipv4_address: 172.22.0.3
     restart: always
+    logging:
+      driver: loki
+      options:
+        loki-url: http://172.22.0.5:3100/loki/api/v1/push
+        loki-pipeline-stages: |
+          - regex:
+              expression: '(level|lvl|severity)=(?P<level>\w+)'
+          - labels:
+              level:
 
 
   redis:
@@ -50,6 +68,15 @@ services:
       default:
         ipv4_address: 172.22.0.4
     restart: unless-stopped
+    logging:
+      driver: loki
+      options:
+        loki-url: http://172.22.0.5:3100/loki/api/v1/push
+        loki-pipeline-stages: |
+          - regex:
+              expression: '(level|lvl|severity)=(?P<level>\w+)'
+          - labels:
+              level:
 
 
   loki:
@@ -78,6 +105,15 @@ services:
       default:
         ipv4_address: 172.22.0.6
     restart: unless-stopped
+    logging:
+      driver: loki
+      options:
+        loki-url: http://172.22.0.5:3100/loki/api/v1/push
+        loki-pipeline-stages: |
+          - regex:
+              expression: '(level|lvl|severity)=(?P<level>\w+)'
+          - labels:
+              level:
 
 
   prometheus:
@@ -96,6 +132,15 @@ services:
       default:
         ipv4_address: 172.22.0.7
     restart: unless-stopped
+    logging:
+      driver: loki
+      options:
+        loki-url: http://172.22.0.5:3100/loki/api/v1/push
+        loki-pipeline-stages: |
+          - regex:
+              expression: '(level|lvl|severity)=(?P<level>\w+)'
+          - labels:
+              level:
 
 
   mongodb:
@@ -111,6 +156,15 @@ services:
       default:
         ipv4_address: 172.22.0.8
     restart: always
+    logging:
+      driver: loki
+      options:
+        loki-url: http://172.22.0.5:3100/loki/api/v1/push
+        loki-pipeline-stages: |
+          - regex:
+              expression: '(level|lvl|severity)=(?P<level>\w+)'
+          - labels:
+              level:
 
 
   elasticsearch:
@@ -136,6 +190,15 @@ services:
       default:
         ipv4_address: 172.22.0.9
     restart: unless-stopped
+    logging:
+      driver: loki
+      options:
+        loki-url: http://172.22.0.5:3100/loki/api/v1/push
+        loki-pipeline-stages: |
+          - regex:
+              expression: '(level|lvl|severity)=(?P<level>\w+)'
+          - labels:
+              level:
 
 
   jaeger:
@@ -147,3 +210,12 @@ services:
       default:
         ipv4_address: 172.22.0.10
     restart: unless-stopped
+    logging:
+      driver: loki
+      options:
+        loki-url: http://172.22.0.5:3100/loki/api/v1/push
+        loki-pipeline-stages: |
+          - regex:
+              expression: '(level|lvl|severity)=(?P<level>\w+)'
+          - labels:
+              level:
