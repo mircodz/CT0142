@@ -20,25 +20,27 @@ volumes:
 
 
 services:
-  #frontend:
-  #  context:
-  #    build: frontend
-  #  ports:
-  #    - 80:80
-  #  networks:
-  #    default:
-  #      ipv4_address: 172.22.0.2
-  #  restart: always
+  frontend:
+    build:
+      context: frontend
+    ports:
+      - 80:80
+    networks:
+      default:
+        ipv4_address: 172.22.0.2
+    restart: always
 
-  #backend:
-  #  context:
-  #    build: backend
-  #  ports:
-  #    - 9000:9000
-  #  networks:
-  #    default:
-  #      ipv4_address: 172.22.0.3
-  #  restart: always
+
+  backend:
+    build:
+      context: backend
+    ports:
+      - 6969:6969
+    networks:
+      default:
+        ipv4_address: 172.22.0.3
+    restart: always
+
 
   redis:
     image: redis:alpine
@@ -48,6 +50,7 @@ services:
       default:
         ipv4_address: 172.22.0.4
     restart: unless-stopped
+
 
   loki:
     image: grafana/loki:2.3.0
@@ -63,6 +66,7 @@ services:
         ipv4_address: 172.22.0.5
     restart: unless-stopped
 
+
   grafana:
     image: grafana/grafana:latest
     volumes:
@@ -74,6 +78,7 @@ services:
       default:
         ipv4_address: 172.22.0.6
     restart: unless-stopped
+
 
   prometheus:
     image: prom/prometheus:v2.1.0
@@ -91,6 +96,7 @@ services:
       default:
         ipv4_address: 172.22.0.7
     restart: unless-stopped
+
 
   mongodb:
     image : mongo
@@ -131,8 +137,13 @@ services:
         ipv4_address: 172.22.0.9
     restart: unless-stopped
 
+
   jaeger:
     image: jaegertracing/all-in-one:latest
     ports:
       - "6831:6831/udp"
       - "16686:16686"
+    networks:
+      default:
+        ipv4_address: 172.22.0.10
+    restart: unless-stopped
