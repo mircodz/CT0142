@@ -7,9 +7,16 @@ import {HttpClient} from '@angular/common/http'
 export class AppService {
 
   constructor(private http: HttpClient) { }
-
+  
 
   register(user:any){
-    return this.http.post("/signup",{user});
+    return this.http.post("http://localhost:6969/signup",user);
+  }
+
+  login(user:any){
+    return this.http.post("http://localhost:6969/signin",user);
+  }
+  getFoo(){
+    return this.http.get("http://localhost:6969/foo");
   }
 }

@@ -1,4 +1,4 @@
-require('./tracing')
+//require('./tracing')
 
 const config = require('config');
 const appConfig = config.get('app');
@@ -49,13 +49,14 @@ try {
 } catch (error) {
     console.log('no mongo connection')
 }
-
+var members=0;
 const User = mongoose.model('User');
 
 app.post('/signup', async (req, res) => {
   const { name, username, email, password } = req.body;
   const user = await User.exists({ username });
-
+  console.log(req.body);
+  
   if (!user) {
     const hashed = crypto
       .createHash("sha256")
@@ -68,9 +69,10 @@ app.post('/signup', async (req, res) => {
       email,
       password: hashed
     }).save();
-
+    console.log("DIOCANE");
     res.status(200).json({message: "ok"});
   } else {
+    console.log("FALLITO");
     res.status(400).json({message: "user exists"});
   }
 });
@@ -86,6 +88,7 @@ app.post('/signin', (req, res) => {
   if (user) {
     const token = jwt.sign({ username: user.username,  role: user.role }, secret);
     res.json({ token });
+     console.log(token);
   } else {
     res.sendStatus(400);
   }
@@ -110,6 +113,7 @@ const authenticateJWT = (req, res, next) => {
 };
 
 app.get('/foo', (req, res) => {
+  console.log("DIOEBREO");
   res.send('Hello World!');
 });
 
@@ -117,10 +121,28 @@ app.get('/', authenticateJWT, (req, res) => {
   res.send('Hello World!');
 });
 
-const { logger } = require('./logger');
-io.on('connection', (socket) => {
-  logger.error({ message: 'user connected', labels: { 'key': 'value' } })
+const { logger } = require('./logger.ts');
 
+io.on('connection', (socket) => {
+  //logger.error({ message: 'user connected', labels: { 'key': 'value' } })
+  socket.on('Move', function (data) {
+    socket.to("game").emit("Move", data);
+  });
+  socket.on('Board', function (data) {
+    console.log("DIOCANE");
+    socket.to("game").emit("Board", data);
+  });
+  socket.on("logged",function(){
+      members++;
+      if (members <= 2) {
+        socket.join("game");
+        io.emit("new_member", members);
+        console.log("si è aggiunto al gioco!");
+    }
+  })
+  
+
+    
   socket.on('message', arg => {
       logger.error({ message: 'message received', labels: { 'key': 'value' } })
       console.log(arg);
@@ -134,6 +156,7 @@ io.on('connection', (socket) => {
 server.listen(port, function () {
   console.log(`Example app listening on ${port}!`);
 });
+
 
 app.get('/chat', async (req, res) => {
     const { ChatClient } = require('./chat');

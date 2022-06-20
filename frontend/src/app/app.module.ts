@@ -7,8 +7,14 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ToastrModule } from 'ngx-toastr';
 import { SocketIoModule, SocketIoConfig } from 'ngx-socket-io';
 import { BattleshipGameComponent } from './battleship-game/battleship-game.component';
-const config: SocketIoConfig = { url: 'http://localhost:3000', options: {} };
+import { environment } from 'src/environments/environment';
+import { FormsModule } from '@angular/forms';
+import { HttpClientModule } from '@angular/common/http';
 
+const config: SocketIoConfig = {
+	url: 'http://localhost:6969',// socket server url;
+	options: {}
+}
 
 
 @NgModule({
@@ -19,6 +25,8 @@ const config: SocketIoConfig = { url: 'http://localhost:3000', options: {} };
   imports: [
     BrowserModule,
     AppRoutingModule,
+    FormsModule,
+    HttpClientModule,
     SocketIoModule.forRoot(config),
     ToastrModule.forRoot(),
     BrowserAnimationsModule,

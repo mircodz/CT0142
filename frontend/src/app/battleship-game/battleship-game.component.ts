@@ -7,7 +7,7 @@ import { BoardService } from './board.service';
 ;
 import { Move } from './move';
 
-import { WebsocketService } from './websocket.service';
+import { WebsocketService } from '../websocket.service';
 
 
 // set game constants
@@ -25,18 +25,20 @@ const BOARD_SIZE: number = 6;
 export class BattleshipGameComponent implements OnInit {
   canPlay: boolean = true;
   player: number = -1;
+  check: string = "";
   players: number = 0;
   gameId: string = '';
   score: number=0;
   gameUrl: string = location.protocol + '//' + location.hostname + (location.port ? ':' + location.port: '');
-  constructor(private elementRef: ElementRef,private socket: WebsocketService,private boardService: BoardService,private toastr: ToastrService){
+  constructor(private socket: WebsocketService,private boardService: BoardService,private toastr: ToastrService){
     this.createBoards();
     this.initConnection();
     
   }
   initConnection(): BattleshipGameComponent {
     
-
+   
+    this.socket.joinMember();
     this.socket.listenMembers().subscribe((data:any)=>{
 
       this.players=data;
@@ -158,10 +160,7 @@ export class BattleshipGameComponent implements OnInit {
     
   }
   ngAfterViewInit() {
-    const button = this.elementRef.nativeElement.querySelector("#start");
-    button.addEventListener("click",()=>{
-      
-    });
+    
   }
   emit(carattere:Move):void{
     

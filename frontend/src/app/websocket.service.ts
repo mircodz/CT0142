@@ -1,10 +1,11 @@
 import { Injectable } from '@angular/core';
 import { Socket } from 'ngx-socket-io';
 import { ignoreElements, map } from 'rxjs';
+import { AppComponent } from './app.component';
 
 
-import { Board } from './board';
-import { Move } from './move';
+import { Board } from './battleship-game/board';
+import { Move } from './battleship-game/move';
 
 
 
@@ -17,6 +18,10 @@ export class WebsocketService {
   constructor(private socket:Socket) {
     
    }
+
+  connection(){
+    this.socket.emit("logged");
+  }
   
   emitMoves(move:Move){
     this.socket.emit('Move', move);
