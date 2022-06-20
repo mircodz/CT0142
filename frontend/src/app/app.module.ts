@@ -8,9 +8,11 @@ import { ToastrModule } from 'ngx-toastr';
 import { SocketIoModule, SocketIoConfig } from 'ngx-socket-io';
 import { BattleshipGameComponent } from './battleship-game/battleship-game.component';
 import { environment } from 'src/environments/environment';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
-
+import { LoginComponent } from './login/login.component';
+import { RegisterComponent } from './register/register.component';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 const config: SocketIoConfig = {
 	url: 'http://localhost:6969',// socket server url;
 	options: {}
@@ -20,7 +22,9 @@ const config: SocketIoConfig = {
 @NgModule({
   declarations: [
     AppComponent,
-    BattleshipGameComponent
+    BattleshipGameComponent,
+    LoginComponent,
+    RegisterComponent
   ],
   imports: [
     BrowserModule,
@@ -30,6 +34,8 @@ const config: SocketIoConfig = {
     SocketIoModule.forRoot(config),
     ToastrModule.forRoot(),
     BrowserAnimationsModule,
+    FontAwesomeModule,
+    ReactiveFormsModule
   ],
   providers: [],
   bootstrap: [AppComponent]

@@ -1,6 +1,6 @@
-
+{{getToken()}}
 <div *ngIf="logged==false && isShown==false">
-  <video autoplay loop playsinline muted class="fullscreen-bg__video">
+  <!--<video autoplay loop playsinline muted class="fullscreen-bg__video">
     <source src="videos/bg-video.mp4" type="video/mp4">
   </video>
   <div class="container d-flex align-items-center justify-content-center" style="min-height: 100vh; max-width: 800px;">
@@ -53,10 +53,12 @@
               </div>
           </div>
       </div>
-  </div>
+  </div>-->
+  <app-register></app-register>
+  
 </div>
 <div *ngIf="logged==false && isShown==true">
-    <div class="container d-flex align-items-center justify-content-center" style="min-height: 100vh; max-width: 800px;">
+    <!--<div class="container d-flex align-items-center justify-content-center" style="min-height: 100vh; max-width: 800px;">
         <div class="col-12">
             <div class="card mb-3">
                 <div class="row g-0">
@@ -79,7 +81,7 @@
                                     <button type="submit" class="btn btn-primary" id="signup-submit">Sign in</button>
                                 </div>
                                 <div class="row mb-3">
-                                    <a (click)="toggleShow()"><small>Not a member?</small></a>
+                                   
                                 </div>
                             </form>
                         </div>
@@ -88,7 +90,9 @@
                 </div>
             </div>
         </div>
-    </div>
+    </div>-->
+    <app-login></app-login>
+    
 </div>
  
   <!-- Option 1: Bootstrap Bundle with Popper -->

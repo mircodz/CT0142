@@ -17,16 +17,23 @@ import { WebsocketService } from './websocket.service';
 })
 export class AppComponent implements OnInit, OnDestroy {
   static token: any;
+  static isShown: boolean=false;
   static getToken() {
     return this.token;
   }
+  get logged() {
+    return AppComponent.logged;
+  }
+  get isShown(){
+    return AppComponent.isShown;
+  }
   title = 'c4';
-  logged:boolean= false;
+  static logged:boolean= false;
   name:string="";
   username:string="";
   password:string="";
   email:string="";
-  isShown:boolean=false;
+
   
   constructor(private chatService: ChatService, private appService:AppService, private socket:WebsocketService) {
    
@@ -39,14 +46,14 @@ export class AppComponent implements OnInit, OnDestroy {
     
   }
   register(){
-    this.appService.register({name:this.name,username:this.username,email:this.email,password:this.password}).pipe().subscribe(()=>this.logged=true);
+    this.appService.register({name:this.name,username:this.username,email:this.email,password:this.password}).pipe().subscribe();
   }
-  toggleShow(){
+  static toggleShow(){
     this.isShown=!this.isShown;
   }
   login(){
     this.appService.login({username:this.username,password:this.password}).pipe().subscribe((data)=>{
-      this.logged=true;
+      
       AppComponent.token=JSON.parse(JSON.stringify(data)).token;
       this.socket.connection();
     });
