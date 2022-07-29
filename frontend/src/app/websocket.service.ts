@@ -20,7 +20,7 @@ export class WebsocketService {
    }
 
   connection(){
-    this.socket.emit("logged");
+    this.socket.emit("inGame");
   }
   
   emitMoves(move:Move){

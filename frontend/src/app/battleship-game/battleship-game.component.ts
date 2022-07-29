@@ -39,6 +39,7 @@ export class BattleshipGameComponent implements OnInit {
     
    
     this.socket.joinMember();
+    
     this.socket.listenMembers().subscribe((data:any)=>{
 
       this.players=data;
@@ -142,7 +143,7 @@ export class BattleshipGameComponent implements OnInit {
 
   ngOnInit():void{
     
-    
+    this.socket.connection();
     this.socket.listenMoves().subscribe((data:any)=>{
       this.canPlay = data.canPlay;
       this.boards[this.player] = data.board;

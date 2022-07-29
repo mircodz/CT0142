@@ -28,7 +28,7 @@ export class LoginComponent implements OnInit {
   onSubmit() {
     this.appService.login({username:this.loginForm.get("username")?.value,password:this.loginForm.get("password")?.value}).pipe().subscribe((data)=>{
       AppComponent.token=JSON.parse(JSON.stringify(data)).token;
-      this.socket.connection();
+      
       AppComponent.logged=true;
     });
   }

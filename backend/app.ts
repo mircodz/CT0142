@@ -49,7 +49,7 @@ try {
 } catch (error) {
     console.log('no mongo connection')
 }
-var members=0;
+
 const User = mongoose.model('User');
 
 app.post('/signup', async (req, res) => {
@@ -122,8 +122,9 @@ app.get('/', authenticateJWT, (req, res) => {
 });
 
 const { logger } = require('./logger.ts');
-
+let members=0;
 io.on('connection', (socket) => {
+ 
   //logger.error({ message: 'user connected', labels: { 'key': 'value' } })
   socket.on('Move', function (data) {
     socket.to("game").emit("Move", data);
@@ -132,12 +133,14 @@ io.on('connection', (socket) => {
     console.log("DIOCANE");
     socket.to("game").emit("Board", data);
   });
-  socket.on("logged",function(){
+  socket.on("inGame",function(){
+      console.log("Membri prima dell'entrata: "+members);
       members++;
+      console.log("Membri dopo dell'entrata: "+members);
       if (members <= 2) {
         socket.join("game");
         io.emit("new_member", members);
-        console.log("si è aggiunto al gioco!");
+        console.log("si è aggiunto al gioco! "+members);
     }
   })
   
@@ -150,6 +153,7 @@ io.on('connection', (socket) => {
 
   socket.on('disconnect', () => {
       logger.error({ message: 'user disconnected', labels: { 'key': 'value' } })
+      members--;
   })
 });
 

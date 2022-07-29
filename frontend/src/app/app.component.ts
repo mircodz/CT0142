@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormGroup } from '@angular/forms';
+import { faL } from '@fortawesome/free-solid-svg-icons';
 import { Socket } from 'ngx-socket-io';
 import { ToastrService } from 'ngx-toastr';
 import { HighlightSpanKind } from 'typescript';
@@ -18,6 +19,9 @@ import { WebsocketService } from './websocket.service';
 export class AppComponent implements OnInit, OnDestroy {
   static token: any;
   static isShown: boolean=false;
+  static isGame: boolean= false;
+  static isHome: boolean= false;
+  static isFriends: boolean= false;
   static getToken() {
     return this.token;
   }
@@ -26,6 +30,20 @@ export class AppComponent implements OnInit, OnDestroy {
   }
   get isShown(){
     return AppComponent.isShown;
+  }
+  get isHome(){
+	return AppComponent.isHome;
+  }
+
+  get isGame(){
+	return AppComponent.isGame;
+  }
+
+  get isFriends(){
+	return AppComponent.isFriends;
+  }
+  get AppComponent(){
+    return AppComponent;
   }
   title = 'c4';
   static logged:boolean= false;
@@ -51,11 +69,26 @@ export class AppComponent implements OnInit, OnDestroy {
   static toggleShow(){
     this.isShown=!this.isShown;
   }
+  static showGame(){
+	this.isGame=true;
+	this.isHome=false;
+	this.isFriends=false;
+  }
+  static showFriends(){
+	this.isGame=false;
+	this.isHome=false;
+	this.isFriends=true;
+  }
+  static showHome(){
+	this.isGame=false;
+	this.isHome=true;
+	this.isFriends=false;
+  }
   login(){
     this.appService.login({username:this.username,password:this.password}).pipe().subscribe((data)=>{
       
       AppComponent.token=JSON.parse(JSON.stringify(data)).token;
-      this.socket.connection();
+      
     });
   }
   ngOnDestroy() {
