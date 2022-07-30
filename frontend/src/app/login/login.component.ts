@@ -26,8 +26,10 @@ export class LoginComponent implements OnInit {
   ngOnInit(): void { }
 
   onSubmit() {
+    AppComponent.username= this.loginForm.get("username")?.value;
     this.appService.login({username:this.loginForm.get("username")?.value,password:this.loginForm.get("password")?.value}).pipe().subscribe((data)=>{
       AppComponent.token=JSON.parse(JSON.stringify(data)).token;
+      this.socket.login({username:this.loginForm.get("username")?.value});
       
       AppComponent.logged=true;
     });

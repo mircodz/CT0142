@@ -17,10 +17,10 @@
     <div class="container-fluid">
       <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a (click)="AppComponent.showHome()">Home</a></li>
-          <li class="breadcrumb-item"><a (click)="AppComponent.showGame()">Game</a></li>
+          <li class="breadcrumb-item"><a (click)="showHome()">Home</a></li>
+          <li class="breadcrumb-item"><a (click)="showGame()">Game</a></li>
           <li class="breadcrumb-item active" aria-current="page">
-            <a (click)="AppComponent.showFriends()">Friends</a>
+            <a (click)="showFriends()">Friends</a>
           </li>
         </ol>
       </nav>
@@ -30,7 +30,23 @@
       <app-battleship-game></app-battleship-game>
   </div>
   <div *ngIf="isFriends==true">
-    
+    <form [formGroup]="friendForm" (ngSubmit)="onSubmitFriend()" class="box">
+      <label for="friend" class="label">Username</label>
+      <input type="text" class="input" name="friend" placeholder="Friend" formControlName="friend">
+      <button type="submit"  class="button is-success">Invia richiesta</button>
+    </form>
+    <h1>Online players</h1>
+    <div *ngFor="let x of users">
+      
+        {{x}}
+   
+    </div>
+    <h1>Friends list</h1>
+    <div *ngFor="let x of friends">
+      
+      {{x.username}}
+ 
+  </div>
 </div>
 <div *ngIf="isHome==true">
   

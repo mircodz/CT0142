@@ -29,7 +29,7 @@ const io = new Server(server, {
 }});
 
 // Crypto
-const crypto = require('crypto');
+const crypto2 = require('crypto');
 const jwt = require('jsonwebtoken');
 
 const secret = jwtSecret;
@@ -41,7 +41,12 @@ const models = join(__dirname, 'models');
 fs.readdirSync(models)
   .filter(file => ~file.indexOf('.js'))
   .forEach(file => require(join(models, file)));
-
+interface Foo {
+   
+    [key: string]: string;
+}
+let last_user;
+let users:Foo={};
 // Mongo
 const mongoose = require('mongoose');
 try {
@@ -58,7 +63,7 @@ app.post('/signup', async (req, res) => {
   console.log(req.body);
   
   if (!user) {
-    const hashed = crypto
+    const hashed = crypto2
       .createHash("sha256")
       .update(password)
       .digest("hex");
@@ -79,15 +84,18 @@ app.post('/signup', async (req, res) => {
 
 app.post('/signin', (req, res) => {
   const { username, password } = req.body;
-  const hashed = crypto
+  const hashed = crypto2
     .createHash("sha256")
     .update(password)
     .digest("hex");
   const user = User.find({ username, password: hashed });
 
+  
   if (user) {
     const token = jwt.sign({ username: user.username,  role: user.role }, secret);
     res.json({ token });
+    users[username]='';
+    last_user=username;
      console.log(token);
   } else {
     res.sendStatus(400);
@@ -121,10 +129,46 @@ app.get('/', authenticateJWT, (req, res) => {
   res.send('Hello World!');
 });
 
-const { logger } = require('./logger.ts');
-let members=0;
-io.on('connection', (socket) => {
+app.post('/addFriends', authenticateJWT, (req, res) => {
+  const { username, friend } = req.body;
  
+  const f = User.find({username:friend},function(err,sub){
+
+    User.updateOne({username:username},{$push: { friends: sub[0]._id }},function(err,res){
+      console.log("Amicizia inserita!")
+    })
+    
+  });
+  const f2 = User.find({username:username},function(err,sub){
+    User.updateOne({username:friend},{$push: { friends: sub[0]._id }},function(err,res){
+      console.log("Amicizia inserita!")
+    })
+    
+  });
+  res.sendStatus(200);
+});
+app.get('/allUsers', authenticateJWT, (req, res) => {
+  console.log("Lista utenti: "+users)
+  res.json({users});
+});
+app.post('/friend', authenticateJWT, (req, res) => {
+  const { username } = req.body;
+  User.find({username:username},function(err,sub){
+   console.log(sub)
+    User.find({_id:sub[0].friends},function(err,sub){
+      res.json(sub);
+      
+    })
+  })
+  
+});
+//const { logger2 } = require('./logger.ts');
+let members=0;
+
+
+
+io.on('connection', (socket) => {
+  
   //logger.error({ message: 'user connected', labels: { 'key': 'value' } })
   socket.on('Move', function (data) {
     socket.to("game").emit("Move", data);
@@ -133,6 +177,14 @@ io.on('connection', (socket) => {
     console.log("DIOCANE");
     socket.to("game").emit("Board", data);
   });
+  socket.on('login',function(data){
+    users[data.username] = socket.id;
+  });
+  
+  socket.on("friendRequest",function(data){
+    
+    io.to(users[data.friend]).emit("friendRequest", data);
+  })
   socket.on("inGame",function(){
       console.log("Membri prima dell'entrata: "+members);
       members++;
@@ -147,12 +199,12 @@ io.on('connection', (socket) => {
 
     
   socket.on('message', arg => {
-      logger.error({ message: 'message received', labels: { 'key': 'value' } })
+     // logger2.error({ message: 'message received', labels: { 'key': 'value' } })
       console.log(arg);
   })
 
   socket.on('disconnect', () => {
-      logger.error({ message: 'user disconnected', labels: { 'key': 'value' } })
+      //logger2.error({ message: 'user disconnected', labels: { 'key': 'value' } })
       members--;
   })
 });
@@ -171,4 +223,4 @@ app.get('/chat', async (req, res) => {
         .then(items => res.json(items))
 });
 
-export {};
+

@@ -26,7 +26,9 @@ export class WebsocketService {
   emitMoves(move:Move){
     this.socket.emit('Move', move);
   }
-
+  login(user:any){
+    this.socket.emit("login",user);
+  }
   listenMoves(){
     return this.socket.fromEvent("Move");
   }
@@ -44,5 +46,11 @@ export class WebsocketService {
   }
   disconnect(){
     this.socket.emit("disconnect");
+  }
+  sendFriendRequest(data:any){
+    this.socket.emit("friendRequest",data);
+  }
+  listenFriendRequest(){
+    return this.socket.fromEvent("friendRequest");
   }
 }
