@@ -27,7 +27,20 @@
     </div>
   </nav>
   <div *ngIf="isGame==true">
+      <button (click)="AppComponent.isVisitor=true">Visitor</button>
+      <button (click)="AppComponent.isVisitor=false">Gamer</button>
+      <div  *ngIf="AppComponent.isVisitor==false">
       <app-battleship-game></app-battleship-game>
+    </div>
+    <div  *ngIf="AppComponent.isVisitor==true">
+      <div *ngFor="let x of matches; let i=index">
+      
+        <a (click)="watchMatch(i)"> {{x.id}}</a> 
+        <div  *ngIf="gameAsVisitor==true">
+          <app-battleship-game></app-battleship-game>
+        </div>
+     </div>
+    </div>
   </div>
   <div *ngIf="isFriends==true">
     <form [formGroup]="friendForm" (ngSubmit)="onSubmitFriend()" class="box">
@@ -38,7 +51,7 @@
     <h1>Online players</h1>
     <div *ngFor="let x of users">
       
-        {{x}}
+       <a (click)="sendMatchRequest(x)"> {{x}}</a> 
    
     </div>
     <h1>Friends list</h1>

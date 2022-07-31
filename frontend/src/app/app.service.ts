@@ -49,4 +49,13 @@ export class AppService {
   getFoo(){
     return this.http.get("http://localhost:6969/foo");
   }
+  getMatches(jwt:any){
+    const httpOptions = {
+      headers: new HttpHeaders({
+        authorization: 'Bearer ' + jwt,
+        'cache-control': 'no-cache',
+        'Content-Type':  'application/json'})
+    };
+    return this.http.get("http://localhost:6969/matches",httpOptions);
+  }
 }

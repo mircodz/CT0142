@@ -1,5 +1,8 @@
 //require('./tracing')
 
+import { randomBytes } from "crypto";
+import { Match } from "./matches";
+
 const config = require('config');
 const appConfig = config.get('app');
 const mongoConfig = config.get('mongo');
@@ -44,6 +47,10 @@ fs.readdirSync(models)
 interface Foo {
    
     [key: string]: string;
+}
+interface Foo2 {
+   
+  [key: string]: any;
 }
 let last_user;
 let users:Foo={};
@@ -162,20 +169,38 @@ app.post('/friend', authenticateJWT, (req, res) => {
   })
   
 });
+app.get('/matches', authenticateJWT, (req, res) => {
+  
+  res.json({matches});
+  
+});
 //const { logger2 } = require('./logger.ts');
-let members=0;
 
 
 
+
+var matches:Match[]=[];
+let j=0;
+matches[0]=new Match();
+matches[0].members=0;
+matches[0].id=makeid(20);
+matches[0].players=[];
+matches[0].boards={};
+matches[0].i=0;
+matches[0].visitor=0;
 io.on('connection', (socket) => {
   
   //logger.error({ message: 'user connected', labels: { 'key': 'value' } })
   socket.on('Move', function (data) {
-    socket.to("game").emit("Move", data);
+    console.log("Mossa inviata "+data.gameId+" "+data.canPlay+" "+data.board)
+    matches[data.gameId].boards[data.board.player.name]=data.board;
+    socket.to(matches[data.gameId].id).emit("Move", data);
+    socket.to("visitors"+matches[data.gameId].id).emit("ListenGames", matches[data.gameId].boards)
   });
   socket.on('Board', function (data) {
+    matches[j].boards[data.username]=data.board;
     console.log("DIOCANE");
-    socket.to("game").emit("Board", data);
+    
   });
   socket.on('login',function(data){
     users[data.username] = socket.id;
@@ -185,15 +210,62 @@ io.on('connection', (socket) => {
     
     io.to(users[data.friend]).emit("friendRequest", data);
   })
-  socket.on("inGame",function(){
-      console.log("Membri prima dell'entrata: "+members);
-      members++;
-      console.log("Membri dopo dell'entrata: "+members);
-      if (members <= 2) {
-        socket.join("game");
-        io.emit("new_member", members);
-        console.log("si è aggiunto al gioco! "+members);
-    }
+  socket.on("matchRequest",function(data){
+    console.log(data.opponent+ " send a request to "+data.username);
+    io.to(users[data.username]).emit("matchRequest", data);
+    
+  })
+  socket.on("matchConfirm",function(data){
+    io.to(users[data.username]).emit("matchConfirm");
+  });
+  socket.on("inGame",function(data){
+      if (matches[j].members < 2 && data.visitor==false) {
+        matches[j].players[matches[j].i]=data.username;
+        
+        matches[j].i++;
+        socket.join(matches[j].id);
+        
+        io.emit("new_member", {members:matches[j].members+1,gameId:j});
+        console.log("si è aggiunto al gioco! "+matches[j].members);
+        
+      }else if (data.visitor==true){
+        console.log("ENTRA UN VISITATORE!")
+        socket.join("visitors"+matches[data.gameId].id);
+        console.log(matches[data.gameId].boards)
+        socket.to("visitors"+matches[data.gameId].id).emit("ListenGames", matches[data.gameId].boards)
+      }else if(matches[j].members==2 && data.visitor==false){
+        while(matches[j].members>2 ){
+          j++;
+        }
+        matches[j]=new Match();
+        matches[j].members=0;
+        matches[j].id=makeid(20);
+        matches[j].players=[];
+        matches[j].boards={};
+        matches[j].i=0;
+        matches[j].visitor=0;
+        matches[j].players[matches[j].i]=data.username;
+        matches[j].i++;
+        socket.join(matches[j].id);
+        
+        io.emit("new_member", {members:matches[j].members+1,gameId:j});
+        console.log("si è aggiunto al gioco! "+matches[j].members);
+      }
+      matches[j].members++;
+
+
+      
+      if(matches[j].members==2){
+        const randomElement = matches[j].players[Math.floor(Math.random() * matches[j].players.length)];
+        if(randomElement==matches[j].players[0]){
+          io.to(users[matches[j].players[0]]).emit("Board", {board: matches[j].boards[matches[j].players[1]],username:matches[j].players[1],canPlay:true});
+          io.to(users[matches[j].players[1]]).emit("Board", {board: matches[j].boards[matches[j].players[0]],username:matches[j].players[0],canPlay:false});
+        }else{
+          io.to(users[matches[j].players[0]]).emit("Board", {board: matches[j].boards[matches[j].players[1]],username:matches[j].players[1],canPlay:false});
+          io.to(users[matches[j].players[1]]).emit("Board", {board: matches[j].boards[matches[j].players[0]],username:matches[j].players[0],canPlay:true});
+        }
+      }
+
   })
   
 
@@ -205,15 +277,37 @@ io.on('connection', (socket) => {
 
   socket.on('disconnect', () => {
       //logger2.error({ message: 'user disconnected', labels: { 'key': 'value' } })
-      members--;
+      
   })
+  socket.on('quitGame', (data) => {
+    //logger2.error({ message: 'user disconnected', labels: { 'key': 'value' } })
+    console.log("Partita numero "+data.gameId);
+    if(matches[data.gameId].members>0){
+      matches[data.gameId].members--;
+      matches[data.gameId].players[matches[j].i-1] = "";
+      matches[data.gameId].i--;
+    }
+    j=data.gameId;
+    
+    io.to(users[data.username]).emit("quitGame");
+    console.log("L'utente si è disconnesso");
+})
 });
 
 server.listen(port, function () {
   console.log(`Example app listening on ${port}!`);
 });
 
-
+function makeid(length) {
+  var result           = '';
+  var characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  var charactersLength = characters.length;
+  for ( var i = 0; i < length; i++ ) {
+    result += characters.charAt(Math.floor(Math.random() * 
+charactersLength));
+ }
+ return result;
+}
 app.get('/chat', async (req, res) => {
     const { ChatClient } = require('./chat');
     let c = new ChatClient(1)

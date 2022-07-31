@@ -1,17 +1,20 @@
-import { Injectable } from '@angular/core';
+import { HostListener, Injectable, OnDestroy } from '@angular/core';
+import { AppComponent } from '../app.component';
 import { Board } from './board';
 import { Cell } from './cell';
+import { Foo } from './foo';
 import { Player } from './player';
 
 @Injectable({
   providedIn: 'root'
 })
-export class BoardService {
+
+export class BoardService implements OnDestroy {
   
-  playerId: number = 0;
-  boards: Board[] = [];
+  player: string = "";
+  boards: Foo = {};
   constructor() { }
-  createBoard(size: number = 5): BoardService{
+  createBoard(size: number = 5,player:string): BoardService{
     let tiles:Cell[][] = [];
     for(let i = 0;i<size;i++){
       tiles[i]=[];
@@ -24,10 +27,10 @@ export class BoardService {
 			tiles = this.randomShips(tiles, size);
 		}
     let board = new Board ({
-      player: new Player({id: this.playerId++}),
+      player: new Player({name: player}),
       tiles: tiles
     });
-    this.boards.push(board);
+    this.boards[player] = board;
     return this;
   }
   randomShips(tiles: Cell[][], len:number): Cell[][]{
@@ -43,7 +46,12 @@ export class BoardService {
 	getRandomInt(min:number, max:number){
 		return Math.floor(Math.random()*(max-min +1))+min;
 	}
-	getBoards(): Board[]{
+	getBoards(): Foo{
 		return this.boards;
 	}
+  @HostListener('unloaded')
+  ngOnDestroy() {
+    console.log('Items destroyed');
+    
+  }
 }

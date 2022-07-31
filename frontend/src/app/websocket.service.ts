@@ -19,8 +19,8 @@ export class WebsocketService {
     
    }
 
-  connection(){
-    this.socket.emit("inGame");
+  connection(data:any){
+    this.socket.emit("inGame",data);
   }
   
   emitMoves(move:Move){
@@ -35,17 +35,23 @@ export class WebsocketService {
   listenMembers(){
     return this.socket.fromEvent("new_member");
   }
-  sendBoard(board:Board){
-    this.socket.emit('Board', board);
+  sendBoard(data:any){
+    this.socket.emit('Board', data);
   }
   getBoard(){
     return this.socket.fromEvent("Board");
   }
+  getBoards(){
+    return this.socket.fromEvent("ListenGames");
+  }
   joinMember(){
     this.socket.emit("new_member");
   }
-  disconnect(){
-    this.socket.emit("disconnect");
+  disconnect(data:any){
+    this.socket.emit("quitGame",data);
+  }
+  listeQuit(){
+    return this.socket.fromEvent("quitGame");
   }
   sendFriendRequest(data:any){
     this.socket.emit("friendRequest",data);
@@ -53,4 +59,20 @@ export class WebsocketService {
   listenFriendRequest(){
     return this.socket.fromEvent("friendRequest");
   }
+  sendMatchRequest(data:any){
+    this.socket.emit("matchRequest",data);
+  }
+  listenMatchRequest(){
+    return this.socket.fromEvent("matchRequest");
+  }
+  matchConfirm(){
+    return this.socket.fromEvent("matchConfirm");
+  }
+  sendConfirm(data:any){
+    this.socket.emit("matchConfirm",data);
+  }
+  sendReady(data:any){
+    this.socket.emit("ready",data);
+  }
+  
 }

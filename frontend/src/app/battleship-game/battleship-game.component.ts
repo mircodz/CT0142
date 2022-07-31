@@ -1,4 +1,4 @@
-import { Component, OnInit, ElementRef } from '@angular/core';
+import { Component, OnInit, ElementRef, HostListener, OnDestroy } from '@angular/core';
 
 import { ToastrService } from 'ngx-toastr';
 
@@ -8,6 +8,8 @@ import { BoardService } from './board.service';
 import { Move } from './move';
 
 import { WebsocketService } from '../websocket.service';
+import { AppComponent } from '../app.component';
+import { Foo } from './foo';
 
 
 // set game constants
@@ -22,54 +24,63 @@ const BOARD_SIZE: number = 6;
 
 
 
-export class BattleshipGameComponent implements OnInit {
+export class BattleshipGameComponent implements OnInit,OnDestroy {
   canPlay: boolean = true;
-  player: number = -1;
+  player: any = AppComponent.username;
+  opponent:any ="";
   check: string = "";
   players: number = 0;
-  gameId: string = '';
+  static gameId: number = 0;
   score: number=0;
   gameUrl: string = location.protocol + '//' + location.hostname + (location.port ? ':' + location.port: '');
   constructor(private socket: WebsocketService,private boardService: BoardService,private toastr: ToastrService){
-    this.createBoards();
+    if(AppComponent.isVisitor==false){
+      this.createBoards(AppComponent.username);
+    }
     this.initConnection();
     
   }
+  get BattleshipGameComponent(){
+    return BattleshipGameComponent;
+  }
   initConnection(): BattleshipGameComponent {
-    
-   
-    this.socket.joinMember();
-    
-    this.socket.listenMembers().subscribe((data:any)=>{
-
-      this.players=data;
-      if(this.player!=0){
-        this.player = this.players-1;
-        if (this.players == 2) {
-          this.canPlay = false;
-        }
+    console.log(AppComponent.isVisitor)
+    if(AppComponent.isVisitor==false){
+      this.socket.joinMember();
+      this.socket.sendBoard({board:this.boards[AppComponent.username],username:AppComponent.username});
+      this.socket.listenMembers().subscribe((data:any)=>{
+        this.players=data.members;
+        BattleshipGameComponent.gameId=data.gameId;
+        console.log("Numero di giocatori: "+this.players);
         
-        this.socket.sendBoard(this.boards[this.player]);
-        
-
-      }
-      let i =-1;
-      if(this.player==0){
-        i=1;
-      }else if(this.player==1){
-        i=0;
-      }
-      this.socket.getBoard().subscribe((data:any)=>{
-        this.boards[i]=data;
-        if(this.player==0){
-          this.socket.sendBoard(this.boards[0]);
-        }
       });
-    });
+      this.socket.getBoard().subscribe((data:any)=>{
+        this.boards[data.username]=data.board;
+        this.opponent=data.username;
+        this.canPlay = data.canPlay;
+        console.log("Ricevuta la board di "+data.username)
+        console.log("Lista di giocatori "+Object.keys(this.boards))
+      });
       
     
     
-    
+      this.socket.listeQuit().subscribe((data:any)=>{
+        this.ngOnDestroy();
+      });
+    }else{
+      this.socket.getBoards().subscribe((data:any)=>{
+        console.log(data);
+        let chiavi=Object.keys(data);
+        this.player=chiavi[0];
+        this.opponent=chiavi[1];
+        this.boards[chiavi[0]]=data[chiavi[0]];
+        this.boards[chiavi[1]]=data[chiavi[1]];
+        this.players=2;
+
+      });
+      this.socket.connection({username:AppComponent.username,visitor:AppComponent.isVisitor,gameId:AppComponent.gameId});
+      
+    }
     
     
     return this;
@@ -79,14 +90,16 @@ export class BattleshipGameComponent implements OnInit {
     return this;
   }
   get validPlayer(): boolean {
-    return (this.players >= NUM_PLAYERS) && (this.player < NUM_PLAYERS);
+    return (this.players >= NUM_PLAYERS);
   }
   fireTorpedo(e:any) : BattleshipGameComponent | undefined {
     
-    let id = e.target.id,
-      boardId = id.substring(1,2),
-      row = id.substring(2,3), col = id.substring(3,4),
+    let id = e.target.id.split(";"),
+      boardId = id[0];
+      console.log(boardId)
+      let row = Number.parseInt(id[1]), col = Number.parseInt(id[2]),
       tile = this.boards[boardId].tiles[row][col];
+    
     if (!this.checkValidHit(boardId, tile)) {
       return;
     }
@@ -103,11 +116,11 @@ export class BattleshipGameComponent implements OnInit {
     this.canPlay = false;
     this.boards[boardId].tiles[row][col].used = true;
     
-    this.emit(new Move({canPlay: true, score: this.score,board:this.boards[boardId]}));
+    this.emit(new Move({canPlay: true, score: this.score,board:this.boards[boardId],gameId:BattleshipGameComponent.gameId}));
     return this;
   }
 
-  checkValidHit(boardId: number, tile: any) : boolean {
+  checkValidHit(boardId: string, tile: any) : boolean {
     if (boardId == this.player) {
       this.toastr.error("Don't commit suicide.", "You can't hit your own board.")
       return false;
@@ -124,37 +137,54 @@ export class BattleshipGameComponent implements OnInit {
       this.toastr.error("Don't waste your torpedos.", "You already shot here.");
       return false;
     }
+    if(AppComponent.isVisitor == true) {
+      this.toastr.error("You can't play!", "You are only a visitor.");
+      return false;
+    }
     return true;
   }
 
-  createBoards() : BattleshipGameComponent {
-    for (let i = 0; i < NUM_PLAYERS; i++)
-      this.boardService.createBoard(BOARD_SIZE);
+  createBoards(player:string) : BattleshipGameComponent {
+    this.boardService.createBoard(BOARD_SIZE,player);
     
     return this;
   }
   get winner () : Board | undefined {
-    return this.boards.find(board => board.player.score >= BOARD_SIZE);
+    if(this.boards[this.player]!=undefined){
+      if(this.boards[this.player].player.score>=BOARD_SIZE){
+        return this.boards[this.player];
+      }else{
+        return undefined;
+      }
+    }
+    else if(this.boards[this.opponent]!=undefined){ 
+      if(this.boards[this.opponent].player.score>=BOARD_SIZE){
+        return this.boards[this.opponent];
+      }else{
+        return undefined;
+      }
+    }else{
+      return undefined;
+    }
+    
   }
 
-  get boards () : Board[] {
+  get boards () : Foo {
     return this.boardService.getBoards();
   }
 
   ngOnInit():void{
-    
-    this.socket.connection();
+    if(AppComponent.isVisitor==false){
+    this.socket.connection({username:AppComponent.username,visitor:AppComponent.isVisitor,gameId:BattleshipGameComponent.gameId});
     this.socket.listenMoves().subscribe((data:any)=>{
       this.canPlay = data.canPlay;
       this.boards[this.player] = data.board;
       this.boards[this.player].player.score = this.score;
-      if(this.player==0){
-        this.boards[1].player.score=data.score;
-      }else{
-        this.boards[0].player.score=data.score;
-      }
+      this.boards[this.opponent].player.score=data.score;
+      
       
     });
+  }
     
     
     
@@ -163,10 +193,18 @@ export class BattleshipGameComponent implements OnInit {
   ngAfterViewInit() {
     
   }
+  getKeys():string[]{
+    return Object.keys(this.boards);
+  }
   emit(carattere:Move):void{
     
     this.socket.emitMoves(carattere);
   }
-
+  @HostListener('unloaded')
+  ngOnDestroy() {
+    console.log('Items destroyed');
+    this.boardService.ngOnDestroy();
+  }
+  
 
 }

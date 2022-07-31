@@ -19,10 +19,13 @@ import { WebsocketService } from './websocket.service';
 export class AppComponent implements OnInit, OnDestroy {
   static token: any;
   static isShown: boolean=false;
+  static isVisitor:boolean=true;
+  static gameId:any;
    isGame: boolean= false;
+   gameAsVisitor:boolean=false;
    isHome: boolean= false;
    isFriends: boolean= false;
-  
+    matches:any;
    users:any;
    friends:any;
   static username: any;
@@ -51,7 +54,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
   
   constructor(private chatService: ChatService, private appService:AppService, private socket:WebsocketService) {
-   
+      
    }
 
   ngOnInit() {
@@ -69,6 +72,22 @@ export class AppComponent implements OnInit, OnDestroy {
         console.log('NO!');
       }
     });
+    this.socket.matchConfirm().subscribe((data:any)=>{
+        this.showGame();
+        AppComponent.isVisitor=false;
+    });
+    this.socket.listenMatchRequest().subscribe((data:any)=>{
+      if (confirm('Ti va di fare una partita? Sono '+data.opponent)) {
+        // Save it!
+        console.log('SI!');
+        this.showGame();
+        AppComponent.isVisitor=false;
+        this.socket.sendConfirm({username:data.opponent})
+      } else {
+        // Do nothing!
+        console.log('NO!');
+      }
+    })
     
   }
   
@@ -76,11 +95,24 @@ export class AppComponent implements OnInit, OnDestroy {
     this.isShown=!this.isShown;
   }
   showGame(){
+    this.appService.getMatches(AppComponent.token).pipe().subscribe((data:any)=>{
+      this.matches = data.matches;
+      console.log(this.matches)
+     });
     this.isGame=true;
     this.isHome=false;
     this.isFriends=false;
   }
+  watchMatch(x:any){
+    this.gameAsVisitor=true;
+    console.log("ID del match: "+x);
+    AppComponent.gameId=x;
+    
+  }
    showFriends(){
+    
+    
+    
     this.isGame=false;
     this.isHome=false;
     this.isFriends=true;
@@ -94,14 +126,20 @@ export class AppComponent implements OnInit, OnDestroy {
       this.friends = JSON.parse(JSON.stringify(data));
       console.log(this.friends);
     });
+    this.socket.disconnect({username:AppComponent.username,gameId:BattleshipGameComponent.gameId,visitor:AppComponent.isVisitor});
 
   
   }
-  
+  sendMatchRequest(x:any){
+    this.socket.sendMatchRequest({opponent:AppComponent.username,username:x});
+  }
   showHome(){
+   
+    
     this.isGame=false;
     this.isHome=true;
     this.isFriends=false;
+    this.socket.disconnect({username:AppComponent.username});
   }
   
   ngOnDestroy() {
