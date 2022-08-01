@@ -6,6 +6,7 @@ import { faUser, faKey } from '@fortawesome/free-solid-svg-icons';
 
 import { AppComponent } from '../app.component';
 import { AppService } from '../app.service';
+import { HomeComponent } from '../home/home.component';
 import { WebsocketService } from '../websocket.service';
 
 @Component({
@@ -25,15 +26,15 @@ export class LoginComponent implements OnInit {
   constructor(private appService:AppService, private socket:WebsocketService) { }
 
   ngOnInit(): void { 
-    console.log("VEDIAMO SE FUNZIONA! "+sessionStorage.getItem("logged")+" Mentre qui segna "+AppComponent.logged);
+   
   }
 
   onSubmit() {
-    AppComponent.username= this.loginForm.get("username")?.value;
+    HomeComponent.username= this.loginForm.get("username")?.value;
     if(this.loginForm.get("username")?.value != "" && this.loginForm.get("password")?.value != ""){
       this.appService.login({username:this.loginForm.get("username")?.value,password:this.loginForm.get("password")?.value}).pipe().subscribe((data)=>{
         console.log(data);
-        AppComponent.token=JSON.parse(JSON.stringify(data)).token;
+        HomeComponent.token=JSON.parse(JSON.stringify(data)).token;
         sessionStorage.setItem("token",JSON.parse(JSON.stringify(data)).token);
         this.socket.login({username:this.loginForm.get("username")?.value});
         

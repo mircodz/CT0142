@@ -9,23 +9,22 @@
         <!-- shows when a player has won the game -->
         <section *ngIf="winner" class="notification is-success has-text-centered" style="color:white">
           <h1>Player {{ winner.player.name }} has won the game!</h1>
-          <h5>Click <a href="{{ gameUrl }}">here</a> to start a new game.</h5>
+          <h5>Click <a (click)="this.ngOnDestroy()">here</a> to start a new game.</h5>
         </section>
-      
         <!-- shows while waiting for 2nd user to join -->
         <div *ngIf="players < 2">
           <h2>Waiting for 2nd user to join...</h2>
-          <h3 class="subtitle is-6">You can invite them with this link: {{ gameUrl }}?id={{ BattleshipGameComponent.gameId }}. You can also open <a href="{{ gameUrl }}?id={{ BattleshipGameComponent.gameId }}" target="_blank">this link</a> in a new browser, to play all by yourself.</h3>
+          <h3 class="subtitle is-6">You can invite them with this link: {{ gameUrl }}?id={{ HomeComponent.gameId }}. You can also open <a href="{{ gameUrl }}?id={{ HomeComponent.gameId }}" target="_blank">this link</a> in a new browser, to play all by yourself.</h3>
         </div>
   
         <!-- loops through the boards array and displays the player and board tiles -->
         <div class="columns" *ngIf="validPlayer">
           <div class="column has-text-centered" *ngFor="let board of getKeys(); let i = index">
             <h5>
-              PLAYER {{ boards[board].player.name }} <span class="tag is-info" *ngIf="board == AppComponent.username">You</span>
+              PLAYER {{ boards[board].player.name }} <span class="tag is-info" *ngIf="board == HomeComponent.username">You</span>
               <strong>SCORE: {{ boards[board].player.score }}</strong>
             </h5>
-            <table class="is-bordered" [style.opacity] = "board == AppComponent.username ? 0.5 : 1">
+            <table class="is-bordered" [style.opacity] = "board == HomeComponent.username ? 0.5 : 1">
               <tr *ngFor="let row of boards[board].tiles; let j = index">
         
               <td *ngFor="let col of row; let k = index"
@@ -37,13 +36,13 @@
               </td>
             </tr>
           </table>
-          <span class="tag is-warning" *ngIf="players==2 && AppComponent.gameAsVisitor==true && boards[board].player.name==this.whoPlay">{{this.whoPlay}} turn!</span>
+          <span class="tag is-warning" *ngIf="players==2 && HomeComponent.gameAsVisitor==true && boards[board].player.name==this.whoPlay">{{this.whoPlay}} turn!</span>
         </div>
       </div>
   
       <div class="has-text-centered">
-        <span class="tag is-warning" *ngIf="canPlay && players==2 && AppComponent.gameAsVisitor==false">Your turn!</span>
-        <span class="tag is-danger" *ngIf="!canPlay && players==2 && AppComponent.gameAsVisitor==false">Other player's turn.</span>
+        <span class="tag is-warning" *ngIf="canPlay && players==2 && HomeComponent.gameAsVisitor==false">Your turn!</span>
+        <span class="tag is-danger" *ngIf="!canPlay && players==2 && HomeComponent.gameAsVisitor==false">Other player's turn.</span>
         <h5 class="title"><small>{{ players }} player(s) in game</small></h5>
       </div>
   

@@ -52,6 +52,10 @@ export class BoardService implements OnDestroy {
   @HostListener('unloaded')
   ngOnDestroy() {
     console.log('Items destroyed');
+    Object.keys(this.boards).forEach((x)=>
+      delete this.boards[x]
+    );
+    
     
   }
 }

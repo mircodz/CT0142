@@ -1,0 +1,55 @@
+
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container-fluid">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a (click)="showHome()">Home</a></li>
+        <li class="breadcrumb-item"><a (click)="showGame()">Game</a></li>
+        <li class="breadcrumb-item active" aria-current="page">
+            <a (click)="showFriends()">Friends</a>
+        </li>
+        <li class="breadcrumb-item"><a (click)="logout()">Logout</a></li>
+        </ol>
+    </nav>
+    </div>
+</nav>
+<div *ngIf="isGame==true">
+    <button (click)="HomeComponent.isVisitor=true">Visitor</button>
+    <button (click)="HomeComponent.isVisitor=false">Gamer</button>
+    <div  *ngIf="HomeComponent.isVisitor==false">
+    <app-battleship-game></app-battleship-game>
+    </div>
+    <div  *ngIf="HomeComponent.isVisitor==true">
+    <div *ngFor="let x of matches; let i=index">
+    
+        <a (click)="watchMatch(i)"> {{x.id}}</a> 
+        <div  *ngIf="HomeComponent.gameAsVisitor==true">
+        <app-battleship-game></app-battleship-game>
+        </div>
+    </div>
+    </div>
+</div>
+<div *ngIf="isFriends==true">
+    <form [formGroup]="friendForm" (ngSubmit)="onSubmitFriend()" class="box">
+    <label for="friend" class="label">Username</label>
+    <input type="text" class="input" name="friend" placeholder="Friend" formControlName="friend">
+    <button type="submit"  class="button is-success">Invia richiesta</button>
+    </form>
+    <h1>Online players</h1>
+    <div *ngFor="let x of users">
+    
+        <a (click)="sendMatchRequest(x)"> {{x}}</a> 
+    
+    </div>
+    <h1>Friends list</h1>
+    <div *ngFor="let x of friends">
+    
+    {{x.username}}
+
+</div>
+</div>
+<div *ngIf="isHome==true">
+
+</div>
+  
+ 

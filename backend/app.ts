@@ -2,7 +2,7 @@
 
 import { randomBytes } from "crypto";
 import { Match } from "./matches";
-
+const BOARD_SIZE: number = 6;
 const config = require('config');
 const appConfig = config.get('app');
 const mongoConfig = config.get('mongo');
@@ -97,8 +97,8 @@ app.post('/signin', (req, res) => {
     .digest("hex");
   
   const user = User.findOne({ username:username,password:hashed},function(err,sub){
-    console.log("STAMPA UTENTE "+sub["username"]+" "+sub.username+" COSE ARRIVATE "+username+" "+hashed);
-    if (sub.username) {
+    console.log(sub)
+    if (sub) {
       const token = jwt.sign({ username: username,  role: user.role }, secret);
       res.status(200).json({ token });
   
@@ -166,23 +166,28 @@ app.post('/addFriends', authenticateJWT, (req, res) => {
   res.sendStatus(200);
 });
 app.get('/allUsers', authenticateJWT, (req, res) => {
-  res.json({users});
+  console.log("STAMPA DI TUTTI GLI UTENTI: "+users);
+  res.status(200).json({users});
 });
 app.post('/friend', authenticateJWT, (req, res) => {
   const { username } = req.body;
   User.find({username:username},function(err,sub){
     User.find({_id:sub[0].friends},function(err,sub){
-      res.json(sub);
+      if(sub[0]){
+        res.status(200).json(sub);
+      }else{
+        res.status(400).json({message:"Amici non trovati!"});
+      }
       
     })
   })
   
 });
 app.post('/logout', authenticateJWT, (req, res) => {
-  //const { username } = req.body;
+  const { username } = req.body;
   console.log(req.body)
-  //delete users[username];
-  //io.emit("updatePlayers",users);
+  delete users[username];
+  io.emit("updatePlayers",users);
   
   res.status(200).json({message: "ok"});
   
@@ -193,8 +198,13 @@ app.post('/matchId', authenticateJWT, (req, res) => {
   
 });
 app.get('/matches', authenticateJWT, (req, res) => {
+  if(matches){
+    res.status(200).json({matches});
+
+  }else{
+    res.status(400).json({message:"Non ci sono partite in corso!"});
+  }
   
-  res.json({matches});
   
 });
 //const { logger2 } = require('./logger.ts');
@@ -216,7 +226,7 @@ io.on('connection', (socket) => {
   //logger.error({ message: 'user connected', labels: { 'key': 'value' } })
   socket.on('Move', function (data) {
     console.log("Mossa inviata "+data.gameId+" "+data.canPlay+" "+data.board)
-    matches[data.gameId].boards[data.board.player.name]=data.board;
+    matches[data.gameId].boards=data.boards;
     matches[data.gameId].whoPlay=data.opponent;
     socket.to(matches[data.gameId].id).emit("Move", data);
     socket.to("visitors"+matches[data.gameId].id).emit("ListenGames", matches[data.gameId])
@@ -306,12 +316,17 @@ io.on('connection', (socket) => {
   socket.on('quitGame', (data) => {
     //logger2.error({ message: 'user disconnected', labels: { 'key': 'value' } })
     console.log("Partita numero "+data.gameId);
-    if(matches[data.gameId].members>0){
-      matches[data.gameId].members--;
-      matches[data.gameId].players[matches[j].i-1] = "";
-      matches[data.gameId].i--;
+    if(data.gameId!=undefined && data.gameId>=0){
+      if(matches[data.gameId].members>0){
+        (data.username==matches[data.gameId].players[0])? matches[data.gameId].boards[matches[data.gameId].players[1]].player.score=BOARD_SIZE : matches[data.gameId].boards[matches[data.gameId].players[0]].player.score=BOARD_SIZE;
+        console.log("PUNTEGGI INVIATI"+matches[data.gameId].boards[matches[data.gameId].players[1]].player.score+" "+matches[data.gameId].boards[matches[data.gameId].players[0]].player.score)
+        socket.to("visitors"+matches[data.gameId].id).emit("ListenGames", matches[data.gameId]);
+        io.emit("new_member", {members:matches[data.gameId].members-1,gameId:data.gameId});
+        matches[data.gameId]=new Match();
+      }
+      j=data.gameId;
+      console.log("UN GIOCATORE HA QUITATO");
     }
-    j=data.gameId;
     
     io.to(users[data.username]).emit("quitGame");
     console.log("L'utente si è disconnesso");
