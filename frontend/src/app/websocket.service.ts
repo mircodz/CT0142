@@ -74,5 +74,11 @@ export class WebsocketService {
   sendReady(data:any){
     this.socket.emit("ready",data);
   }
+  listenUpdateUsers(){
+    return this.socket.fromEvent("updatePlayers");
+  }
+  listenUpdateFriends(){
+    return this.socket.fromEvent("updateFriends");
+  }
   
 }

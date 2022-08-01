@@ -3,7 +3,7 @@
     <div class="container">
       <div class="content">
         <h1 class="title">Ready to sink some battleships?</h1>
-        <h6 class="subtitle is-6"><strong>Pusher Battleship</strong></h6>
+        <h6 class="subtitle is-6"><strong>Battleship</strong></h6>
         <hr>
   
         <!-- shows when a player has won the game -->
@@ -22,10 +22,10 @@
         <div class="columns" *ngIf="validPlayer">
           <div class="column has-text-centered" *ngFor="let board of getKeys(); let i = index">
             <h5>
-              PLAYER {{ boards[board].player.name }} <span class="tag is-info" *ngIf="board == player">You</span>
+              PLAYER {{ boards[board].player.name }} <span class="tag is-info" *ngIf="board == AppComponent.username">You</span>
               <strong>SCORE: {{ boards[board].player.score }}</strong>
             </h5>
-            <table class="is-bordered" [style.opacity] = "board == player ? 0.5 : 1">
+            <table class="is-bordered" [style.opacity] = "board == AppComponent.username ? 0.5 : 1">
               <tr *ngFor="let row of boards[board].tiles; let j = index">
         
               <td *ngFor="let col of row; let k = index"
@@ -37,12 +37,13 @@
               </td>
             </tr>
           </table>
+          <span class="tag is-warning" *ngIf="players==2 && AppComponent.gameAsVisitor==true && boards[board].player.name==this.whoPlay">{{this.whoPlay}} turn!</span>
         </div>
       </div>
   
       <div class="has-text-centered">
-        <span class="tag is-warning" *ngIf="canPlay && players==2">Your turn!</span>
-        <span class="tag is-danger" *ngIf="!canPlay && players==2">Other player's turn.</span>
+        <span class="tag is-warning" *ngIf="canPlay && players==2 && AppComponent.gameAsVisitor==false">Your turn!</span>
+        <span class="tag is-danger" *ngIf="!canPlay && players==2 && AppComponent.gameAsVisitor==false">Other player's turn.</span>
         <h5 class="title"><small>{{ players }} player(s) in game</small></h5>
       </div>
   

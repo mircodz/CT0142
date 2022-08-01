@@ -81,10 +81,10 @@ app.post('/signup', async (req, res) => {
       email,
       password: hashed
     }).save();
-    console.log("DIOCANE");
+    
     res.status(200).json({message: "ok"});
   } else {
-    console.log("FALLITO");
+    
     res.status(400).json({message: "user exists"});
   }
 });
@@ -95,18 +95,22 @@ app.post('/signin', (req, res) => {
     .createHash("sha256")
     .update(password)
     .digest("hex");
-  const user = User.find({ username, password: hashed });
-
   
-  if (user) {
-    const token = jwt.sign({ username: user.username,  role: user.role }, secret);
-    res.json({ token });
-    users[username]='';
-    last_user=username;
-     console.log(token);
-  } else {
-    res.sendStatus(400);
-  }
+  const user = User.findOne({ username:username,password:hashed},function(err,sub){
+    console.log("STAMPA UTENTE "+sub["username"]+" "+sub.username+" COSE ARRIVATE "+username+" "+hashed);
+    if (sub.username) {
+      const token = jwt.sign({ username: username,  role: user.role }, secret);
+      res.status(200).json({ token });
+  
+  
+    } else {
+      res.status(400).json({message: "Credenziali errate!"});
+    }
+  });
+  
+  
+  
+  
 });
 
 const authenticateJWT = (req, res, next) => {
@@ -128,7 +132,7 @@ const authenticateJWT = (req, res, next) => {
 };
 
 app.get('/foo', (req, res) => {
-  console.log("DIOEBREO");
+ 
   res.send('Hello World!');
 });
 
@@ -151,22 +155,41 @@ app.post('/addFriends', authenticateJWT, (req, res) => {
       console.log("Amicizia inserita!")
     })
     
+    User.find({username:username},function(err,sub){
+      User.find({_id:sub[0].friends},function(err,sub){
+        io.emit("updateFriends",sub)
+        
+      })
+    })
   });
+  
   res.sendStatus(200);
 });
 app.get('/allUsers', authenticateJWT, (req, res) => {
-  console.log("Lista utenti: "+users)
   res.json({users});
 });
 app.post('/friend', authenticateJWT, (req, res) => {
   const { username } = req.body;
   User.find({username:username},function(err,sub){
-   console.log(sub)
     User.find({_id:sub[0].friends},function(err,sub){
       res.json(sub);
       
     })
   })
+  
+});
+app.post('/logout', authenticateJWT, (req, res) => {
+  //const { username } = req.body;
+  console.log(req.body)
+  //delete users[username];
+  //io.emit("updatePlayers",users);
+  
+  res.status(200).json({message: "ok"});
+  
+});
+app.post('/matchId', authenticateJWT, (req, res) => {
+  const { id } = req.body;
+  res.json({match:matches[id]});
   
 });
 app.get('/matches', authenticateJWT, (req, res) => {
@@ -194,8 +217,9 @@ io.on('connection', (socket) => {
   socket.on('Move', function (data) {
     console.log("Mossa inviata "+data.gameId+" "+data.canPlay+" "+data.board)
     matches[data.gameId].boards[data.board.player.name]=data.board;
+    matches[data.gameId].whoPlay=data.opponent;
     socket.to(matches[data.gameId].id).emit("Move", data);
-    socket.to("visitors"+matches[data.gameId].id).emit("ListenGames", matches[data.gameId].boards)
+    socket.to("visitors"+matches[data.gameId].id).emit("ListenGames", matches[data.gameId])
   });
   socket.on('Board', function (data) {
     matches[j].boards[data.username]=data.board;
@@ -204,14 +228,13 @@ io.on('connection', (socket) => {
   });
   socket.on('login',function(data){
     users[data.username] = socket.id;
+    io.emit("updatePlayers",users);
   });
   
-  socket.on("friendRequest",function(data){
-    
+  socket.on("friendRequest",function(data){   
     io.to(users[data.friend]).emit("friendRequest", data);
   })
   socket.on("matchRequest",function(data){
-    console.log(data.opponent+ " send a request to "+data.username);
     io.to(users[data.username]).emit("matchRequest", data);
     
   })
@@ -227,12 +250,10 @@ io.on('connection', (socket) => {
         
         io.emit("new_member", {members:matches[j].members+1,gameId:j});
         console.log("si è aggiunto al gioco! "+matches[j].members);
-        
+        matches[j].members++;
       }else if (data.visitor==true){
         console.log("ENTRA UN VISITATORE!")
         socket.join("visitors"+matches[data.gameId].id);
-        console.log(matches[data.gameId].boards)
-        socket.to("visitors"+matches[data.gameId].id).emit("ListenGames", matches[data.gameId].boards)
       }else if(matches[j].members==2 && data.visitor==false){
         while(matches[j].members>2 ){
           j++;
@@ -250,17 +271,20 @@ io.on('connection', (socket) => {
         
         io.emit("new_member", {members:matches[j].members+1,gameId:j});
         console.log("si è aggiunto al gioco! "+matches[j].members);
+        matches[j].members++;
       }
-      matches[j].members++;
+      
 
 
       
       if(matches[j].members==2){
         const randomElement = matches[j].players[Math.floor(Math.random() * matches[j].players.length)];
         if(randomElement==matches[j].players[0]){
+          matches[j].whoPlay=matches[j].players[0];
           io.to(users[matches[j].players[0]]).emit("Board", {board: matches[j].boards[matches[j].players[1]],username:matches[j].players[1],canPlay:true});
           io.to(users[matches[j].players[1]]).emit("Board", {board: matches[j].boards[matches[j].players[0]],username:matches[j].players[0],canPlay:false});
         }else{
+          matches[j].whoPlay=matches[j].players[1];
           io.to(users[matches[j].players[0]]).emit("Board", {board: matches[j].boards[matches[j].players[1]],username:matches[j].players[1],canPlay:false});
           io.to(users[matches[j].players[1]]).emit("Board", {board: matches[j].boards[matches[j].players[0]],username:matches[j].players[0],canPlay:true});
         }

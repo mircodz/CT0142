@@ -7,7 +7,7 @@
                         <div class="field">
                             <label for="username" class="label">Username</label>
                             <div class="control has-icons-left">
-                                <input type="text" class="input" name="username" placeholder="Username" formControlName="username">
+                                <input type="text" class="input" name="username" placeholder="Username" formControlName="username" ngModel required>
                                 <span class="icon is-small is-left">
                                     <fa-icon [icon]="faUser"></fa-icon>
                                 </span>
@@ -16,7 +16,7 @@
                         <div class="field">
                             <label for="password" class="label">Password</label>
                             <div class="control has-icons-left">
-                                <input type="password" class="input" name="password" placeholder="Password" formControlName="password">
+                                <input type="password" class="input" name="password" placeholder="Password" formControlName="password" ngModel required>
                                 <span class="icon is-small is-left">
                                     <fa-icon [icon]="faKey"></fa-icon>
                                 </span>

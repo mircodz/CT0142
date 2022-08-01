@@ -58,4 +58,23 @@ export class AppService {
     };
     return this.http.get("http://localhost:6969/matches",httpOptions);
   }
+  getMatchId(jwt:any,data:any){
+    const httpOptions = {
+      headers: new HttpHeaders({
+        authorization: 'Bearer ' + jwt,
+        'cache-control': 'no-cache',
+        'Content-Type':  'application/json'})
+    };
+    return this.http.post("http://localhost:6969/matchId",data,httpOptions);
+  }
+  logout(jwt:any,data:any){
+    console.log("FACCIO IL LOGOUT "+jwt)
+    const httpOptions = {
+      headers: new HttpHeaders({
+        authorization: 'Bearer ' + jwt,
+        'cache-control': 'no-cache',
+        'Content-Type':  'application/json'})
+    };
+    return this.http.post("http://localhost:6969/logout",data,httpOptions);
+  }
 }

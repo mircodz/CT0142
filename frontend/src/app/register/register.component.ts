@@ -27,9 +27,11 @@ export class RegisterComponent implements OnInit {
   }
 
   onSubmit(): void {
-    this.appService.register({name:this.registerForm.get("name")?.value,username:this.registerForm.get("username")?.value,email:this.registerForm.get("email")?.value,password:this.registerForm.get("password")?.value}).pipe().subscribe(
-      () => this.toggleShow()
-    );
+    if(this.registerForm.get("username")?.value != "" && this.registerForm.get("name")?.value != "" && this.registerForm.get("email")?.value != "" && this.registerForm.get("password")?.value != ""){
+      this.appService.register({name:this.registerForm.get("name")?.value,username:this.registerForm.get("username")?.value,email:this.registerForm.get("email")?.value,password:this.registerForm.get("password")?.value}).pipe().subscribe(
+        () => this.toggleShow()
+      );
+    }
   }
   toggleShow(){
     AppComponent.toggleShow();

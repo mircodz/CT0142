@@ -1,11 +1,10 @@
-{{getToken()}}
 <div *ngIf="logged==false && isShown==false">
  
   <app-register></app-register>
   
 </div>
 <div *ngIf="logged==false && isShown==true">
-    
+
    
     <app-login></app-login>
     
@@ -22,6 +21,7 @@
           <li class="breadcrumb-item active" aria-current="page">
             <a (click)="showFriends()">Friends</a>
           </li>
+          <li class="breadcrumb-item"><a (click)="logout()">Logout</a></li>
         </ol>
       </nav>
     </div>
@@ -36,7 +36,7 @@
       <div *ngFor="let x of matches; let i=index">
       
         <a (click)="watchMatch(i)"> {{x.id}}</a> 
-        <div  *ngIf="gameAsVisitor==true">
+        <div  *ngIf="AppComponent.gameAsVisitor==true">
           <app-battleship-game></app-battleship-game>
         </div>
      </div>
