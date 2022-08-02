@@ -14,6 +14,8 @@ import { LoginComponent } from './login/login.component';
 import { RegisterComponent } from './register/register.component';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { HomeComponent } from './home/home.component';
+import { ConfirmationDialogComponent } from './confirmation-dialog/confirmation-dialog.component';
+import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
 const config: SocketIoConfig = {
 	url: 'http://localhost:6969',// socket server url;
@@ -27,7 +29,8 @@ const config: SocketIoConfig = {
     BattleshipGameComponent,
     LoginComponent,
     RegisterComponent,
-    HomeComponent
+    HomeComponent,
+    ConfirmationDialogComponent
   ],
   imports: [
     BrowserModule,
@@ -38,7 +41,8 @@ const config: SocketIoConfig = {
     ToastrModule.forRoot(),
     BrowserAnimationsModule,
     FontAwesomeModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    NgbModule
   ],
   providers: [],
   bootstrap: [AppComponent]

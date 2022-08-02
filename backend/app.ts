@@ -1,7 +1,8 @@
 //require('./tracing')
 
 import { randomBytes } from "crypto";
-import { Match } from "./matches";
+import { match } from "./matches";
+
 const BOARD_SIZE: number = 6;
 const config = require('config');
 const appConfig = config.get('app');
@@ -52,7 +53,7 @@ interface Foo2 {
    
   [key: string]: any;
 }
-let last_user;
+
 let users:Foo={};
 // Mongo
 const mongoose = require('mongoose');
@@ -63,6 +64,7 @@ try {
 }
 
 const User = mongoose.model('User');
+const Match = mongoose.model("Match");
 
 app.post('/signup', async (req, res) => {
   const { name, username, email, password } = req.body;
@@ -207,20 +209,31 @@ app.get('/matches', authenticateJWT, (req, res) => {
   
   
 });
+app.post('/getHistoricalMatches', authenticateJWT, (req, res) => {
+  const { username } = req.body;
+  const f = Match.find({$or: [{ player1: username },{ player2: username }]},function(err,sub){
+    console.log("STAMPA DELLO STORICO "+sub[0])
+    if(sub){
+      res.status(200).json({sub});
+
+  }else{
+    res.status(400).json({message:"Non ci sono partite nello storico!"});
+  }
+    
+  });
+    
+  
+  
+});
 //const { logger2 } = require('./logger.ts');
 
 
 
 
-var matches:Match[]=[];
+var matches:match[]=[];
 let j=0;
-matches[0]=new Match();
-matches[0].members=0;
-matches[0].id=makeid(20);
-matches[0].players=[];
-matches[0].boards={};
-matches[0].i=0;
-matches[0].visitor=0;
+matches[0]=new match();
+matches[j].id=makeid(20);
 io.on('connection', (socket) => {
   
   //logger.error({ message: 'user connected', labels: { 'key': 'value' } })
@@ -252,41 +265,29 @@ io.on('connection', (socket) => {
     io.to(users[data.username]).emit("matchConfirm");
   });
   socket.on("inGame",function(data){
-      if (matches[j].members < 2 && data.visitor==false) {
-        matches[j].players[matches[j].i]=data.username;
-        
-        matches[j].i++;
-        socket.join(matches[j].id);
-        
-        io.emit("new_member", {members:matches[j].members+1,gameId:j});
-        console.log("si è aggiunto al gioco! "+matches[j].members);
-        matches[j].members++;
-      }else if (data.visitor==true){
+      if (data.visitor==true){
         console.log("ENTRA UN VISITATORE!")
         socket.join("visitors"+matches[data.gameId].id);
-      }else if(matches[j].members==2 && data.visitor==false){
-        while(matches[j].members>2 ){
+      }else{
+        while(matches[j]!=null && matches[j].members==2 ){
           j++;
         }
-        matches[j]=new Match();
-        matches[j].members=0;
-        matches[j].id=makeid(20);
-        matches[j].players=[];
-        matches[j].boards={};
-        matches[j].i=0;
-        matches[j].visitor=0;
+        if(matches[j]==null){
+          matches[j]=new match();
+          matches[j].id=makeid(20);
+        }
+        
+        
         matches[j].players[matches[j].i]=data.username;
         matches[j].i++;
         socket.join(matches[j].id);
-        
+        console.log("ENTRA NELLA STANZA "+matches[j].id)
         io.emit("new_member", {members:matches[j].members+1,gameId:j});
         console.log("si è aggiunto al gioco! "+matches[j].members);
         matches[j].members++;
-      }
       
-
-
-      
+        
+      }      
       if(matches[j].members==2){
         const randomElement = matches[j].players[Math.floor(Math.random() * matches[j].players.length)];
         if(randomElement==matches[j].players[0]){
@@ -313,23 +314,36 @@ io.on('connection', (socket) => {
       //logger2.error({ message: 'user disconnected', labels: { 'key': 'value' } })
       
   })
-  socket.on('quitGame', (data) => {
+  socket.on('quitGame', async (data) => {
     //logger2.error({ message: 'user disconnected', labels: { 'key': 'value' } })
     console.log("Partita numero "+data.gameId);
-    if(data.gameId!=undefined && data.gameId>=0){
-      if(matches[data.gameId].members>0){
+    if(data.gameId!=undefined && data.gameId>=0 && matches[data.gameId].members>0){
+      if(matches[data.gameId].boards[matches[data.gameId].players[0]].player.score>=BOARD_SIZE || matches[data.gameId].boards[matches[data.gameId].players[1]].player.score>=BOARD_SIZE){
+
+      }else{ 
         (data.username==matches[data.gameId].players[0])? matches[data.gameId].boards[matches[data.gameId].players[1]].player.score=BOARD_SIZE : matches[data.gameId].boards[matches[data.gameId].players[0]].player.score=BOARD_SIZE;
         console.log("PUNTEGGI INVIATI"+matches[data.gameId].boards[matches[data.gameId].players[1]].player.score+" "+matches[data.gameId].boards[matches[data.gameId].players[0]].player.score)
         socket.to("visitors"+matches[data.gameId].id).emit("ListenGames", matches[data.gameId]);
         io.emit("new_member", {members:matches[data.gameId].members-1,gameId:data.gameId});
-        matches[data.gameId]=new Match();
+        
       }
+      const r = await new Match({
+        player1: matches[data.gameId].players[0],
+        player2: matches[data.gameId].players[1],
+        score1: matches[data.gameId].boards[matches[data.gameId].players[0]].player.score,
+        score2: matches[data.gameId].boards[matches[data.gameId].players[1]].player.score,
+        winner: max(data.gameId)
+      }).save();
+     
+      console.log("CANCELLATO IL GAME");
       j=data.gameId;
       console.log("UN GIOCATORE HA QUITATO");
+      io.to(users[data.username]).emit("quitGame");
+      matches[data.gameId]=new match();
+      console.log("L'utente si è disconnesso");
     }
     
-    io.to(users[data.username]).emit("quitGame");
-    console.log("L'utente si è disconnesso");
+    
 })
 });
 
@@ -356,4 +370,11 @@ app.get('/chat', async (req, res) => {
         .then(items => res.json(items))
 });
 
+function max(id){
+  if(matches[id].boards[matches[id].players[0]].player.score>matches[id].boards[matches[id].players[1]].player.score){
+    return matches[id].players[0];
+  }else{
+    return matches[id].players[1];
+  }
+}
 

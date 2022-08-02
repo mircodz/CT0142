@@ -1,5 +1,5 @@
 import {Foo} from "./foo"
-export class Match {
+export class match {
     members: number= 0;
     id: string ="";
     whoPlay: string ="";

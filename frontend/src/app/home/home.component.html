@@ -14,8 +14,8 @@
     </div>
 </nav>
 <div *ngIf="isGame==true">
-    <button (click)="HomeComponent.isVisitor=true">Visitor</button>
-    <button (click)="HomeComponent.isVisitor=false">Gamer</button>
+    <button (click)="setVisitor()">Visitor</button>
+    <button (click)="setGamer()">Gamer</button>
     <div  *ngIf="HomeComponent.isVisitor==false">
     <app-battleship-game></app-battleship-game>
     </div>
@@ -30,15 +30,10 @@
     </div>
 </div>
 <div *ngIf="isFriends==true">
-    <form [formGroup]="friendForm" (ngSubmit)="onSubmitFriend()" class="box">
-    <label for="friend" class="label">Username</label>
-    <input type="text" class="input" name="friend" placeholder="Friend" formControlName="friend">
-    <button type="submit"  class="button is-success">Invia richiesta</button>
-    </form>
     <h1>Online players</h1>
-    <div *ngFor="let x of users">
+    <div *ngFor="let x of usersNotFriends">
     
-        <a (click)="sendMatchRequest(x)"> {{x}}</a> 
+        <a (click)="sendFriendsRequest(x)"> {{x}}</a> 
     
     </div>
     <h1>Friends list</h1>
@@ -46,10 +41,28 @@
     
     {{x.username}}
 
+    </div>
+    <div>
+    <h1>Online friends</h1>
+    <div *ngFor="let x of friendsOnline">
+    
+        <a (click)="sendMatchRequest(x)"> {{x}}</a> 
+    
+    </div>
+    </div>
 </div>
-</div>
-<div *ngIf="isHome==true">
 
+<div *ngIf="isHome==true">
+    <h1>Historical matches</h1>
+    <div *ngFor="let x of historical">
+    <div>
+        {{x.player1}} : {{x.score1}}
+        {{x.player2}} : {{x.score2}}
+    </div>
+        
+    
+    </div>
+    
 </div>
   
  

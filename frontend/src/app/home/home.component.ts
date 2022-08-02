@@ -1,10 +1,12 @@
 import { Component, HostListener, OnInit } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
+import { ToastrService } from 'ngx-toastr';
 import { Subscription } from 'rxjs';
 import { AppComponent } from '../app.component';
 import { AppService } from '../app.service';
 import { BattleshipGameComponent } from '../battleship-game/battleship-game.component';
 import { ChatService } from '../chat.service';
+import { ConfirmationDialogService } from '../confirmation-dialog/confirmation-dialog.service';
 import { LoginComponent } from '../login/login.component';
 import { WebsocketService } from '../websocket.service';
 
@@ -16,15 +18,17 @@ import { WebsocketService } from '../websocket.service';
 export class HomeComponent implements OnInit {
   subscriptions: Subscription[]=[];
   static token: any = sessionStorage.getItem("token");
-  static isVisitor:boolean= LoginComponent.getBoolean((sessionStorage.getItem("isVisitor")==null) ? true : sessionStorage.getItem("isVisitor")) && true;
+  static isVisitor:boolean=true;
   static gameId:any=sessionStorage.getItem("gameId");
   isGame: boolean= LoginComponent.getBoolean(sessionStorage.getItem("isGame")) || false;
   static gameAsVisitor:boolean=false;
-  isHome: boolean= LoginComponent.getBoolean(sessionStorage.getItem("isHome")) || false;;
-  isFriends: boolean= LoginComponent.getBoolean(sessionStorage.getItem("isFriends")) || false;;
+  
+  isFriends: boolean= LoginComponent.getBoolean(sessionStorage.getItem("isFriends")) || false;
+  isHome: boolean= (this.isGame==false && this.isFriends==false) ? true: LoginComponent.getBoolean(sessionStorage.getItem("isHome")) || false;;
   matches:any= JSON.parse(sessionStorage.getItem("matches")+"");
   users:any = JSON.parse(sessionStorage.getItem("users")+"");
   friends:any = JSON.parse(sessionStorage.getItem("friends")+"");
+  historical:any = JSON.parse(sessionStorage.getItem("historical")+"");
   
   static username: any=sessionStorage.getItem("username");
   title = 'c4';
@@ -46,31 +50,32 @@ export class HomeComponent implements OnInit {
   });
 
   
-  constructor(private chatService: ChatService, private appService:AppService, private socket:WebsocketService) {
+  constructor(private chatService: ChatService, private appService:AppService, private socket:WebsocketService,private confirmationDialogService: ConfirmationDialogService) {
       
    }
 
   ngOnInit() {
-    
+    this.subscriptions.push(this.appService.getHistorical(HomeComponent.token,{username:HomeComponent.username}).pipe().subscribe((data:any)=>{
+      this.historical = data.sub;
+      
+    }));
     this.chatService.sendMessage('porcodio');
     this.subscriptions.push(
       this.socket.listenUpdateUsers().subscribe((data:any)=>{
         console.log(data)
         this.users=Object.keys(data);
+        sessionStorage.setItem("users",JSON.stringify(this.users));
       })
     );
     this.subscriptions.push(
       this.socket.listenFriendRequest().subscribe((data:any)=>{
-        if (confirm('Vuoi diventare mio amico?'+data.username)) {
-          // Save it!
-          console.log('SI!');
-          this.appService.addFriends(HomeComponent.token,{username:data.username,friend:HomeComponent.username}).pipe().subscribe(()=>{
-            console.log("Amicizia inserita");
-          })
-        } else {
-          // Do nothing!
-          console.log('NO!');
-        }
+        this.confirmationDialogService.confirm('Richiesta di amicizia da '+data.username, 'Vuoi diventare mio amico?')
+            .then((confirmed) => {
+              console.log('SI!');
+            this.appService.addFriends(HomeComponent.token,{username:data.username,friend:HomeComponent.username}).pipe().subscribe(()=>{
+              console.log("Amicizia inserita");
+            })}
+            ).catch(() => console.log('NO!'));
       })
     );
     this.subscriptions.push(
@@ -82,19 +87,16 @@ export class HomeComponent implements OnInit {
     );
     this.subscriptions.push(
     this.socket.listenMatchRequest().subscribe((data:any)=>{
-      if (confirm('Ti va di fare una partita? Sono '+data.opponent)) {
-        // Save it!
-        console.log('SI!');
-        this.showGame();
-        HomeComponent.isVisitor=false;
-        sessionStorage.setItem("isVisitor","false");
-        this.socket.sendConfirm({username:data.opponent});
-      } else {
-        // Do nothing!
-        console.log('NO!');
-      }
-    })
-    );
+      this.confirmationDialogService.confirm('Richiesta di partita da '+data.username, 'Vuoi fare una partita?')
+            .then((confirmed) => {
+              console.log('SI!');
+              this.showGame();
+              HomeComponent.isVisitor=false;
+              sessionStorage.setItem("isVisitor","false");
+              this.socket.sendConfirm({username:data.opponent});
+            }).catch(()=> console.log('NO!'));
+      
+          }));
     
   }
   
@@ -103,7 +105,7 @@ export class HomeComponent implements OnInit {
     this.subscriptions.push(
     this.appService.getMatches(HomeComponent.token).pipe().subscribe((data:any)=>{
       this.matches = data.matches;
-      sessionStorage.setItem("matches",JSON.stringify(data.matches));
+      sessionStorage.setItem("matches",JSON.stringify(this.matches));
      })
     );
     this.isGame=true;
@@ -123,6 +125,14 @@ export class HomeComponent implements OnInit {
       
     
   }
+  setVisitor(){
+    HomeComponent.isVisitor=true;
+    sessionStorage.setItem("isVisitor","true");
+  }
+  setGamer(){
+    HomeComponent.isVisitor=false;
+    sessionStorage.setItem("isVisitor","false");
+  }
    showFriends(){
     
     
@@ -137,6 +147,7 @@ export class HomeComponent implements OnInit {
       this.appService.allUsers(HomeComponent.token).pipe().subscribe((data)=>{
         this.users = JSON.parse(JSON.stringify(data));
         this.users = Object.keys(this.users.users);
+        console.log(this.users)
         sessionStorage.setItem("users",JSON.stringify(this.users));
       })
     );
@@ -183,23 +194,50 @@ export class HomeComponent implements OnInit {
     this.isFriends = false;
     this.isHome = false;
     this.matches = undefined;
-    this.friends = undefined;
+    this.friends = [];
     this.users = undefined;
     AppComponent.logged=false;
   }
   get friendsOnline(){
     let friendsOnline:any[]=[];
-    this.users.forEach((x: any) => {
-      this.friends.forEach((y:any) =>{
-          if(x==y){
-            friendsOnline.push(x);
-          }
+    try {
+      this.users.forEach((x: string) => {
+        this.friends.forEach((y:any) =>{
+          console.log(x.toString()+ " "+y.toString());
+            if(x===y.username){
+              
+              friendsOnline.push(x);
+            }
+        });
       });
-    });
-    return friendsOnline;
+      return friendsOnline;
+    } catch (error) {
+      return undefined;
+    }
+    
   }
-  onSubmitFriend(){
-    this.socket.sendFriendRequest({username:HomeComponent.username,friend:this.friendForm.get("friend")?.value});
+  get usersNotFriends(){
+    let usersNotFriends:any[]=[];
+    let flag=false;
+    try{
+      this.users.forEach((x: string) => {
+        flag=false;
+        this.friends.forEach((y:any) =>{
+            if(x===y.username){
+              flag=true;
+            }
+        });
+        if(flag==false){
+          usersNotFriends.push(x);
+        }
+      });
+      return usersNotFriends;
+    }catch(err){
+      return this.users;
+    }
+  }
+  sendFriendsRequest(x:any){
+    this.socket.sendFriendRequest({username:HomeComponent.username,friend:x});
   }
   logout(){
     this.subscriptions.push(

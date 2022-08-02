@@ -12,7 +12,7 @@ import { Player } from './player';
 export class BoardService implements OnDestroy {
   
   player: string = "";
-  boards: Foo = {};
+  boards: Foo = (JSON.parse(sessionStorage.getItem("boards")+"")!=null) ? JSON.parse(sessionStorage.getItem("boards")+"") : {};
   constructor() { }
   createBoard(size: number = 5,player:string): BoardService{
     let tiles:Cell[][] = [];
@@ -31,6 +31,7 @@ export class BoardService implements OnDestroy {
       tiles: tiles
     });
     this.boards[player] = board;
+    sessionStorage.setItem("boards",JSON.stringify(this.boards));
     return this;
   }
   randomShips(tiles: Cell[][], len:number): Cell[][]{
