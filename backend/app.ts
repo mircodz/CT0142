@@ -3,7 +3,7 @@
 import { randomBytes } from "crypto";
 import { match } from "./matches";
 
-const BOARD_SIZE: number = 6;
+const BOARD_SIZE: number = 32;
 const config = require('config');
 const appConfig = config.get('app');
 const mongoConfig = config.get('mongo');

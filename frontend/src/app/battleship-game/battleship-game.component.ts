@@ -17,7 +17,8 @@ import { HomeComponent } from '../home/home.component';
 
 // set game constants
 const NUM_PLAYERS: number = 2;
-const BOARD_SIZE: number = 6;
+const BOARD_SIZE: number = 10;
+const SCORE_LIMIT: number = 32;
 
 @Component({
   selector: 'app-battleship-game',
@@ -56,7 +57,7 @@ export class BattleshipGameComponent implements OnInit,OnDestroy {
         this.socket.listenMembers().subscribe((data:any)=>{
           
           if(data.members<this.players){
-            this.boards[this.player].player.score=BOARD_SIZE;
+            this.boards[this.player].player.score=SCORE_LIMIT;
           }else{
             this.players=data.members;
             sessionStorage.setItem("players",this.players+"");
@@ -188,10 +189,10 @@ export class BattleshipGameComponent implements OnInit,OnDestroy {
   get winner () : Board | undefined {
     
     try {
-      if(this.boards[this.player].player.score>=BOARD_SIZE){
+      if(this.boards[this.player].player.score>=SCORE_LIMIT){
       
         return this.boards[this.player];
-      }else if(this.boards[this.opponent].player.score>=BOARD_SIZE){
+      }else if(this.boards[this.opponent].player.score>=SCORE_LIMIT){
       
         return this.boards[this.opponent];
       }else{
