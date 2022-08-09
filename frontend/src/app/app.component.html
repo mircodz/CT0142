@@ -1,16 +1,4 @@
-<div *ngIf="logged==false && AppComponent.isShown==false">
- 
-  <app-register></app-register>
-  
-</div>
-<div *ngIf="logged==false && AppComponent.isShown==true">
+<router-outlet></router-outlet>
 
-   
-    <app-login></app-login>
-    
-</div>
-<div *ngIf="AppComponent.logged==true">
-  <app-home></app-home>
-</div>
 
 

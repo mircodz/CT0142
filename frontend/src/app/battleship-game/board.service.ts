@@ -1,6 +1,7 @@
 import { BOOL_TYPE } from '@angular/compiler/src/output/output_ast';
 import { HostListener, Injectable, OnDestroy } from '@angular/core';
 import { AppComponent } from '../app.component';
+import { HomeComponent } from '../home/home.component';
 import { Board } from './board';
 import { Cell } from './cell';
 import { Foo } from './foo';
@@ -14,11 +15,12 @@ export class BoardService implements OnDestroy {
   BOARD_SIZE: number = 10;
 
   player: string = "";
+  index_checked:string[]=[];
   boards: Foo = (JSON.parse(sessionStorage.getItem("boards")+"")!=null) ? JSON.parse(sessionStorage.getItem("boards")+"") : {};
   constructor() { }
-  createBoard(size: number = 5,player:string): BoardService{
+  createBoard(size: number = 10,player:string): BoardService{
     let tiles:Cell[][] = [];
-    let ships:number[]=[2,2,2,2,2,3,3,3,4,4,5];
+    let ships:number[]=[5,4,4,3,3,3,2,2,2,2,2];
     for(let i = 0;i<size;i++){
       tiles[i]=[];
       for(let j=0;j<size;j++){
@@ -40,28 +42,71 @@ export class BoardService implements OnDestroy {
   randomShips(tiles: Cell[][], len:number,ship:number): Cell[][]{
 		len = len -1;
 		let ranRow:number = this.getRandomInt(0, len), ranCol:number = this.getRandomInt(0, len);
-		if(tiles[ranRow][ranCol].value == "X"){
-			return this.randomShips(tiles, len,ship);
-		}else{
-			tiles[ranRow][ranCol].value = "X";
+    if(this.index_checked.length>=99){
+      
+      return tiles;
+    }
+    while(this.index_checked.includes(ranRow+" "+ranCol)){
+      ranRow = this.getRandomInt(0, len);
+      ranCol = this.getRandomInt(0, len);
+    }
+    
+    this.index_checked.push(ranRow+" "+ranCol);
+		if(this.canSetShip(ship,tiles,ranRow,ranCol)==-1){
+			return this.randomShips(tiles, len+1,ship);
+		}else if (this.canSetShip(ship,tiles,ranRow,ranCol)==0){
+    
+      let i=0;
+			while(i<ship){
+        tiles[ranRow+i][ranCol].value = "X";
+        i++;
+      }
+     
+      
+    
+      
 			return tiles;
-		}
+		}else if (this.canSetShip(ship,tiles,ranRow,ranCol)==1){
+      let i=0;
+			while(i<ship){
+        tiles[ranRow][ranCol+i].value = "X";
+        i++;
+      }
+      
+			return tiles;
+		}else{
+      if(this.getRandomInt(0,1)){
+        let i=0;
+			  while(i<ship){
+          tiles[ranRow][ranCol+i].value = "X";
+          i++;
+        }
+      }else{
+        let i=0;
+			  while(i<ship){
+          tiles[ranRow+i][ranCol].value = "X";
+          i++;
+        }
+      }
+    
+      return tiles;
+    }
 	}
   canSetShip(x:number,tiles: Cell[][],r:number,c:number):number{
-    
-    if(r+x-1<=this.BOARD_SIZE || c+x-1<=this.BOARD_SIZE){
+   
+    if(r+x-1<this.BOARD_SIZE || c+x-1<this.BOARD_SIZE){
       let i=0;
-      if(r+x-1<=this.BOARD_SIZE && c+x-1>this.BOARD_SIZE){
-        while(i<x-1){
-          if(tiles[r+i][c].value == "X"){
+      if(r+x-1<this.BOARD_SIZE && c+x-1>=this.BOARD_SIZE){
+        while(i<x){
+          if(tiles[r+i][c].value == "X" || !this.checkIndex(r+i,c,tiles)){
             return -1;
           }
           i++;
         }
         return 0;
-      }else if(r+x-1>this.BOARD_SIZE && c+x-1<=this.BOARD_SIZE){
-        while(i<x-1){
-          if(tiles[r][c+i].value == "X"){
+      }else if(r+x-1>=this.BOARD_SIZE && c+x-1<this.BOARD_SIZE){
+        while(i<x){
+          if(tiles[r][c+i].value == "X" || !this.checkIndex(r,c+i,tiles)){
            return -1;
           }
          i++;
@@ -70,15 +115,15 @@ export class BoardService implements OnDestroy {
       }else{
         let flag1=false;
         let flag2=false;
-        while(i<x-1){
-          if(tiles[r+i][c].value == "X"){
+        while(i<x){
+          if(tiles[r+i][c].value == "X" || !this.checkIndex(r+i,c,tiles)){
            flag1=true;
           }
          i++;
         }
         i=0;
-        while(i<x-1){
-          if(tiles[r+i][c+i].value == "X"){
+        while(i<x){
+          if(tiles[r][c+i].value == "X"|| !this.checkIndex(r,c+i,tiles)){
            flag2=true;
           }
          i++;
@@ -97,9 +142,72 @@ export class BoardService implements OnDestroy {
       return -1;
     }
   }
+  checkIndex(r:number,c:number,tiles: Cell[][]){
+    
+    if(r==0 || c==0){
+      
+      if(r==0 && c!=0 && c<this.BOARD_SIZE-1){
+        if((tiles[r+1][c].value!='X') && (tiles[r][c+1].value!='X') && (tiles[r][c-1].value!='X') && (tiles[r+1][c-1].value!='X')&& (tiles[r+1][c+1].value!='X')){
+          return true;
+        }else{
+          return false;
+        }
+      }else if(c==0 && r!=0 && r<this.BOARD_SIZE-1){
+        if((tiles[r+1][c].value!='X') && (tiles[r][c+1].value!='X') && (tiles[r-1][c].value!='X') && (tiles[r-1][c+1].value!='X')&& (tiles[r+1][c+1].value!='X')){
+          return true;
+        }else{
+          return false;
+        }
+      }else if(c==0 && r==this.BOARD_SIZE-1){
+        if((tiles[r][c+1].value!='X') && (tiles[r-1][c].value!='X') && (tiles[r-1][c+1].value!='X')){
+          return true;
+        }else{
+          return false;
+        }
+      }else if(r==0 && c==this.BOARD_SIZE-1){
+        if((tiles[r+1][c].value!='X') && (tiles[r][c-1].value!='X') && (tiles[r+1][c-1].value!='X')){
+          return true;
+        }else{
+          return false;
+        }
+      }else{
+        
+        if((tiles[r+1][c].value!='X') && (tiles[r][c+1].value!='X') && (tiles[r+1][c+1].value!='X')){
+          return true;
+        }else{
+          return false;
+        }
+      }
+    }else if(r==this.BOARD_SIZE-1 && c<this.BOARD_SIZE-1){
+      if((tiles[r-1][c].value!='X') && (tiles[r][c-1].value!='X') && (tiles[r-1][c-1].value!='X')&& (tiles[r-1][c+1].value!='X')&& (tiles[r][c+1].value!='X')){
+        return true;
+      }else{
+        return false;
+      }
+    }else if(c==this.BOARD_SIZE-1 && r<this.BOARD_SIZE-1){
+      if((tiles[r-1][c].value!='X') && (tiles[r][c-1].value!='X') && (tiles[r-1][c-1].value!='X')&& (tiles[r+1][c-1].value!='X')&& (tiles[r+1][c].value!='X')){
+        return true;
+      }else{
+        return false;
+      }
+    }else if(r==this.BOARD_SIZE-1 && c==this.BOARD_SIZE-1){ 
+      if((tiles[r-1][c].value!='X') && (tiles[r][c-1].value!='X') && (tiles[r-1][c-1].value!='X')){   
+        return true;
+      }else{
+        return false;
+      }
+    }else{
+      if((tiles[r+1][c].value!='X') && (tiles[r][c+1].value!='X') && (tiles[r][c-1].value!='X') && (tiles[r+1][c-1].value!='X')&& (tiles[r+1][c+1].value!='X')&& (tiles[r-1][c-1].value!='X')&& (tiles[r-1][c].value!='X')&& (tiles[r-1][c+1].value!='X')){
+        return true;
+      }else{
+        return false;
+      }
+    }
+  }
 	getRandomInt(min:number, max:number){
 		return Math.floor(Math.random()*(max-min +1))+min;
 	}
+  
 	getBoards(): Foo{
 		return this.boards;
 	}
@@ -109,7 +217,7 @@ export class BoardService implements OnDestroy {
     Object.keys(this.boards).forEach((x)=>
       delete this.boards[x]
     );
-    
+    this.index_checked=[];
     
   }
 }

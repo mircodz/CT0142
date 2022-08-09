@@ -1,0 +1,20 @@
+<h1>Online players</h1>
+    <div *ngFor="let x of usersNotFriends">
+    
+        <a (click)="sendFriendsRequest(x)"> {{x}}</a> 
+    
+    </div>
+    <h1>Friends list</h1>
+    <div *ngFor="let x of friends">
+    
+    {{x.username}}
+
+    </div>
+    <div>
+    <h1>Online friends</h1>
+    <div *ngFor="let x of friendsOnline">
+    
+        <a (click)="sendMatchRequest(x)"> {{x}}</a> 
+    
+    </div>
+    </div>

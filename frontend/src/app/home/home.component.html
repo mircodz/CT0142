@@ -3,66 +3,16 @@
     <div class="container-fluid">
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a (click)="showHome()">Home</a></li>
-        <li class="breadcrumb-item"><a (click)="showGame()">Game</a></li>
+        <li class="breadcrumb-item"><a  routerLink="/home/main" routerLinkActive="activebutton" ariaCurrentWhenActive="page">Home</a></li>
+        <li class="breadcrumb-item"><a  routerLink="/home/game" routerLinkActive="activebutton" ariaCurrentWhenActive="page">Game</a></li>
         <li class="breadcrumb-item active" aria-current="page">
-            <a (click)="showFriends()">Friends</a>
+            <a  routerLink="/home/friends" routerLinkActive="activebutton" ariaCurrentWhenActive="page">Friends</a>
         </li>
         <li class="breadcrumb-item"><a (click)="logout()">Logout</a></li>
         </ol>
     </nav>
     </div>
 </nav>
-<div *ngIf="isGame==true">
-    <button (click)="setVisitor()">Visitor</button>
-    <button (click)="setGamer()">Gamer</button>
-    <div  *ngIf="HomeComponent.isVisitor==false">
-    <app-battleship-game></app-battleship-game>
-    </div>
-    <div  *ngIf="HomeComponent.isVisitor==true">
-    <div *ngFor="let x of matches; let i=index">
-    
-        <a (click)="watchMatch(i)"> {{x.id}}</a> 
-        <div  *ngIf="HomeComponent.gameAsVisitor==true">
-        <app-battleship-game></app-battleship-game>
-        </div>
-    </div>
-    </div>
-</div>
-<div *ngIf="isFriends==true">
-    <h1>Online players</h1>
-    <div *ngFor="let x of usersNotFriends">
-    
-        <a (click)="sendFriendsRequest(x)"> {{x}}</a> 
-    
-    </div>
-    <h1>Friends list</h1>
-    <div *ngFor="let x of friends">
-    
-    {{x.username}}
-
-    </div>
-    <div>
-    <h1>Online friends</h1>
-    <div *ngFor="let x of friendsOnline">
-    
-        <a (click)="sendMatchRequest(x)"> {{x}}</a> 
-    
-    </div>
-    </div>
-</div>
-
-<div *ngIf="isHome==true">
-    <h1>Historical matches</h1>
-    <div *ngFor="let x of historical">
-    <div>
-        {{x.player1}} : {{x.score1}}
-        {{x.player2}} : {{x.score2}}
-    </div>
-        
-    
-    </div>
-    
-</div>
+<router-outlet></router-outlet>
   
  

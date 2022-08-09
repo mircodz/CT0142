@@ -1,5 +1,10 @@
 
-<div class="section">
+  <div *ngFor="let x of matches; let i=index">
+  
+      <a (click)="watchMatch(i)"> {{x.id}}</a> 
+  </div>
+
+<div *ngIf="HomeComponent.gameAsVisitor==true" class="section">
     <div class="container">
       <div class="content">
         <h1 class="title">Ready to sink some battleships?</h1>
@@ -36,28 +41,14 @@
               </td>
             </tr>
           </table>
+          <span class="tag is-warning" *ngIf="players==2 && boards[board].player.name==this.whoPlay">{{this.whoPlay}} turn!</span>
         </div>
       </div>
   
       <div class="has-text-centered">
-        <span class="tag is-warning" *ngIf="canPlay && players==2">Your turn!</span>
-        <span class="tag is-danger" *ngIf="!canPlay && players==2">Other player's turn.</span>
         <h5 class="title"><small>{{ players }} player(s) in game</small></h5>
       </div>
-      <div *ngIf="players==2">
-        <div class="tile">
-          <!-- The magical tile element! -->
-          <div *ngFor="let x of messages" class="block">
-            <p>{{x.from}} : {{x.message}}</p>
-            <br>
-          </div>
-          <br>
-          <div class="block">
-            <form [formGroup]="msgForm" (ngSubmit)="sendMessage()">
-          <input name="msg" class="input" type="text" formControlName="msg" placeholder="Text input">
-          <button type="submit" class="btn btn-default pull-right">Send</button> 
-          </form>
-          </div>                   
-        </div>
-      </div>
- 
+  
+    </div>
+  </div>
+  </div>

@@ -16,7 +16,13 @@ import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { HomeComponent } from './home/home.component';
 import { ConfirmationDialogComponent } from './confirmation-dialog/confirmation-dialog.component';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
-
+import { WatchGameComponent } from './watch-game/watch-game.component';
+import { ModeratorComponent } from './moderator/moderator.component';
+import { FriendsComponent } from './friends/friends.component';
+import { RouterModule } from '@angular/router';
+import { HashLocationStrategy, LocationStrategy } from '@angular/common';
+import { GameComponent } from './game/game.component';
+import { MainComponent } from './main/main.component';
 const config: SocketIoConfig = {
 	url: 'http://localhost:6969',// socket server url;
 	options: {}
@@ -30,7 +36,12 @@ const config: SocketIoConfig = {
     LoginComponent,
     RegisterComponent,
     HomeComponent,
-    ConfirmationDialogComponent
+    ConfirmationDialogComponent,
+    WatchGameComponent,
+    ModeratorComponent,
+    FriendsComponent,
+    GameComponent,
+    MainComponent
   ],
   imports: [
     BrowserModule,
@@ -44,7 +55,7 @@ const config: SocketIoConfig = {
     ReactiveFormsModule,
     NgbModule
   ],
-  providers: [],
+  providers: [{provide: LocationStrategy, useClass: HashLocationStrategy}],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

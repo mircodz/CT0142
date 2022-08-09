@@ -13,6 +13,13 @@ import { Foo } from './foo';
 import { AppService } from '../app.service';
 import { Subscription } from 'rxjs';
 import { HomeComponent } from '../home/home.component';
+import { ChatService } from '../chat.service';
+import { faPaperPlane } from '@fortawesome/free-solid-svg-icons';
+import { FormControl, FormGroup, Validators } from '@angular/forms';
+import { json } from 'express';
+import { JsonPipe } from '@angular/common';
+import { SubscriptionsService } from './subscriptions.service';
+import { LoginComponent } from '../login/login.component';
 
 
 // set game constants
@@ -29,96 +36,69 @@ const SCORE_LIMIT: number = 32;
 
 
 export class BattleshipGameComponent implements OnInit,OnDestroy {
-  canPlay: boolean = true;
-  player: any = (sessionStorage.getItem("player")) ? sessionStorage.getItem("player"):  HomeComponent.username;
-  subscriptions: Subscription[]=[];
+  msgForm = new FormGroup({
+    msg: new FormControl('', Validators.required),
+  });
+  canPlay: boolean = (sessionStorage.getItem("canPlay")!=null) ? LoginComponent.getBoolean(sessionStorage.getItem("canPlay")) : true;
+  connected:boolean=(sessionStorage.getItem("connected")!=null) ? LoginComponent.getBoolean(sessionStorage.getItem("connected")) : false;
+  player: any = HomeComponent.username;
   opponent:any =(sessionStorage.getItem("opponent")) ? sessionStorage.getItem("opponent") : "";
-  whoPlay:any=(sessionStorage.getItem("whoPlay")) ? sessionStorage.getItem("whoPlay"): "";
   players: number =(sessionStorage.getItem("players"))? Number.parseInt(sessionStorage.getItem("players")+""):  0;
   gameUrl: string = location.protocol + '//' + location.hostname + (location.port ? ':' + location.port: '');
-  constructor(private socket: WebsocketService,private boardService: BoardService,private toastr: ToastrService,private appService:AppService){
-    if(HomeComponent.isVisitor==false){
+  messages:any[]=[];
+  faPaper = faPaperPlane;
+  constructor(private socket: WebsocketService,private boardService: BoardService,private toastr: ToastrService,private appService:AppService,private chatService:ChatService){
+    if(!this.connected){
       this.createBoards(HomeComponent.username);
-    }else{
-      this.socket.disconnect({username:HomeComponent.username,gameId:HomeComponent.gameId,visitor:HomeComponent.isVisitor});
     }
-    this.initConnection();
-    
   }
   get BattleshipGameComponent(){
     return BattleshipGameComponent;
   }
   initConnection(): BattleshipGameComponent {
-    console.log(HomeComponent.isVisitor)
-    if(HomeComponent.isVisitor==false){
-      this.socket.joinMember();
-      this.socket.sendBoard({board:this.boards[HomeComponent.username],username:HomeComponent.username});
-      this.subscriptions.push(
-        this.socket.listenMembers().subscribe((data:any)=>{
-          
-          if(data.members<this.players){
-            this.boards[this.player].player.score=SCORE_LIMIT;
-          }else{
-            this.players=data.members;
-            sessionStorage.setItem("players",this.players+"");
-          }
-          HomeComponent.gameId=data.gameId;
-          console.log("QUESTO e' IL MIO ID DI GIOCO "+data.gameId);
-          sessionStorage.setItem("gameId",data.gameId+"");
-          
-        })
-      );
-      this.subscriptions.push(
-        this.socket.getBoard().subscribe((data:any)=>{
-          this.boards[data.username]=data.board;
-          sessionStorage.setItem("boards",JSON.stringify(this.boards));
-          this.opponent=data.username;
-          sessionStorage.setItem("opponent",data.username);
-          this.canPlay = data.canPlay;
-          sessionStorage.setItem("canPlay",data.canPlay);
-        })
-      );
-      
+    console.log("Stampa la sessione del gioco : ");
+    console.log(JSON.parse(sessionStorage.getItem("boards")+""));
+    this.socket.joinMember();
+    this.socket.sendBoard({board:this.boards[HomeComponent.username],username:HomeComponent.username});
+  
+    SubscriptionsService.subscriptions.push(
+      this.socket.listenMembers().subscribe((data:any)=>{
+        
+        if(data.members<this.players){
+          this.boards[this.player].player.score=SCORE_LIMIT;
+        }else{
+          this.players=data.members;
+          sessionStorage.setItem("players",this.players+"");
+        }
+        HomeComponent.gameId=data.gameId;
+        sessionStorage.setItem("gameId",data.gameId+"");
+        
+      })
+    );
+    SubscriptionsService.subscriptions.push(
+      this.socket.getBoard().subscribe((data:any)=>{
+        console.log("Ricevuta la board di "+data.username+" "+data.board)
+        this.boards[data.username]=data.board;
+        sessionStorage.setItem("boards",JSON.stringify(this.boards));
+        this.opponent=data.username;
+        sessionStorage.setItem("opponent",data.username);
+        this.canPlay = data.canPlay;
+        sessionStorage.setItem("canPlay",data.canPlay);
+      })
+    );
+    SubscriptionsService.subscriptions.push(
+      this.chatService.listenMessage().subscribe((data:any)=>{
+        this.messages.push(data);
+      })
+    );
+  
+    SubscriptionsService.subscriptions.push(
+      this.socket.listeQuit().subscribe((data:any)=>{
+  
+        this.ngOnDestroy();
+      })
+    );
     
-      this.subscriptions.push(
-        this.socket.listeQuit().subscribe((data:any)=>{
-          this.ngOnDestroy();
-        })
-      );
-    }else{
-      this.subscriptions.push(
-        this.appService.getMatchId(HomeComponent.token,{id:HomeComponent.gameId}).pipe().subscribe((data:any)=>{
-      
-          let chiavi=Object.keys(data.match.boards);
-          this.player=chiavi[0];
-          sessionStorage.setItem("player",chiavi[0]);
-          this.opponent=chiavi[1];
-          sessionStorage.setItem("opponent",chiavi[1]);
-          this.boards[chiavi[0]]=data.match.boards[chiavi[0]];
-          this.boards[chiavi[1]]=data.match.boards[chiavi[1]];
-          sessionStorage.setItem("boards",JSON.stringify(data.match.boards));
-          this.players=2;
-          sessionStorage.setItem("players",2+"");
-          this.whoPlay = data.match.whoPlay;
-          sessionStorage.setItem("whoPlay",this.whoPlay);
-        })
-      );
-      this.subscriptions.push(
-        this.socket.getBoards().subscribe((data:any)=>{
-          
-          let chiavi=Object.keys(data.boards);
-          
-          this.boards[chiavi[0]]=data.boards[chiavi[0]];
-          this.boards[chiavi[1]]=data.boards[chiavi[1]];
-          sessionStorage.setItem("boards",JSON.stringify(this.boards));
-          this.whoPlay = data.whoPlay;
-          sessionStorage.setItem("whoPlay",this.whoPlay);
-          console.log("AGGIORNAMENTI PARTIA "+this.boards[chiavi[0]].player.score+" "+this.boards[chiavi[0]].player.score+"\n")
-
-        })
-      );
-      
-    }
     
     
     return this;
@@ -134,7 +114,6 @@ export class BattleshipGameComponent implements OnInit,OnDestroy {
     
     let id = e.target.id.split(";"),
       boardId = id[0];
-      console.log(boardId)
       let row = Number.parseInt(id[1]), col = Number.parseInt(id[2]),
       tile = this.boards[boardId].tiles[row][col];
     
@@ -174,10 +153,6 @@ export class BattleshipGameComponent implements OnInit,OnDestroy {
       this.toastr.error("Don't waste your torpedos.", "You already shot here.");
       return false;
     }
-    if(HomeComponent.isVisitor == true) {
-      this.toastr.error("You can't play!", "You are only a visitor.");
-      return false;
-    }
     return true;
   }
 
@@ -209,24 +184,24 @@ export class BattleshipGameComponent implements OnInit,OnDestroy {
   }
 
   ngOnInit():void{
-    if(HomeComponent.isVisitor==false){
-    this.socket.connection({username:HomeComponent.username,visitor:HomeComponent.isVisitor,gameId:HomeComponent.gameId});
-    this.subscriptions.push(
-      this.socket.listenMoves().subscribe((data:any)=>{
-        this.canPlay = data.canPlay;
+    this.initConnection();
+    if(!this.connected){
+      this.socket.connection({username:HomeComponent.username,visitor:false,gameId:HomeComponent.gameId});
+      this.connected=true;
+      sessionStorage.setItem("connected",this.connected+"");
+    
+    }
+      
+      SubscriptionsService.subscriptions.push(
+        this.socket.listenMoves().subscribe((data:any)=>{
+          this.canPlay = data.canPlay;
         this.boards[this.player] = data.boards[this.player];
         this.boards[this.opponent] = data.boards[this.opponent];
-   
-        //this.boards[this.opponent].player.score=data.score;
         sessionStorage.setItem("canPlay",this.canPlay+"");
-        sessionStorage.setItem("boards",JSON.stringify(this.boards));
-        
-        
+        sessionStorage.setItem("boards",JSON.stringify(this.boards));  
+       
       })
     );
-  }
-    
-    
     
     
   }
@@ -239,20 +214,21 @@ export class BattleshipGameComponent implements OnInit,OnDestroy {
     console.log('Items destroyed');
     this.canPlay = true;
     this.player = "";
-    this.subscriptions=[]
     this.opponent ="";
-    this.whoPlay="";
-    this.players = 0;
+    this.players = 1;
+    this.connected=false;
+    this.messages=[];
+    SubscriptionsService.dispose();
     this.boardService.ngOnDestroy();
-    this.dispose();
     this.createBoards(HomeComponent.username);
-    this.initConnection();
-    this.ngOnInit();
     
   }
-  dispose(){
-    this.subscriptions.forEach(subscription =>subscription.unsubscribe());
+  sendMessage(){
+    
+    this.chatService.sendMessage(this.msgForm.get("msg")?.value,this.player,this.opponent,HomeComponent.gameId);
+    this.msgForm.reset();
   }
+  
   
 
 }

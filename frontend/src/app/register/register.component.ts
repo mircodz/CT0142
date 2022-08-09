@@ -3,6 +3,7 @@ import { FormGroup, FormControl, Validators } from '@angular/forms';
 import { AppComponent } from '../app.component';
 import { faUser, faKey, faEnvelope } from '@fortawesome/free-solid-svg-icons';
 import { AppService } from '../app.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-register',
@@ -21,7 +22,7 @@ export class RegisterComponent implements OnInit {
   faKey = faKey;
   faEnvelope = faEnvelope;
 
-  constructor(private appService:AppService) { }
+  constructor(private appService:AppService,private route:Router) { }
 
   ngOnInit(): void {
   }
@@ -29,12 +30,10 @@ export class RegisterComponent implements OnInit {
   onSubmit(): void {
     if(this.registerForm.get("username")?.value != "" && this.registerForm.get("name")?.value != "" && this.registerForm.get("email")?.value != "" && this.registerForm.get("password")?.value != ""){
       this.appService.register({name:this.registerForm.get("name")?.value,username:this.registerForm.get("username")?.value,email:this.registerForm.get("email")?.value,password:this.registerForm.get("password")?.value}).pipe().subscribe(
-        () => this.toggleShow()
+        ()=>this.route.navigate(['/','login'])
       );
     }
   }
-  toggleShow(){
-    AppComponent.toggleShow();
-  }
+  
 
 }

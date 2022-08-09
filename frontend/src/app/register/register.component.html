@@ -42,7 +42,9 @@
                         </div>
                         <div class="field">
                             <button type="submit"  class="button is-success">Login</button>
-                            <a (click)="toggleShow()"><small>Already a member?</small></a>
+                            <a  routerLink="/login"
+                            routerLinkActive="activebutton"
+                            ariaCurrentWhenActive="page"><small>Already a member?</small></a>
                         </div>
                     </form>
                 </div>

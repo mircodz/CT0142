@@ -8,7 +8,13 @@ import { Socket } from 'ngx-socket-io';
 export class ChatService {
   constructor(private socket: Socket) { }
 
-  sendMessage(msg: string) {
-    this.socket.emit('message', msg);
+  sendMessage(msg: string,from:string,to:string,gameId:any) {
+    this.socket.emit('message', {message: msg,from:from,to:to,gameId:gameId});
+  }
+  listenMessage(){
+    return this.socket.fromEvent("message");
+  }
+  sendMessagetoBroadcast(msg: string,from:string,id_game:any) {
+    this.socket.emit('messageBroadcast', {message: msg,from:from,gameId:id_game});
   }
 }

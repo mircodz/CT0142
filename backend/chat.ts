@@ -5,13 +5,13 @@ const elasticConfig = require('config').get('elastic');
 // TODO retries
 class ChatClient {
     client: any
-    from: number
+    from: string
 
-    constructor(from: number) {
+    constructor(from: string) {
         this.from = from;
     }
 
-    put(text: String, to: number) {
+    put(text: String, to: string) {
         this.client.index({
             index: elasticConfig.chat_index_name,
             body: {
@@ -22,7 +22,7 @@ class ChatClient {
         });
     }
 
-    get(to: number) {
+    get(to: string) {
         return this.client.search({
             index: elasticConfig.chat_index_name,
             body: {

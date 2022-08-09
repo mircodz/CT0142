@@ -102,7 +102,7 @@ app.post('/signin', (req, res) => {
     console.log(sub)
     if (sub) {
       const token = jwt.sign({ username: username,  role: user.role }, secret);
-      res.status(200).json({ token });
+      res.status(200).json({ token,sub });
   
   
     } else {
@@ -199,6 +199,59 @@ app.post('/matchId', authenticateJWT, (req, res) => {
   res.json({match:matches[id]});
   
 });
+app.post('/firstLogin', authenticateJWT, (req, res) => {
+  const { username, password } = req.body;
+  const hashed = crypto2
+    .createHash("sha256")
+    .update(password)
+    .digest("hex");
+    const user = User.updateOne({ username:username},{$set:{password:hashed,isFirstLogin:false}},function(err,sub){
+        console.log("PASSWORD AGGIORNATA!")
+    })
+    res.status(200).json({message: "ok"});
+  
+  
+});
+
+app.post('/deleteUser', authenticateJWT, (req, res) => {
+  const { moderator, username } = req.body;
+  User.findOne({username:moderator},function(sub){
+    if(sub.isModerator){
+      User.deleteOne({username:username});
+      res.status(200).json({message: "ok"});
+    }else{
+      res.status(400).json({message:"Non sei il moderatore!"});
+    }
+  });
+    
+  
+  
+});
+
+app.post('/addModeator', authenticateJWT, (req, res) => {
+  const { moderator, username,password } = req.body;
+  User.findOne({username:moderator},async function(sub){
+    if(sub.isModerator){
+      const hashed = crypto2
+      .createHash("sha256")
+      .update(password)
+      .digest("hex");
+      const r = await new User({
+        username,
+        password: hashed,
+        isModerator: true,
+        isFirstLogin:true
+      }).save();
+      res.status(200).json({message: "ok"});
+    }else{
+      res.status(400).json({message:"Non sei il moderatore!"});
+    }
+  });
+    
+  
+  
+});
+
 app.get('/matches', authenticateJWT, (req, res) => {
   if(matches){
     res.status(200).json({matches});
@@ -305,9 +358,11 @@ io.on('connection', (socket) => {
   
 
     
-  socket.on('message', arg => {
+  socket.on('message', data => {
      // logger2.error({ message: 'message received', labels: { 'key': 'value' } })
-      console.log(arg);
+    
+    io.to(matches[data.gameId].id).emit("message",data);
+    
   })
 
   socket.on('disconnect', () => {
@@ -317,7 +372,7 @@ io.on('connection', (socket) => {
   socket.on('quitGame', async (data) => {
     //logger2.error({ message: 'user disconnected', labels: { 'key': 'value' } })
     console.log("Partita numero "+data.gameId);
-    if(data.gameId!=undefined && data.gameId>=0 && matches[data.gameId].members>0){
+    if(data.gameId!=undefined && data.gameId>=0 && matches[data.gameId].members>0 && matches[data.gameId].players.includes(data.username)){
       if(matches[data.gameId].boards[matches[data.gameId].players[0]].player.score>=BOARD_SIZE || matches[data.gameId].boards[matches[data.gameId].players[1]].player.score>=BOARD_SIZE){
 
       }else{ 
@@ -332,14 +387,21 @@ io.on('connection', (socket) => {
         player2: matches[data.gameId].players[1],
         score1: matches[data.gameId].boards[matches[data.gameId].players[0]].player.score,
         score2: matches[data.gameId].boards[matches[data.gameId].players[1]].player.score,
-        winner: max(data.gameId)
+        winner: matches[data.gameId].players[max(data.gameId)]
       }).save();
-     
+      User.updateOne({username:matches[data.gameId].players[max(data.gameId)]},{$inc:{matches:1,wins:1}},function(err,res){
+        console.log("Giocatore aggiornato!")
+      });
+      User.updateOne({username:matches[data.gameId].players[min(data.gameId)]},{$inc:{matches:1,looses:1}},function(err,res){
+        console.log("Giocatore aggiornato!")
+      });
       console.log("CANCELLATO IL GAME");
       j=data.gameId;
       console.log("UN GIOCATORE HA QUITATO");
       io.to(users[data.username]).emit("quitGame");
+
       matches[data.gameId]=new match();
+      matches[data.gameId].id=makeid(20);
       console.log("L'utente si è disconnesso");
     }
     
@@ -362,7 +424,7 @@ charactersLength));
  return result;
 }
 app.get('/chat', async (req, res) => {
-    const { ChatClient } = require('./chat');
+  const { ChatClient } = require('./chat');
     let c = new ChatClient(1)
     c.put('Hello, World!', 3)
     await c.get(3)
@@ -372,9 +434,16 @@ app.get('/chat', async (req, res) => {
 
 function max(id){
   if(matches[id].boards[matches[id].players[0]].player.score>matches[id].boards[matches[id].players[1]].player.score){
-    return matches[id].players[0];
+    return 0;
   }else{
-    return matches[id].players[1];
+    return 1;
+  }
+}
+function min(id){
+  if(matches[id].boards[matches[id].players[0]].player.score<=matches[id].boards[matches[id].players[1]].player.score){
+    return 0;
+  }else{
+    return 1;
   }
 }
 

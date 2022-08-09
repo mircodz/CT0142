@@ -1,6 +1,7 @@
 import { ResourceLoader } from '@angular/compiler';
 import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { faL } from '@fortawesome/free-solid-svg-icons';
 import { Socket } from 'ngx-socket-io';
 import { ToastrService } from 'ngx-toastr';
@@ -22,12 +23,13 @@ import { WebsocketService } from './websocket.service';
 export class AppComponent implements OnInit {
   
   static logged:boolean= AppComponent.getBoolean(sessionStorage.getItem("logged")) || false;
-  static isShown: boolean=false;
+  static isModerator:boolean=AppComponent.getBoolean(sessionStorage.getItem("isModerator")) || false;
+  title: any;
+  constructor(
+    private route: ActivatedRoute,
+  ) {}
   get logged() {
     return AppComponent.logged;
-  }
-  static toggleShow(){
-    AppComponent.isShown=!AppComponent.isShown;
   }
   get AppComponent(){
     return AppComponent;

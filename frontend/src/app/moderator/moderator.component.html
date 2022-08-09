@@ -1,0 +1,65 @@
+<div *ngIf="ModeratorComoponent.isFirstLogin==true" class="hero is-primary is-fullheight">
+    <div class="hero-body">
+        <div class="container">
+            <div class="columns is-centered">
+                <div class="column is-4">
+                    <form [formGroup]="moderatorForm" (ngSubmit)="onSubmit()" class="box">
+                        <div class="field">
+                            <label for="password" class="label">Update your password as your first Login</label>
+                            <div class="control has-icons-left">
+                                <input type="password" class="input" name="password" placeholder="Password" formControlName="password" ngModel required>
+                                <span class="icon is-small is-left">
+                                    <fa-icon [icon]="faKey"></fa-icon>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <button type="submit"  class="button is-success">Update</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div *ngIf="ModeratorComoponent.isFirstLogin==false">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container-fluid">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a>Home</a></li>
+            <li class="breadcrumb-item"><a (click)="logout()">Logout</a></li>
+            </ol>
+        </nav>
+        </div>
+    </nav>
+    <div class="container">
+        <div class="columns is-centered">
+            <div class="column is-4">
+                <form [formGroup]="addModeratorForm" (ngSubmit)="onSubmitAddModerator()" class="box">
+                    <div class="field">
+                        <label for="username" class="label">Username</label>
+                        <div class="control has-icons-left">
+                            <input type="text" class="input" name="username" placeholder="Username" formControlName="username" ngModel required>
+                            <span class="icon is-small is-left">
+                                <fa-icon [icon]="faUser"></fa-icon>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label for="password" class="label">Password</label>
+                        <div class="control has-icons-left">
+                            <input type="password" class="input" name="password" placeholder="Password" formControlName="password" ngModel required>
+                            <span class="icon is-small is-left">
+                                <fa-icon [icon]="faKey"></fa-icon>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <button type="submit"  class="button is-success">Add moderator</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

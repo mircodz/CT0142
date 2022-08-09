@@ -26,7 +26,7 @@ export class AppService {
     return this.http.post("http://localhost:6969/addFriends",user,httpOptions);
   }
   friends(jwt:any,user:any){
-    console.log(jwt)
+
     const httpOptions = {
       headers: new HttpHeaders({
         authorization: 'Bearer ' + jwt,
@@ -43,11 +43,13 @@ export class AppService {
         'cache-control': 'no-cache',
         'Content-Type':  'application/json'})
     };
-    console.log("IL TOKEN: "+jwt)
     return this.http.get("http://localhost:6969/allUsers",httpOptions);
   }
   getFoo(){
     return this.http.get("http://localhost:6969/foo");
+  }
+  getChat(){
+    return this.http.get("http://localhost:6969/chat");
   }
   getMatches(jwt:any){
     const httpOptions = {
@@ -77,7 +79,6 @@ export class AppService {
     return this.http.post("http://localhost:6969/getHistoricalMatches",data,httpOptions);
   }
   logout(jwt:any,data:any){
-    console.log("FACCIO IL LOGOUT "+jwt)
     const httpOptions = {
       headers: new HttpHeaders({
         authorization: 'Bearer ' + jwt,
@@ -85,5 +86,32 @@ export class AppService {
         'Content-Type':  'application/json'})
     };
     return this.http.post("http://localhost:6969/logout",data,httpOptions);
+  }
+  firstlogin(jwt:any,data:any){
+    const httpOptions = {
+      headers: new HttpHeaders({
+        authorization: 'Bearer ' + jwt,
+        'cache-control': 'no-cache',
+        'Content-Type':  'application/json'})
+    };
+    return this.http.post("http://localhost:6969/firstLogin",data,httpOptions);
+  }
+  deleteUser(jwt:any,data:any){
+    const httpOptions = {
+      headers: new HttpHeaders({
+        authorization: 'Bearer ' + jwt,
+        'cache-control': 'no-cache',
+        'Content-Type':  'application/json'})
+    };
+    return this.http.post("http://localhost:6969/deleteUser",data,httpOptions);
+  }
+  addModerator(jwt:any,data:any){
+    const httpOptions = {
+      headers: new HttpHeaders({
+        authorization: 'Bearer ' + jwt,
+        'cache-control': 'no-cache',
+        'Content-Type':  'application/json'})
+    };
+    return this.http.post("http://localhost:6969/addModerator",data,httpOptions);
   }
 }
