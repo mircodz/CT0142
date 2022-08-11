@@ -12,6 +12,7 @@ import { BattleshipGameComponent } from './battleship-game/battleship-game.compo
 import { BoardService } from './battleship-game/board.service';
 
 import { ChatService } from './chat.service';
+import { HomeComponent } from './home/home.component';
 import { LoginComponent } from './login/login.component';
 import { WebsocketService } from './websocket.service';
 
@@ -26,7 +27,7 @@ export class AppComponent implements OnInit {
   static isModerator:boolean=AppComponent.getBoolean(sessionStorage.getItem("isModerator")) || false;
   title: any;
   constructor(
-    private route: ActivatedRoute,
+    private route: ActivatedRoute,private socket:WebsocketService
   ) {}
   get logged() {
     return AppComponent.logged;
@@ -35,7 +36,9 @@ export class AppComponent implements OnInit {
     return AppComponent;
   }
   ngOnInit(): void {
-    
+    if(this.logged==true){
+      this.socket.login({username:HomeComponent.username});
+    }
   }
   static getBoolean(value:any){
     switch(value){

@@ -291,11 +291,13 @@ io.on('connection', (socket) => {
   
   //logger.error({ message: 'user connected', labels: { 'key': 'value' } })
   socket.on('Move', function (data) {
-    console.log("Mossa inviata "+data.gameId+" "+data.canPlay+" "+data.board)
+    
+    console.log("Mossa inviata "+data.gameId+" "+data.canPlay+" "+data.opponent)
+    console.log("socket id di "+data.opponent+" "+users[data.opponent]+" "+socket.id)
     matches[data.gameId].boards=data.boards;
     matches[data.gameId].whoPlay=data.opponent;
-    socket.to(matches[data.gameId].id).emit("Move", data);
-    socket.to("visitors"+matches[data.gameId].id).emit("ListenGames", matches[data.gameId])
+    io.to(users[data.opponent]).emit("Move", data);
+    io.emit("ListenGames", matches[data.gameId])
   });
   socket.on('Board', function (data) {
     matches[j].boards[data.username]=data.board;
@@ -303,6 +305,7 @@ io.on('connection', (socket) => {
     
   });
   socket.on('login',function(data){
+    console.log("BUONGIORNO :"+data.username)
     users[data.username] = socket.id;
     io.emit("updatePlayers",users);
   });

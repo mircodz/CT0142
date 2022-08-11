@@ -75,15 +75,7 @@ export class HomeComponent implements OnInit {
           }));
     
   }
-  @HostListener('unloaded')
-  ngOnDestroy() {
-    this.dispose();
-    this.subscriptions=[];
-    HomeComponent.token = "";
-    HomeComponent.gameId =undefined;
-    HomeComponent.gameAsVisitor=false;
-    AppComponent.logged=false;
-  }
+  
   
   
   logout(){
@@ -91,7 +83,8 @@ export class HomeComponent implements OnInit {
       this.appService.logout(HomeComponent.token,{username:HomeComponent.username}).pipe().subscribe(()=>{
         
         this.socket.disconnect({username:HomeComponent.username,gameId:HomeComponent.gameId});
-        this.ngOnDestroy();
+        AppComponent.logged=false;
+        sessionStorage.setItem("logged",false+"");
 
         sessionStorage.clear();
         console.log("Stampa la sessione del gioco dopo i logout : ");

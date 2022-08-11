@@ -20,6 +20,7 @@ import { json } from 'express';
 import { JsonPipe } from '@angular/common';
 import { SubscriptionsService } from './subscriptions.service';
 import { LoginComponent } from '../login/login.component';
+import { Router } from '@angular/router';
 
 
 // set game constants
@@ -47,7 +48,7 @@ export class BattleshipGameComponent implements OnInit,OnDestroy {
   gameUrl: string = location.protocol + '//' + location.hostname + (location.port ? ':' + location.port: '');
   messages:any[]=[];
   faPaper = faPaperPlane;
-  constructor(private socket: WebsocketService,private boardService: BoardService,private toastr: ToastrService,private appService:AppService,private chatService:ChatService){
+  constructor(private socket: WebsocketService,private boardService: BoardService,private toastr: ToastrService,private appService:AppService,private chatService:ChatService,private route:Router){
     if(!this.connected){
       this.createBoards(HomeComponent.username);
     }
@@ -191,7 +192,7 @@ export class BattleshipGameComponent implements OnInit,OnDestroy {
       sessionStorage.setItem("connected",this.connected+"");
     
     }
-      
+      console.log("DIOCANEEE")
       SubscriptionsService.subscriptions.push(
         this.socket.listenMoves().subscribe((data:any)=>{
           this.canPlay = data.canPlay;
@@ -199,6 +200,8 @@ export class BattleshipGameComponent implements OnInit,OnDestroy {
         this.boards[this.opponent] = data.boards[this.opponent];
         sessionStorage.setItem("canPlay",this.canPlay+"");
         sessionStorage.setItem("boards",JSON.stringify(this.boards));  
+        console.log("Ricevuta la board ");
+        console.log(data);
        
       })
     );
@@ -208,6 +211,12 @@ export class BattleshipGameComponent implements OnInit,OnDestroy {
   
   getKeys():string[]{
     return Object.keys(this.boards);
+  }
+  quitGame(){
+    this.ngOnDestroy();
+    this.socket.disconnect({username:HomeComponent.username,gameId:HomeComponent.gameId});
+    this.route.navigate(["/home/game"]);
+    console.log(AppComponent.logged)
   }
   @HostListener('unloaded')
   ngOnDestroy() {

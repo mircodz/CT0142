@@ -50,6 +50,7 @@ export class ModeratorComponent implements OnInit {
   ngOnDestroy() {
     HomeComponent.token = "";
     AppComponent.logged=false;
+    sessionStorage.setItem("logged","false");
   }
   
   

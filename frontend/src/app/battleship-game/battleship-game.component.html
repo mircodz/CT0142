@@ -10,11 +10,11 @@
         <section *ngIf="winner" class="notification is-success has-text-centered" style="color:white">
           <h1>Player {{ winner.player.name }} has won the game!</h1>
           <h5>Click <a (click)="this.ngOnDestroy();this.ngOnInit();">here</a> to start a new game.</h5>
+          <h5>Click <a (click)="quitGame()">here</a> to get back to menu.</h5>
         </section>
         <!-- shows while waiting for 2nd user to join -->
         <div *ngIf="players < 2">
           <h2>Waiting for 2nd user to join...</h2>
-          <h3 class="subtitle is-6">You can invite them with this link: {{ gameUrl }}?id={{ HomeComponent.gameId }}. You can also open <a href="{{ gameUrl }}?id={{ HomeComponent.gameId }}" target="_blank">this link</a> in a new browser, to play all by yourself.</h3>
         </div>
   
         <!-- loops through the boards array and displays the player and board tiles -->
@@ -43,6 +43,9 @@
         <span class="tag is-warning" *ngIf="canPlay && players==2">Your turn!</span>
         <span class="tag is-danger" *ngIf="!canPlay && players==2">Other player's turn.</span>
         <h5 class="title"><small>{{ players }} player(s) in game</small></h5>
+      </div>
+      <div *ngIf="players==2">
+        <button (click)="quitGame()">Quit game</button>
       </div>
       <div *ngIf="players==2">
         <div class="tile">

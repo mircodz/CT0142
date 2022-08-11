@@ -1,4 +1,5 @@
 import { Component, HostListener, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { Subscription } from 'rxjs';
 import { AppService } from '../app.service';
@@ -29,7 +30,7 @@ export class WatchGameComponent implements OnInit {
   whoPlay:any=(sessionStorage.getItem("whoPlay")) ? sessionStorage.getItem("whoPlay"): "";
   players: number =(sessionStorage.getItem("players"))? Number.parseInt(sessionStorage.getItem("players")+""):  0;
   gameUrl: string = location.protocol + '//' + location.hostname + (location.port ? ':' + location.port: '');
-  constructor(private socket: WebsocketService,private boardService: BoardService,private toastr: ToastrService,private appService:AppService){
+  constructor(private socket: WebsocketService,private boardService: BoardService,private toastr: ToastrService,private appService:AppService,private route:Router){
     
   
   }
@@ -145,6 +146,11 @@ export class WatchGameComponent implements OnInit {
       return undefined;
     }
     
+  }
+  exitGame(){
+    this.ngOnDestroy();
+    this.socket.disconnect({username:HomeComponent.username,gameId:HomeComponent.gameId});
+    this.route.navigate(["/home/game"]);
   }
 
   get boards () : Foo {
