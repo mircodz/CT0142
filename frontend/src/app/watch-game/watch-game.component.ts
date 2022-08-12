@@ -22,7 +22,7 @@ const SCORE_LIMIT: number = 32;
 })
 export class WatchGameComponent implements OnInit {
 
-  canPlay: boolean = true;
+
   player: any = (sessionStorage.getItem("player")) ? sessionStorage.getItem("player"): "";
   subscriptions: Subscription[]=[];
   matches:any= JSON.parse(sessionStorage.getItem("matches")+"");
@@ -43,16 +43,6 @@ export class WatchGameComponent implements OnInit {
     HomeComponent.gameId=x;
     sessionStorage.setItem("gameId",x);
     this.socket.connection({username:HomeComponent.username,visitor:true,gameId:HomeComponent.gameId});
-      
-    
-  }
-  initConnection(): WatchGameComponent {
-    this.subscriptions.push(
-      this.appService.getMatches(HomeComponent.token).pipe().subscribe((data:any)=>{
-        this.matches = data.matches;
-        sessionStorage.setItem("matches",JSON.stringify(this.matches));
-       })
-      );
     this.subscriptions.push(
       this.appService.getMatchId(HomeComponent.token,{id:HomeComponent.gameId}).pipe().subscribe((data:any)=>{
     
@@ -70,6 +60,17 @@ export class WatchGameComponent implements OnInit {
         sessionStorage.setItem("whoPlay",this.whoPlay);
       })
     );
+      
+    
+  }
+  initConnection(): WatchGameComponent {
+    this.subscriptions.push(
+      this.appService.getMatches(HomeComponent.token).pipe().subscribe((data:any)=>{
+        this.matches = data.matches;
+        sessionStorage.setItem("matches",JSON.stringify(this.matches));
+       })
+      );
+    
     this.subscriptions.push(
       this.socket.getBoards().subscribe((data:any)=>{
         
@@ -112,7 +113,7 @@ export class WatchGameComponent implements OnInit {
       this.toastr.info("Keep trying.", "OOPS! YOU MISSED THIS TIME");
       this.boards[boardId].tiles[row][col].status = 'fail'
     }
-    this.canPlay = false;
+    
     this.boards[boardId].tiles[row][col].used = true;
     sessionStorage.setItem("boards",JSON.stringify(this.boards));
     this.socket.emitMoves(new Move({canPlay: true,boards:this.boards,gameId:HomeComponent.gameId,opponent:this.opponent}));
@@ -167,14 +168,19 @@ export class WatchGameComponent implements OnInit {
   @HostListener('unloaded')
   ngOnDestroy() {
     console.log('Items destroyed');
-    this.canPlay = true;
     this.player = "";
     this.subscriptions=[]
     this.opponent ="";
     this.whoPlay="";
     this.players = 1;
+    HomeComponent.gameAsVisitor=false;
     this.boardService.ngOnDestroy();
     this.dispose();
+    sessionStorage.removeItem("boards");
+    sessionStorage.removeItem("players");
+    sessionStorage.removeItem("opponent");
+    sessionStorage.removeItem("player");
+    sessionStorage.removeItem("gameAsVisitor");
     
     
   }

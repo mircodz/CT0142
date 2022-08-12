@@ -29,7 +29,12 @@ export class BoardService implements OnDestroy {
       }
     }
     for (let i=0; i< ships.length;i++){
-			tiles = this.randomShips(tiles, size, ships[i]);
+			let result = this.randomShips(tiles, size, ships[i]);
+      if(this.checkIfEqual(result,tiles)){
+        return this.createBoard(10,player);
+      }else{
+        tiles=result;
+      }
 		}
     let board = new Board ({
       player: new Player({name: player}),
@@ -39,11 +44,12 @@ export class BoardService implements OnDestroy {
     sessionStorage.setItem("boards",JSON.stringify(this.boards));
     return this;
   }
-  randomShips(tiles: Cell[][], len:number,ship:number): Cell[][]{
+  randomShips(tiles2: Cell[][], len:number,ship:number): Cell[][]{
 		len = len -1;
+    let tiles = this.copyOf(tiles2);
 		let ranRow:number = this.getRandomInt(0, len), ranCol:number = this.getRandomInt(0, len);
     if(this.index_checked.length>=99){
-      
+      this.index_checked=[];
       return tiles;
     }
     while(this.index_checked.includes(ranRow+" "+ranCol)){
@@ -207,7 +213,29 @@ export class BoardService implements OnDestroy {
 	getRandomInt(min:number, max:number){
 		return Math.floor(Math.random()*(max-min +1))+min;
 	}
-  
+  checkIfEqual(tiles1:Cell[][],tiles2:Cell[][]){
+    for(let i = 0;i<this.BOARD_SIZE;i++){
+      for(let j=0;j<this.BOARD_SIZE;j++){
+        if(tiles1[i][j].value!=tiles2[i][j].value){
+            return false;
+        }
+    
+      }
+    }
+    return true;
+  }
+  copyOf(tiles1:Cell[][]){
+    let tiles2:Cell[][]=[];
+    
+    for(let i = 0;i<this.BOARD_SIZE;i++){
+      tiles2[i]=[];
+      for(let j=0;j<this.BOARD_SIZE;j++){
+        tiles2[i][j]=new Cell({value:tiles1[i][j].value,status:tiles1[i][j].status,used:tiles1[i][j].used});
+    
+      }
+    }
+    return tiles2;
+  }
 	getBoards(): Foo{
 		return this.boards;
 	}

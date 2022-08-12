@@ -4,8 +4,27 @@
             <div class="columns is-centered">
                 <div class="column is-4">
                     <form [formGroup]="moderatorForm" (ngSubmit)="onSubmit()" class="box">
+                        <label class="label">Update your credentials as your first Login</label>
                         <div class="field">
-                            <label for="password" class="label">Update your password as your first Login</label>
+                            <label for="email" class="label">Email</label>
+                            <div class="control has-icons-left">
+                                <input type="text" class="input" name="emial" placeholder="Email" formControlName="email" ngModel required>
+                                <span class="icon is-small is-left">
+                                    <fa-icon [icon]="faUser"></fa-icon>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label for="name" class="label">Name</label>
+                            <div class="control has-icons-left">
+                                <input type="text" class="input" name="name" placeholder="Name" formControlName="name" ngModel required>
+                                <span class="icon is-small is-left">
+                                    <fa-icon [icon]="faUser"></fa-icon>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label for="password" class="label">Password</label>
                             <div class="control has-icons-left">
                                 <input type="password" class="input" name="password" placeholder="Password" formControlName="password" ngModel required>
                                 <span class="icon is-small is-left">
@@ -23,43 +42,123 @@
     </div>
 </div>
 <div *ngIf="ModeratorComoponent.isFirstLogin==false">
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <div class="container-fluid">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a>Home</a></li>
-            <li class="breadcrumb-item"><a (click)="logout()">Logout</a></li>
-            </ol>
+    <nav class="breadcrumb" aria-label="breadcrumbs">
+        <ul>
+            <li>
+            <a style="text-decoration: none;"class="navbar-item" routerLink="/moderator" routerLinkActive="activebutton" ariaCurrentWhenActive="page">
+                <span class="icon is-small">
+                <i class="fas fa-home" aria-hidden="true"></i>
+                </span>
+                <span>Home</span>
+            </a>
+            </li>
+            <li>
+                <a style="text-decoration: none;" class="navbar-item" (click)="logout()">
+                    <span class="icon is-small">
+                        <i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i>
+                    </span>
+                    <span>Logout</span>
+                </a>
+                </li>
+            
+        </ul>
         </nav>
-        </div>
-    </nav>
-    <div class="container">
-        <div class="columns is-centered">
-            <div class="column is-4">
-                <form [formGroup]="addModeratorForm" (ngSubmit)="onSubmitAddModerator()" class="box">
-                    <div class="field">
-                        <label for="username" class="label">Username</label>
-                        <div class="control has-icons-left">
-                            <input type="text" class="input" name="username" placeholder="Username" formControlName="username" ngModel required>
-                            <span class="icon is-small is-left">
-                                <fa-icon [icon]="faUser"></fa-icon>
-                            </span>
+    <section class="section">
+        <div class="container">
+            <div class="columns is-centered">
+                <div class="column is-4">
+                    <form [formGroup]="addModeratorForm" (ngSubmit)="onSubmitAddModerator()" class="box">
+                        <div class="field">
+                            <label for="username" class="label">Username</label>
+                            <div class="control has-icons-left">
+                                <input type="text" class="input" name="username" placeholder="Username" formControlName="username" ngModel required>
+                                <span class="icon is-small is-left">
+                                    <fa-icon [icon]="faUser"></fa-icon>
+                                </span>
+                            </div>
                         </div>
-                    </div>
-                    <div class="field">
-                        <label for="password" class="label">Password</label>
-                        <div class="control has-icons-left">
-                            <input type="password" class="input" name="password" placeholder="Password" formControlName="password" ngModel required>
-                            <span class="icon is-small is-left">
-                                <fa-icon [icon]="faKey"></fa-icon>
-                            </span>
+                        <div class="field">
+                            <label for="password" class="label">Password</label>
+                            <div class="control has-icons-left">
+                                <input type="password" class="input" name="password" placeholder="Password" formControlName="password" ngModel required>
+                                <span class="icon is-small is-left">
+                                    <fa-icon [icon]="faKey"></fa-icon>
+                                </span>
+                            </div>
                         </div>
-                    </div>
-                    <div class="field">
-                        <button type="submit"  class="button is-success">Add moderator</button>
-                    </div>
-                </form>
+                        <div class="field">
+                            <button type="submit"  class="button is-success">Add moderator</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
-    </div>
+    </section>
+    <section class="section">
+        <div class="container">
+            <div class="columns is-mobile">
+                <div class="column">
+                    <h1 class="title">Remove players</h1>
+                   
+                    <div *ngFor="let x of users" class="block">
+                        <span  class="tag is-danger">
+                            {{x.username}}
+                            <button class="delete is-small" (click)="removeUser(x.username)"></button>
+                        </span>
+                    </div>
+                    
+                    
+                </div>
+                <div class="column">
+                    <h1 class="title">Statistic of players</h1>
+                    <div class="block">
+                        <div class="select is-rounded">
+                            <select ngModel (ngModelChange)="userInfo($event)">
+                                <option>-</option>
+                            <option *ngFor="let x of users" [ngValue]="x.username" >{{x.username}}</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div *ngIf="user" class="block">
+                        <div class="block">
+                            <span class="icon-text">
+                                <span class="icon">
+                                    <i class="fa-solid fa-face-smile"></i>
+                                </span>
+                                <span><h2 class="subtitle">Username: {{user.username}}</h2></span>
+                            </span>
+                        </div>
+                        <div class="block">
+                            <span class="icon-text">
+                                <span class="icon">
+                                    <i class="fa-solid fa-flag-checkered"></i>
+                                </span>
+                                <span><h2 class="subtitle">Total matches: {{user.matches}}</h2></span>
+                            </span>
+                        </div>
+                        <div class="block">
+                            <span class="icon-text">
+                                <span class="icon">
+                                    <i class="fa-solid fa-trophy"></i>
+                                </span>
+                                <span><h2 class="subtitle">Wins: {{user.wins}}</h2></span>
+                            </span>
+                        </div>
+                        <div class="block">
+                            <span class="icon-text">
+                                <span class="icon">
+                                    <i class="fa-solid fa-circle-xmark"></i>
+                                </span>
+                                <span><h2 class="subtitle">Looses: {{user.looses}}</h2></span>
+                            </span>
+                        </div>
+                        
+                        
+                        
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 </div>

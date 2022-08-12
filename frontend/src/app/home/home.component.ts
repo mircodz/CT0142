@@ -8,6 +8,7 @@ import { AppService } from '../app.service';
 import { BattleshipGameComponent } from '../battleship-game/battleship-game.component';
 import { ChatService } from '../chat.service';
 import { ConfirmationDialogService } from '../confirmation-dialog/confirmation-dialog.service';
+import { FriendsComponent } from '../friends/friends.component';
 import { LoginComponent } from '../login/login.component';
 import { WebsocketService } from '../websocket.service';
 
@@ -20,7 +21,7 @@ export class HomeComponent implements OnInit {
   subscriptions: Subscription[]=[];
   static token: any = sessionStorage.getItem("token");
   static gameId:any=sessionStorage.getItem("gameId");
-  static gameAsVisitor:boolean=false;
+  static gameAsVisitor:boolean=LoginComponent.getBoolean(sessionStorage.getItem("gameAsVisitor"));
   static username: any=sessionStorage.getItem("username");
 
   get AppComponent(){
@@ -34,7 +35,7 @@ export class HomeComponent implements OnInit {
   });
 
   
-  constructor(private chatService: ChatService, private appService:AppService, private socket:WebsocketService,private confirmationDialogService: ConfirmationDialogService,private route:Router) {
+  constructor(private chatService: ChatService, private appService:AppService, private socket:WebsocketService,private confirmationDialogService: ConfirmationDialogService,private route:Router,private toastr:ToastrService) {
       
    }
 
@@ -51,28 +52,54 @@ export class HomeComponent implements OnInit {
                 this.appService.addFriends(HomeComponent.token,{username:data.username,friend:HomeComponent.username}).pipe().subscribe(()=>{
                   console.log("Amicizia inserita");
                 })
+                this.socket.sendConfirmFriend({friend:data.username,username:HomeComponent.username,confirmed:true});
+              }else{
+                this.socket.sendConfirmFriend({friend:data.username,username:HomeComponent.username,confirmed:false});
               }
-              }).catch(() => console.log('NO!'));
+              }).catch(() => {this.socket.sendConfirmFriend({friend:data.username,username:HomeComponent.username,confirmed:false});});
       })
     );
     this.subscriptions.push(
       this.socket.matchConfirm().subscribe((data:any)=>{
-        this.route.navigate(["/home/game/playGame"]);
+        console.log("GUARDA COSA E' ARRIVATO AMICO")
+        console.log(data)
+        if(data.confirmed){
+          this.toastr.success(data.username+" has accepted your game request!","GAME REQUEST ACCEPTED!")
+          this.route.navigate(["/home/game/playGame"]);
+        }else{
+          this.toastr.error(data.username+" has rejected your game request!","GAME REQUEST REJECTED!")
+        }
+        
+      })
+    );
+    this.subscriptions.push(
+      this.socket.friendConfirm().subscribe((data:any)=>{
+        if(data.confirmed){
+          this.toastr.success(data.username+" has accepted your friend request!","FRIEND REQUEST ACCEPTED!")
+        }else{
+          this.toastr.error(data.username+" has rejected your friend request!","FRIEND REQUEST REJECTED!")
+        }
+        
       })
     );
     this.subscriptions.push(
     this.socket.listenMatchRequest().subscribe((data:any)=>{
-      this.confirmationDialogService.confirm('Richiesta di partita da '+data.username, 'Vuoi fare una partita?')
+      this.confirmationDialogService.confirm('Richiesta di partita da '+data.opponent, 'Vuoi fare una partita?')
             .then((confirmed) => {
               if(confirmed){
                 console.log('SI!');
                 this.route.navigate(["/home/game/playGame"]);
-                this.socket.sendConfirm({username:data.opponent});
+                this.socket.sendConfirmMatch({friend:data.opponent,username:data.username,confirmed:true});
+              }else{
+                this.socket.sendConfirmMatch({friend:data.opponent,username:data.username,confirmed:false});
               }
               
-            }).catch(()=> console.log('NO!'));
+            }).catch(()=> {this.socket.sendConfirmMatch({friend:data.opponent,username:data.username,confirmed:false});});
       
           }));
+    this.socket.listenFriendRemoved().subscribe((data:any)=>{
+      this.toastr.warning(data.friend+" is not your friend!","FRIEND REMOVED");
+    })
     
   }
   

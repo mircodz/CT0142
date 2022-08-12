@@ -68,8 +68,14 @@ export class WebsocketService {
   matchConfirm(){
     return this.socket.fromEvent("matchConfirm");
   }
-  sendConfirm(data:any){
+  friendConfirm(){
+    return this.socket.fromEvent("friendConfirm");
+  }
+  sendConfirmMatch(data:any){
     this.socket.emit("matchConfirm",data);
+  }
+  sendConfirmFriend(data:any){
+    this.socket.emit("friendConfirm",data);
   }
   sendReady(data:any){
     this.socket.emit("ready",data);
@@ -79,6 +85,9 @@ export class WebsocketService {
   }
   listenUpdateFriends(){
     return this.socket.fromEvent("updateFriends");
+  }
+  listenFriendRemoved(){
+    return this.socket.fromEvent("friendRemoved");
   }
   
 }

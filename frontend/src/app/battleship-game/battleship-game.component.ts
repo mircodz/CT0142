@@ -21,6 +21,7 @@ import { JsonPipe } from '@angular/common';
 import { SubscriptionsService } from './subscriptions.service';
 import { LoginComponent } from '../login/login.component';
 import { Router } from '@angular/router';
+import { ThisReceiver } from '@angular/compiler';
 
 
 // set game constants
@@ -40,18 +41,16 @@ export class BattleshipGameComponent implements OnInit,OnDestroy {
   msgForm = new FormGroup({
     msg: new FormControl('', Validators.required),
   });
-  canPlay: boolean = (sessionStorage.getItem("canPlay")!=null) ? LoginComponent.getBoolean(sessionStorage.getItem("canPlay")) : true;
+  canPlay: boolean = LoginComponent.getBoolean(sessionStorage.getItem("canPlay"));
   connected:boolean=(sessionStorage.getItem("connected")!=null) ? LoginComponent.getBoolean(sessionStorage.getItem("connected")) : false;
   player: any = HomeComponent.username;
   opponent:any =(sessionStorage.getItem("opponent")) ? sessionStorage.getItem("opponent") : "";
-  players: number =(sessionStorage.getItem("players"))? Number.parseInt(sessionStorage.getItem("players")+""):  0;
+  players: number =(sessionStorage.getItem("players"))? Number.parseInt(sessionStorage.getItem("players")+""):  1;
   gameUrl: string = location.protocol + '//' + location.hostname + (location.port ? ':' + location.port: '');
   messages:any[]=[];
   faPaper = faPaperPlane;
   constructor(private socket: WebsocketService,private boardService: BoardService,private toastr: ToastrService,private appService:AppService,private chatService:ChatService,private route:Router){
-    if(!this.connected){
-      this.createBoards(HomeComponent.username);
-    }
+    
   }
   get BattleshipGameComponent(){
     return BattleshipGameComponent;
@@ -60,6 +59,9 @@ export class BattleshipGameComponent implements OnInit,OnDestroy {
     console.log("Stampa la sessione del gioco : ");
     console.log(JSON.parse(sessionStorage.getItem("boards")+""));
     this.socket.joinMember();
+    if(!this.connected){
+      this.createBoards(HomeComponent.username);
+    }
     this.socket.sendBoard({board:this.boards[HomeComponent.username],username:HomeComponent.username});
   
     SubscriptionsService.subscriptions.push(
@@ -82,6 +84,7 @@ export class BattleshipGameComponent implements OnInit,OnDestroy {
         this.boards[data.username]=data.board;
         sessionStorage.setItem("boards",JSON.stringify(this.boards));
         this.opponent=data.username;
+        console.log("IO SONO: "+this.player)
         sessionStorage.setItem("opponent",data.username);
         this.canPlay = data.canPlay;
         sessionStorage.setItem("canPlay",data.canPlay);
@@ -131,6 +134,7 @@ export class BattleshipGameComponent implements OnInit,OnDestroy {
       this.boards[boardId].tiles[row][col].status = 'fail'
     }
     this.canPlay = false;
+    sessionStorage.setItem("canPlay",this.canPlay+"");
     this.boards[boardId].tiles[row][col].used = true;
     sessionStorage.setItem("boards",JSON.stringify(this.boards));
     this.socket.emitMoves(new Move({canPlay: true,boards:this.boards,gameId:HomeComponent.gameId,opponent:this.opponent}));
@@ -200,8 +204,9 @@ export class BattleshipGameComponent implements OnInit,OnDestroy {
         this.boards[this.opponent] = data.boards[this.opponent];
         sessionStorage.setItem("canPlay",this.canPlay+"");
         sessionStorage.setItem("boards",JSON.stringify(this.boards));  
-        console.log("Ricevuta la board ");
+        console.log("Ricevuta la mossa");
         console.log(data);
+        console.log(this.player+" "+this.opponent)
        
       })
     );
@@ -222,14 +227,19 @@ export class BattleshipGameComponent implements OnInit,OnDestroy {
   ngOnDestroy() {
     console.log('Items destroyed');
     this.canPlay = true;
-    this.player = "";
+    this.player = HomeComponent.username;
     this.opponent ="";
     this.players = 1;
     this.connected=false;
     this.messages=[];
     SubscriptionsService.dispose();
     this.boardService.ngOnDestroy();
-    this.createBoards(HomeComponent.username);
+    sessionStorage.removeItem("canPlay");
+    sessionStorage.removeItem("connected");
+    sessionStorage.removeItem("boards");
+    sessionStorage.removeItem("players");
+    sessionStorage.removeItem("opponent");
+
     
   }
   sendMessage(){

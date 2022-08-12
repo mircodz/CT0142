@@ -99,7 +99,7 @@ app.post('/signin', (req, res) => {
     .digest("hex");
   
   const user = User.findOne({ username:username,password:hashed},function(err,sub){
-    console.log(sub)
+   
     if (sub) {
       const token = jwt.sign({ username: username,  role: user.role }, secret);
       res.status(200).json({ token,sub });
@@ -159,7 +159,13 @@ app.post('/addFriends', authenticateJWT, (req, res) => {
     
     User.find({username:username},function(err,sub){
       User.find({_id:sub[0].friends},function(err,sub){
-        io.emit("updateFriends",sub)
+        io.to(users[username]).emit("updateFriends",sub)
+        
+      })
+    })
+    User.find({username:friend},function(err,sub){
+      User.find({_id:sub[0].friends},function(err,sub){
+        io.to(users[friend]).emit("updateFriends",sub)
         
       })
     })
@@ -170,6 +176,21 @@ app.post('/addFriends', authenticateJWT, (req, res) => {
 app.get('/allUsers', authenticateJWT, (req, res) => {
   console.log("STAMPA DI TUTTI GLI UTENTI: "+users);
   res.status(200).json({users});
+});
+
+app.post('/getAllUsers', authenticateJWT, (req, res) => {
+  const {moderator} = req.body;
+  User.findOne({username:moderator},function(err,sub){
+    if(sub.isModerator){
+      User.find({isModerator:false},function(err,sub){
+
+        res.status(200).json({sub});
+      });
+    }else{
+      res.status(400).json({message:"Non sei il moderatore!"});
+    }
+  });
+  
 });
 app.post('/friend', authenticateJWT, (req, res) => {
   const { username } = req.body;
@@ -185,6 +206,48 @@ app.post('/friend', authenticateJWT, (req, res) => {
   })
   
 });
+app.post('/deleteFriend', authenticateJWT, (req, res) => {
+  const { username,friend } = req.body;
+  User.findOne({username:username},function(err,sub){
+    console.log(sub);
+    let friends = sub.friends;
+    let idFriend = sub._id;
+    User.findOne({username:friend},function(err,sub){
+      console.log(sub);
+      let i=0;
+      if(sub){
+       
+            console.log("FUNZIA")
+            User.updateOne({username:username},{$pull:{friends:sub._id}},function(err,res){
+              console.log("Utente aggiornato");
+              
+            })
+            User.updateOne({username:friend},{$pull:{friends:idFriend}},function(err,res){
+              console.log("Utente aggiornato");
+            })
+            User.find({username:username},function(err,sub){
+              User.find({_id:sub[0].friends},function(err,sub){
+                io.to(users[username]).emit("updateFriends",sub)
+                
+              })
+            })
+            User.find({username:friend},function(err,sub){
+              User.find({_id:sub[0].friends},function(err,sub){
+                io.to(users[friend]).emit("updateFriends",sub)
+                
+              })
+            })
+        res.status(200).json({message:"ok"});
+     }else{
+        res.status(400).json({message:"error"});
+      }
+      
+    })
+  })
+ 
+  io.to(users[friend]).emit("friendRemoved",{friend:username});
+  
+});
 app.post('/logout', authenticateJWT, (req, res) => {
   const { username } = req.body;
   console.log(req.body)
@@ -196,16 +259,18 @@ app.post('/logout', authenticateJWT, (req, res) => {
 });
 app.post('/matchId', authenticateJWT, (req, res) => {
   const { id } = req.body;
+  
+  console.log("STAMPA del MATCH: "+matches[id]);
   res.json({match:matches[id]});
   
 });
 app.post('/firstLogin', authenticateJWT, (req, res) => {
-  const { username, password } = req.body;
+  const { username, password,name,email } = req.body;
   const hashed = crypto2
     .createHash("sha256")
     .update(password)
     .digest("hex");
-    const user = User.updateOne({ username:username},{$set:{password:hashed,isFirstLogin:false}},function(err,sub){
+    const user = User.updateOne({ username:username},{$set:{password:hashed,name:name,email:email,isFirstLogin:false}},function(err,sub){
         console.log("PASSWORD AGGIORNATA!")
     })
     res.status(200).json({message: "ok"});
@@ -215,10 +280,49 @@ app.post('/firstLogin', authenticateJWT, (req, res) => {
 
 app.post('/deleteUser', authenticateJWT, (req, res) => {
   const { moderator, username } = req.body;
-  User.findOne({username:moderator},function(sub){
+  User.findOne({username:moderator},function(err,sub){
     if(sub.isModerator){
-      User.deleteOne({username:username});
-      res.status(200).json({message: "ok"});
+      User.deleteOne({username:username}).then(function(){
+        Match.find({player1:username},function(err,sub){
+          let i=0;
+          while(i<sub.length){
+            if(sub[i].winner==username){
+              User.updateOne({ username:sub[i].player2},{$inc:{matches:-1,looses:-1}},function(err,sub){
+                console.log("UTENTE AGGIORNATA!")
+              })
+            }else{
+              User.updateOne({ username:sub[i].player2},{$inc:{matches:-1,wins:-1}},function(err,sub){
+                console.log("UTENTE AGGIORNATA!")
+              })
+            }
+            i++;
+          }
+        })
+        Match.find({player2:username},function(err,sub){
+          let i=0;
+          while(i<sub.length){
+            if(sub[i].winner==username){
+              User.updateOne({ username:sub[i].player1},{$inc:{matches:-1,looses:-1}},function(err,sub){
+                console.log("UTENTE AGGIORNATA!")
+              })
+            }else{
+              User.updateOne({ username:sub[i].player1},{$inc:{matches:-1,wins:-1}},function(err,sub){
+                console.log("UTENTE AGGIORNATA!")
+              })
+            }
+            i++;
+          }
+        })
+        Match.deleteMany({$or:[{player1:username},{player2:username}]}).then(function(){
+          res.status(200).json({message: "ok"});
+        }).catch(function(error){
+          res.status(400).json({message: error});// Failure
+        });
+        
+      }).catch(function(error){
+        res.status(400).json({message: error});// Failure
+    });
+      
     }else{
       res.status(400).json({message:"Non sei il moderatore!"});
     }
@@ -230,7 +334,7 @@ app.post('/deleteUser', authenticateJWT, (req, res) => {
 
 app.post('/addModeator', authenticateJWT, (req, res) => {
   const { moderator, username,password } = req.body;
-  User.findOne({username:moderator},async function(sub){
+  User.findOne({username:moderator},async function(err,sub){
     if(sub.isModerator){
       const hashed = crypto2
       .createHash("sha256")
@@ -265,7 +369,7 @@ app.get('/matches', authenticateJWT, (req, res) => {
 app.post('/getHistoricalMatches', authenticateJWT, (req, res) => {
   const { username } = req.body;
   const f = Match.find({$or: [{ player1: username },{ player2: username }]},function(err,sub){
-    console.log("STAMPA DELLO STORICO "+sub[0])
+  
     if(sub){
       res.status(200).json({sub});
 
@@ -292,8 +396,8 @@ io.on('connection', (socket) => {
   //logger.error({ message: 'user connected', labels: { 'key': 'value' } })
   socket.on('Move', function (data) {
     
-    console.log("Mossa inviata "+data.gameId+" "+data.canPlay+" "+data.opponent)
-    console.log("socket id di "+data.opponent+" "+users[data.opponent]+" "+socket.id)
+    console.log("Mossa inviata ");
+    console.log(data);
     matches[data.gameId].boards=data.boards;
     matches[data.gameId].whoPlay=data.opponent;
     io.to(users[data.opponent]).emit("Move", data);
@@ -318,7 +422,12 @@ io.on('connection', (socket) => {
     
   })
   socket.on("matchConfirm",function(data){
-    io.to(users[data.username]).emit("matchConfirm");
+    console.log(data.username+" ha mandato la conferma a "+data.friend+" con valore: "+data.confirmed);
+    console.log(data);
+    io.to(users[data.friend]).emit("matchConfirm",data);
+  });
+  socket.on("friendConfirm",function(data){
+    io.to(users[data.friend]).emit("friendConfirm",data);
   });
   socket.on("inGame",function(data){
       if (data.visitor==true){
@@ -341,21 +450,22 @@ io.on('connection', (socket) => {
         io.emit("new_member", {members:matches[j].members+1,gameId:j});
         console.log("si è aggiunto al gioco! "+matches[j].members);
         matches[j].members++;
+        if(matches[j].members==2){
+          const randomElement = matches[j].players[Math.floor(Math.random() * matches[j].players.length)];
+          if(randomElement==matches[j].players[0]){
+            matches[j].whoPlay=matches[j].players[0];
+            io.to(users[matches[j].players[0]]).emit("Board", {board: matches[j].boards[matches[j].players[1]],username:matches[j].players[1],canPlay:true});
+            io.to(users[matches[j].players[1]]).emit("Board", {board: matches[j].boards[matches[j].players[0]],username:matches[j].players[0],canPlay:false});
+          }else{
+            matches[j].whoPlay=matches[j].players[1];
+            io.to(users[matches[j].players[0]]).emit("Board", {board: matches[j].boards[matches[j].players[1]],username:matches[j].players[1],canPlay:false});
+            io.to(users[matches[j].players[1]]).emit("Board", {board: matches[j].boards[matches[j].players[0]],username:matches[j].players[0],canPlay:true});
+          }
+        }
       
         
       }      
-      if(matches[j].members==2){
-        const randomElement = matches[j].players[Math.floor(Math.random() * matches[j].players.length)];
-        if(randomElement==matches[j].players[0]){
-          matches[j].whoPlay=matches[j].players[0];
-          io.to(users[matches[j].players[0]]).emit("Board", {board: matches[j].boards[matches[j].players[1]],username:matches[j].players[1],canPlay:true});
-          io.to(users[matches[j].players[1]]).emit("Board", {board: matches[j].boards[matches[j].players[0]],username:matches[j].players[0],canPlay:false});
-        }else{
-          matches[j].whoPlay=matches[j].players[1];
-          io.to(users[matches[j].players[0]]).emit("Board", {board: matches[j].boards[matches[j].players[1]],username:matches[j].players[1],canPlay:false});
-          io.to(users[matches[j].players[1]]).emit("Board", {board: matches[j].boards[matches[j].players[0]],username:matches[j].players[0],canPlay:true});
-        }
-      }
+      
 
   })
   

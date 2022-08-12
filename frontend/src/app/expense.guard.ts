@@ -14,7 +14,7 @@ export class ExpenseGuard implements CanActivate {
     state: RouterStateSnapshot): boolean | UrlTree {
     if(AppComponent.logged==true && AppComponent.isModerator==false){
       
-      if(state.url=="/login" || state.url=="/moderator"){
+      if(state.url=="/login" || state.url=="/moderator" || state.url=="/home"){
         return this.router.parseUrl("/home/main");
       }else{
         return true;

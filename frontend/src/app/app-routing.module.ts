@@ -17,13 +17,11 @@ const routes: Routes = [
 {path:'register',component:RegisterComponent},
 {path:'playGame',component:BattleshipGameComponent,canActivate: [ExpenseGuard]},
 {path:'moderator',component:ModeratorComponent,canActivate: [ExpenseGuard]},
+{path:'watchGame',component:WatchGameComponent,canActivate: [ExpenseGuard]},
 {path:'home',component:HomeComponent,canActivate: [ExpenseGuard],children:[
   {path:'main',component:MainComponent,canActivate: [ExpenseGuard]},
   {path:'friends',component:FriendsComponent,canActivate: [ExpenseGuard]},
-  {path:'game',component:GameComponent,canActivate: [ExpenseGuard],children:[
-    {path:'watchGame',component:WatchGameComponent,canActivate: [ExpenseGuard]},
-    
-  ]},
+  {path:'game',component:GameComponent,canActivate: [ExpenseGuard]},
 ]},
 {path: '', redirectTo: '/login', pathMatch: 'full'},
 ];

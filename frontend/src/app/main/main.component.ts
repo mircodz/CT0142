@@ -15,9 +15,7 @@ export class MainComponent implements OnInit {
     this.appService.getHistorical(HomeComponent.token,{username:HomeComponent.username}).pipe().subscribe((data:any)=>{
       this.historical = data.sub;
     });
-    this.appService.getChat().pipe().subscribe((data:any)=>{
-      console.log(data);
-    })
+    
   }
 
 }

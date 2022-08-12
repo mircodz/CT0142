@@ -23,6 +23,7 @@ export class AppService {
         'cache-control': 'no-cache',
         'Content-Type':  'application/json'})
     };
+    
     return this.http.post("http://localhost:6969/addFriends",user,httpOptions);
   }
   friends(jwt:any,user:any){
@@ -35,6 +36,28 @@ export class AppService {
     };
   
     return this.http.post("http://localhost:6969/friend",user,httpOptions);
+  }
+  getAllUsers(jwt:any,data:any){
+
+    const httpOptions = {
+      headers: new HttpHeaders({
+        authorization: 'Bearer ' + jwt,
+        'cache-control': 'no-cache',
+        'Content-Type':  'application/json'})
+    };
+  
+    return this.http.post("http://localhost:6969/getAllUsers",data,httpOptions);
+  }
+  deleteFriend(jwt:any,data:any){
+
+    const httpOptions = {
+      headers: new HttpHeaders({
+        authorization: 'Bearer ' + jwt,
+        'cache-control': 'no-cache',
+        'Content-Type':  'application/json'})
+    };
+  
+    return this.http.post("http://localhost:6969/deleteFriend",data,httpOptions);
   }
   allUsers(jwt:any){
     const httpOptions = {

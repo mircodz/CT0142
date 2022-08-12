@@ -5,9 +5,9 @@
     
     </div>
     <h1>Friends list</h1>
-    <div *ngFor="let x of friends">
+    <div  class="block" *ngFor="let x of FriendsComponent.friends">
     
-    {{x.username}}
+    {{x.username}}   <button (click)="deleteFriend(x.username)" class="delete"></button>
 
     </div>
     <div>

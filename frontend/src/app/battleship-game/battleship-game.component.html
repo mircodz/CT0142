@@ -32,7 +32,7 @@
                 [style.background-color] = "col.used ? '' : 'transparent'"
                 [class.win] = "col.status == 'win'" [class.fail] = "col.status == 'fail'"
                 class="battleship-tile" id="{{board}};{{j}};{{k}}">
-                {{ col.value == "X" ? "X" : "💀"}}
+                {{ (col.used==true || board==HomeComponent.username) ? (col.value == "X"  ) ? "X" : "💀":" "}}
               </td>
             </tr>
           </table>
@@ -44,7 +44,7 @@
         <span class="tag is-danger" *ngIf="!canPlay && players==2">Other player's turn.</span>
         <h5 class="title"><small>{{ players }} player(s) in game</small></h5>
       </div>
-      <div *ngIf="players==2">
+      <div>
         <button (click)="quitGame()">Quit game</button>
       </div>
       <div *ngIf="players==2">

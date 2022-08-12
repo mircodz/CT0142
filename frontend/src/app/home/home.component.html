@@ -1,17 +1,39 @@
-
-<nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <div class="container-fluid">
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a  routerLink="/home/main" routerLinkActive="activebutton" ariaCurrentWhenActive="page">Home</a></li>
-        <li class="breadcrumb-item"><a  routerLink="/home/game" routerLinkActive="activebutton" ariaCurrentWhenActive="page">Game</a></li>
-        <li class="breadcrumb-item active" aria-current="page">
-            <a  routerLink="/home/friends" routerLinkActive="activebutton" ariaCurrentWhenActive="page">Friends</a>
+<nav class="breadcrumb" aria-label="breadcrumbs">
+<ul>
+    <li>
+    <a style="text-decoration: none;"class="navbar-item" routerLink="/home/main" routerLinkActive="activebutton" ariaCurrentWhenActive="page">
+        <span class="icon is-small">
+        <i class="fas fa-home" aria-hidden="true"></i>
+        </span>
+        <span>Home</span>
+    </a>
+    </li>
+    <li>
+    <a style="text-decoration: none;" class="navbar-item" routerLink="/home/game" routerLinkActive="activebutton" ariaCurrentWhenActive="page">
+        <span class="icon is-small">
+            <i class="fa-solid fa-gamepad" aria-hidden="true"></i>
+        </span>
+        <span>Game</span>
+    </a>
+    </li>
+    <li>
+    <a style="text-decoration: none;" class="navbar-item" routerLink="/home/friends" routerLinkActive="activebutton" ariaCurrentWhenActive="page">
+        <span class="icon is-small">
+        <i class="fa-solid fa-users" aria-hidden="true"></i>
+        </span>
+        <span>Friends</span>
+    </a>
+    </li>
+    <li>
+        <a style="text-decoration: none;" class="navbar-item" (click)="logout()">
+            <span class="icon is-small">
+                <i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i>
+            </span>
+            <span>Logout</span>
+        </a>
         </li>
-        <li class="breadcrumb-item"><a (click)="logout()">Logout</a></li>
-        </ol>
-    </nav>
-    </div>
+    
+</ul>
 </nav>
 <router-outlet></router-outlet>
   
