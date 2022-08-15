@@ -1,7 +1,7 @@
 
   <div *ngFor="let x of matches; let i=index">
   
-      <a (click)="watchMatch(i)"> {{x.id}}</a> 
+      <a (click)="watchMatch(x.id)"> {{x.id}}</a> 
   </div>
 
 <div *ngIf="HomeComponent.gameAsVisitor==true" class="section">
@@ -42,15 +42,30 @@
           </table>
           <span class="tag is-warning" *ngIf="players==2 && boards[board].player.name==this.whoPlay">{{this.whoPlay}} turn!</span>
         </div>
+        <div class="column has-text-centered">
+            <div class="block" *ngFor="let x of messages">{{x.from}}: {{x.message}}</div>
+        </div>
       </div>
   
       <div class="has-text-centered">
         <h5 class="title"><small>{{ players }} player(s) in game</small></h5>
         <div *ngIf="players==2">
-          <button (click)="exitGame()">Exit game</button>
+          <button class="button" (click)="exitGame()">Exit game</button>
         </div>
       </div>
-  
+      <div class="block" style="height: 300px;">
+        <!-- The magical tile element! -->
+        <div *ngFor="let x of messages" class="block">
+          <span>{{x.from}} : {{x.message}}</span>
+        </div>
+        <br>
+        <div class="block">
+          <form [formGroup]="msgForm" (ngSubmit)="sendMessage()">
+        <input name="msg" class="input" type="text" formControlName="msg" placeholder="Text input">
+        <button type="submit" class="btn btn-default pull-right">Send</button> 
+        </form>
+        </div>                   
+      </div>
     </div>
   </div>
   </div>

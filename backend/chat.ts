@@ -12,6 +12,7 @@ class ChatClient {
     }
 
     put(text: String, to: string) {
+        
         this.client.index({
             index: elasticConfig.chat_index_name,
             body: {

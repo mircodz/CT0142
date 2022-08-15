@@ -44,6 +44,34 @@ export class BoardService implements OnDestroy {
     sessionStorage.setItem("boards",JSON.stringify(this.boards));
     return this;
   }
+  createBoardManually(size: number = 10,player:string): BoardService{
+    let tiles:Cell[][] = [];
+    let ships:number[]=[5,4,4,3,3,3,2,2,2,2,2];
+    for(let i = 0;i<size;i++){
+      tiles[i]=[];
+      for(let j=0;j<size;j++){
+        tiles[i][j] =new Cell({used: false, value: "", status:""});
+    
+      }
+    }
+    for(let i = 0;i<size;i++){
+      for(let j=0;j<size;j++){
+        if(this.canSetShip(2,tiles,i,j)==1  || this.canSetShip(2,tiles,i,j)==2){
+          tiles[i][j].canPut=true;
+        }else{
+          tiles[i][j].canPut=false;
+        }
+    
+      }
+    }
+    let board = new Board ({
+      player: new Player({name: player}),
+      tiles: tiles
+    });
+    this.boards[player] = board;
+    sessionStorage.setItem("boards",JSON.stringify(this.boards));
+    return this;
+  }
   randomShips(tiles2: Cell[][], len:number,ship:number): Cell[][]{
 		len = len -1;
     let tiles = this.copyOf(tiles2);

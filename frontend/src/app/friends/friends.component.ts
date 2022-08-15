@@ -28,14 +28,7 @@ export class FriendsComponent implements OnInit {
     })
   
   
-    this.socket.listenUpdateFriends().subscribe((data:any)=>{
-      FriendsComponent.friends = JSON.parse(JSON.stringify(data));
-    })
-  
-  
-    this.socket.listenUpdateUsers().subscribe((data:any)=>{
-      FriendsComponent.users=Object.keys(data);;
-    })
+    
     
   }
   get FriendsComponent(){

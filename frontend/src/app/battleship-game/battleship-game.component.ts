@@ -22,6 +22,7 @@ import { SubscriptionsService } from './subscriptions.service';
 import { LoginComponent } from '../login/login.component';
 import { Router } from '@angular/router';
 import { ThisReceiver } from '@angular/compiler';
+import { sys } from 'typescript';
 
 
 // set game constants
@@ -42,12 +43,16 @@ export class BattleshipGameComponent implements OnInit,OnDestroy {
     msg: new FormControl('', Validators.required),
   });
   canPlay: boolean = LoginComponent.getBoolean(sessionStorage.getItem("canPlay"));
+  ready:boolean = LoginComponent.getBoolean(sessionStorage.getItem("ready"));;
   connected:boolean=(sessionStorage.getItem("connected")!=null) ? LoginComponent.getBoolean(sessionStorage.getItem("connected")) : false;
   player: any = HomeComponent.username;
-  opponent:any =(sessionStorage.getItem("opponent")) ? sessionStorage.getItem("opponent") : "";
+  static opponent:any =(sessionStorage.getItem("opponent")) ? sessionStorage.getItem("opponent") : "";
   players: number =(sessionStorage.getItem("players"))? Number.parseInt(sessionStorage.getItem("players")+""):  1;
   gameUrl: string = location.protocol + '//' + location.hostname + (location.port ? ':' + location.port: '');
-  messages:any[]=[];
+  messages:any[]=(sessionStorage.getItem("messages")!=null) ? JSON.parse(sessionStorage.getItem("messages")+"") :[];
+  static isFriendly:boolean=LoginComponent.getBoolean(sessionStorage.getItem("isFriendly"));
+  static isInvited:boolean=false;
+  vertically:boolean=true;
   faPaper = faPaperPlane;
   constructor(private socket: WebsocketService,private boardService: BoardService,private toastr: ToastrService,private appService:AppService,private chatService:ChatService,private route:Router){
     
@@ -58,12 +63,6 @@ export class BattleshipGameComponent implements OnInit,OnDestroy {
   initConnection(): BattleshipGameComponent {
     console.log("Stampa la sessione del gioco : ");
     console.log(JSON.parse(sessionStorage.getItem("boards")+""));
-    this.socket.joinMember();
-    if(!this.connected){
-      this.createBoards(HomeComponent.username);
-    }
-    this.socket.sendBoard({board:this.boards[HomeComponent.username],username:HomeComponent.username});
-  
     SubscriptionsService.subscriptions.push(
       this.socket.listenMembers().subscribe((data:any)=>{
         
@@ -73,29 +72,34 @@ export class BattleshipGameComponent implements OnInit,OnDestroy {
           this.players=data.members;
           sessionStorage.setItem("players",this.players+"");
         }
+        console.log("HO RICEVUTO "+data.gameId);
         HomeComponent.gameId=data.gameId;
         sessionStorage.setItem("gameId",data.gameId+"");
         
+        
       })
     );
-    SubscriptionsService.subscriptions.push(
-      this.socket.getBoard().subscribe((data:any)=>{
-        console.log("Ricevuta la board di "+data.username+" "+data.board)
-        this.boards[data.username]=data.board;
-        sessionStorage.setItem("boards",JSON.stringify(this.boards));
-        this.opponent=data.username;
-        console.log("IO SONO: "+this.player)
-        sessionStorage.setItem("opponent",data.username);
-        this.canPlay = data.canPlay;
-        sessionStorage.setItem("canPlay",data.canPlay);
-      })
-    );
+    
+    
     SubscriptionsService.subscriptions.push(
       this.chatService.listenMessage().subscribe((data:any)=>{
         this.messages.push(data);
+        sessionStorage.setItem("messages",JSON.stringify(this.messages));
       })
     );
-  
+    SubscriptionsService.subscriptions.push(
+      this.socket.listenMoves().subscribe((data:any)=>{
+        this.canPlay = data.canPlay;
+      this.boards[this.player] = data.boards[this.player];
+      this.boards[BattleshipGameComponent.opponent] = data.boards[BattleshipGameComponent.opponent];
+      sessionStorage.setItem("canPlay",this.canPlay+"");
+      sessionStorage.setItem("boards",JSON.stringify(this.boards));  
+      console.log("Ricevuta la mossa");
+      console.log(data);
+      console.log(this.player+" "+BattleshipGameComponent.opponent)
+     
+    })
+  );
     SubscriptionsService.subscriptions.push(
       this.socket.listeQuit().subscribe((data:any)=>{
   
@@ -114,6 +118,19 @@ export class BattleshipGameComponent implements OnInit,OnDestroy {
   get validPlayer(): boolean {
     return (this.players >= NUM_PLAYERS);
   }
+
+  sendBoard(){
+    this.createBoards(HomeComponent.username)
+    this.socket.sendBoard({board:this.boards[HomeComponent.username],username:HomeComponent.username,gameId:HomeComponent.gameId});
+    this.ready=true;
+    sessionStorage.setItem("ready",this.ready+"");
+  }
+  sendMyBoard(){
+    this.socket.sendBoard({board:this.boards[HomeComponent.username],username:HomeComponent.username,gameId:HomeComponent.gameId});
+    this.ready=true;
+    sessionStorage.setItem("ready",this.ready+"");
+  }
+
   fireTorpedo(e:any) : BattleshipGameComponent | undefined {
     
     let id = e.target.id.split(";"),
@@ -137,8 +154,102 @@ export class BattleshipGameComponent implements OnInit,OnDestroy {
     sessionStorage.setItem("canPlay",this.canPlay+"");
     this.boards[boardId].tiles[row][col].used = true;
     sessionStorage.setItem("boards",JSON.stringify(this.boards));
-    this.socket.emitMoves(new Move({canPlay: true,boards:this.boards,gameId:HomeComponent.gameId,opponent:this.opponent}));
+    this.socket.emitMoves(new Move({canPlay: true,boards:this.boards,gameId:HomeComponent.gameId,opponent:BattleshipGameComponent.opponent}));
     return this;
+  }
+  getboardService(){
+    return this.boardService;
+  }
+  putShip(e:any,ship:any){
+    let id = e.target.id.split(";");
+    let row = Number.parseInt(id[0]), col = Number.parseInt(id[1]);
+    console.log(ship);
+    if(!this.boards[HomeComponent.username].tiles[row][col].canPut){
+
+      this.toastr.error("You can't put here your ship.", "You can't put")
+      return;
+    }
+    if(this.vertically){
+      let i=0;
+			while(i<ship){
+        this.boards[HomeComponent.username].tiles[row][col+i].value = "X";
+        i++;
+      }
+    }else{
+      let i=0;
+			while(i<ship){
+        this.boards[HomeComponent.username].tiles[row+i][col].value = "X";
+        i++;
+      }
+    }
+    this.boards[HomeComponent.username].ships.pop();
+    if(!this.vertically){
+      for(let i = 0;i<10;i++){
+        for(let j=0;j<10;j++){
+          if(this.boardService.canSetShip(this.boards[HomeComponent.username].ships[this.boards[HomeComponent.username].ships.length-1],this.boards[HomeComponent.username].tiles,i,j)==0 || this.boardService.canSetShip(this.boards[HomeComponent.username].ships[this.boards[HomeComponent.username].ships.length-1],this.boards[HomeComponent.username].tiles,i,j)==2){
+            this.boards[HomeComponent.username].tiles[i][j].canPut=true;
+          }else{
+            this.boards[HomeComponent.username].tiles[i][j].canPut=false;
+          }
+      
+        }
+      }
+      
+    }else{
+      for(let i = 0;i<10;i++){
+        for(let j=0;j<10;j++){
+          if(this.boardService.canSetShip(this.boards[HomeComponent.username].ships[this.boards[HomeComponent.username].ships.length-1],this.boards[HomeComponent.username].tiles,i,j)==1 || this.boardService.canSetShip(this.boards[HomeComponent.username].ships[this.boards[HomeComponent.username].ships.length-1],this.boards[HomeComponent.username].tiles,i,j)==2){
+            this.boards[HomeComponent.username].tiles[i][j].canPut=true;
+          }else{
+            this.boards[HomeComponent.username].tiles[i][j].canPut=false;
+          }
+      
+        }
+      }
+    }
+    return this;
+
+  }
+  mouseenter(r:any,c:any,ship:any){
+    if(this.vertically){
+      let i=0;
+			while(i<ship){
+        this.boards[HomeComponent.username].tiles[r][c+i].value = "X";
+        i++;
+      }
+    }else{
+      let i=0;
+			while(i<ship){
+        this.boards[HomeComponent.username].tiles[r+i][c].value = "X";
+        i++;
+      }
+    }
+  }
+  mouseleave(r:any,c:any,ship:any){
+    if(this.vertically){
+      let i=0;
+			while(i<ship){
+        this.boards[HomeComponent.username].tiles[r][c+i].value = "";
+        i++;
+      }
+    }else{
+      let i=0;
+			while(i<ship){
+        this.boards[HomeComponent.username].tiles[r+i][c].value = "";
+        i++;
+      }
+    }
+  }
+  canContinue(){
+    for(let i = 0;i<10;i++){
+      for(let j=0;j<10;j++){
+        if(this.boards[HomeComponent.username].tiles[i][j].canPut){
+          return true;
+        }
+    
+      }
+    }
+    return false;
   }
 
   checkValidHit(boardId: string, tile: any) : boolean {
@@ -172,9 +283,9 @@ export class BattleshipGameComponent implements OnInit,OnDestroy {
       if(this.boards[this.player].player.score>=SCORE_LIMIT){
       
         return this.boards[this.player];
-      }else if(this.boards[this.opponent].player.score>=SCORE_LIMIT){
+      }else if(this.boards[BattleshipGameComponent.opponent].player.score>=SCORE_LIMIT){
       
-        return this.boards[this.opponent];
+        return this.boards[BattleshipGameComponent.opponent];
       }else{
         return undefined;
       }
@@ -188,28 +299,49 @@ export class BattleshipGameComponent implements OnInit,OnDestroy {
     return this.boardService.getBoards();
   }
 
-  ngOnInit():void{
+  async ngOnInit():Promise<void>{
+    if(!this.connected){
+      this.boardService.createBoardManually(10,HomeComponent.username);
+    }
+    SubscriptionsService.subscriptions.push(
+      this.socket.getBoard().subscribe((data:any)=>{
+        console.log("Ricevuta la board di "+data.username+" "+data.board)
+        this.boards[data.username]=data.board;
+        sessionStorage.setItem("boards",JSON.stringify(this.boards));
+        BattleshipGameComponent.opponent=data.username;
+        console.log("IO SONO: "+this.player)
+        sessionStorage.setItem("opponent",data.username);
+        this.canPlay = data.canPlay;
+        sessionStorage.setItem("canPlay",data.canPlay);
+      })
+    );
     this.initConnection();
     if(!this.connected){
-      this.socket.connection({username:HomeComponent.username,visitor:false,gameId:HomeComponent.gameId});
+      
+      if(BattleshipGameComponent.isFriendly){
+        if(BattleshipGameComponent.isInvited){
+          await new Promise(f => setTimeout(f, 10000));
+          this.socket.friendlyMatch({player1:HomeComponent.username,player2:BattleshipGameComponent.opponent})
+        }else{
+          this.socket.friendlyMatch({player1:HomeComponent.username,player2:BattleshipGameComponent.opponent});
+        }
+        
+      }else{
+        
+        this.socket.connection({username:HomeComponent.username});
+      }
+        
+      
+      
+      
       this.connected=true;
       sessionStorage.setItem("connected",this.connected+"");
     
+      
     }
+    
       console.log("DIOCANEEE")
-      SubscriptionsService.subscriptions.push(
-        this.socket.listenMoves().subscribe((data:any)=>{
-          this.canPlay = data.canPlay;
-        this.boards[this.player] = data.boards[this.player];
-        this.boards[this.opponent] = data.boards[this.opponent];
-        sessionStorage.setItem("canPlay",this.canPlay+"");
-        sessionStorage.setItem("boards",JSON.stringify(this.boards));  
-        console.log("Ricevuta la mossa");
-        console.log(data);
-        console.log(this.player+" "+this.opponent)
-       
-      })
-    );
+      
     
     
   }
@@ -218,8 +350,9 @@ export class BattleshipGameComponent implements OnInit,OnDestroy {
     return Object.keys(this.boards);
   }
   quitGame(){
-    this.ngOnDestroy();
     this.socket.disconnect({username:HomeComponent.username,gameId:HomeComponent.gameId});
+    this.ngOnDestroy();
+    
     this.route.navigate(["/home/game"]);
     console.log(AppComponent.logged)
   }
@@ -228,24 +361,63 @@ export class BattleshipGameComponent implements OnInit,OnDestroy {
     console.log('Items destroyed');
     this.canPlay = true;
     this.player = HomeComponent.username;
-    this.opponent ="";
+    BattleshipGameComponent.opponent ="";
     this.players = 1;
     this.connected=false;
     this.messages=[];
+    this.ready=false;
+    HomeComponent.gameId=undefined;
     SubscriptionsService.dispose();
+    BattleshipGameComponent.isFriendly=false;
+    BattleshipGameComponent.isInvited=false;
     this.boardService.ngOnDestroy();
     sessionStorage.removeItem("canPlay");
     sessionStorage.removeItem("connected");
     sessionStorage.removeItem("boards");
     sessionStorage.removeItem("players");
     sessionStorage.removeItem("opponent");
+    sessionStorage.removeItem("isFriendly");
+    sessionStorage.removeItem("ready");
 
     
   }
   sendMessage(){
     
-    this.chatService.sendMessage(this.msgForm.get("msg")?.value,this.player,this.opponent,HomeComponent.gameId);
+    this.chatService.sendMessage(this.msgForm.get("msg")?.value,this.player,BattleshipGameComponent.opponent,HomeComponent.gameId);
+    this.messages.push({from:HomeComponent.username,to:BattleshipGameComponent.opponent,message:this.msgForm.get("msg")?.value});
+
+    sessionStorage.setItem("messages",JSON.stringify(this.messages));
     this.msgForm.reset();
+  }
+  counter(i: number) {
+    return new Array(i);
+  }
+  rotate(){
+    this.vertically=!this.vertically;
+    if(!this.vertically){
+      for(let i = 0;i<10;i++){
+        for(let j=0;j<10;j++){
+          if(this.boardService.canSetShip(this.boards[HomeComponent.username].ships[this.boards[HomeComponent.username].ships.length-1],this.boards[HomeComponent.username].tiles,i,j)==0 || this.boardService.canSetShip(this.boards[HomeComponent.username].ships[this.boards[HomeComponent.username].ships.length-1],this.boards[HomeComponent.username].tiles,i,j)==2){
+            this.boards[HomeComponent.username].tiles[i][j].canPut=true;
+          }else{
+            this.boards[HomeComponent.username].tiles[i][j].canPut=false;
+          }
+      
+        }
+      }
+      
+    }else{
+      for(let i = 0;i<10;i++){
+        for(let j=0;j<10;j++){
+          if(this.boardService.canSetShip(this.boards[HomeComponent.username].ships[this.boards[HomeComponent.username].ships.length-1],this.boards[HomeComponent.username].tiles,i,j)==1 || this.boardService.canSetShip(this.boards[HomeComponent.username].ships[this.boards[HomeComponent.username].ships.length-1],this.boards[HomeComponent.username].tiles,i,j)==2){
+            this.boards[HomeComponent.username].tiles[i][j].canPut=true;
+          }else{
+            this.boards[HomeComponent.username].tiles[i][j].canPut=false;
+          }
+      
+        }
+      }
+    }
   }
   
   

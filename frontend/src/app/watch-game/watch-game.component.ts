@@ -1,4 +1,5 @@
 import { Component, HostListener, OnInit } from '@angular/core';
+import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { Subscription } from 'rxjs';
@@ -8,6 +9,7 @@ import { Board } from '../battleship-game/board';
 import { BoardService } from '../battleship-game/board.service';
 import { Foo } from '../battleship-game/foo';
 import { Move } from '../battleship-game/move';
+import { ChatService } from '../chat.service';
 import { HomeComponent } from '../home/home.component';
 import { WebsocketService } from '../websocket.service';
 
@@ -22,7 +24,9 @@ const SCORE_LIMIT: number = 32;
 })
 export class WatchGameComponent implements OnInit {
 
-
+  msgForm = new FormGroup({
+    msg: new FormControl('', Validators.required),
+  });
   player: any = (sessionStorage.getItem("player")) ? sessionStorage.getItem("player"): "";
   subscriptions: Subscription[]=[];
   matches:any= JSON.parse(sessionStorage.getItem("matches")+"");
@@ -30,7 +34,8 @@ export class WatchGameComponent implements OnInit {
   whoPlay:any=(sessionStorage.getItem("whoPlay")) ? sessionStorage.getItem("whoPlay"): "";
   players: number =(sessionStorage.getItem("players"))? Number.parseInt(sessionStorage.getItem("players")+""):  0;
   gameUrl: string = location.protocol + '//' + location.hostname + (location.port ? ':' + location.port: '');
-  constructor(private socket: WebsocketService,private boardService: BoardService,private toastr: ToastrService,private appService:AppService,private route:Router){
+  messages:any[]=(sessionStorage.getItem("messages")!=null) ? JSON.parse(sessionStorage.getItem("messages")+"") :[];
+  constructor(private socket: WebsocketService,private boardService: BoardService,private toastr: ToastrService,private appService:AppService,private route:Router,private chatService:ChatService){
     
   
   }
@@ -42,7 +47,11 @@ export class WatchGameComponent implements OnInit {
     sessionStorage.setItem("gameAsVisitor","true");
     HomeComponent.gameId=x;
     sessionStorage.setItem("gameId",x);
-    this.socket.connection({username:HomeComponent.username,visitor:true,gameId:HomeComponent.gameId});
+    this.chatService.listenMessageBroadcast().subscribe((data:any)=>{
+      this.messages.push(data);
+      sessionStorage.setItem("messages",JSON.stringify(this.messages));
+    })
+    this.socket.watchMatch({gameId:HomeComponent.gameId});
     this.subscriptions.push(
       this.appService.getMatchId(HomeComponent.token,{id:HomeComponent.gameId}).pipe().subscribe((data:any)=>{
     
@@ -60,20 +69,10 @@ export class WatchGameComponent implements OnInit {
         sessionStorage.setItem("whoPlay",this.whoPlay);
       })
     );
-      
-    
-  }
-  initConnection(): WatchGameComponent {
-    this.subscriptions.push(
-      this.appService.getMatches(HomeComponent.token).pipe().subscribe((data:any)=>{
-        this.matches = data.matches;
-        sessionStorage.setItem("matches",JSON.stringify(this.matches));
-       })
-      );
-    
     this.subscriptions.push(
       this.socket.getBoards().subscribe((data:any)=>{
-        
+        console.log("AGGIORNAMENTI PARTIA ");
+        console.log(data);
         let chiavi=Object.keys(data.boards);
         
         this.boards[chiavi[0]]=data.boards[chiavi[0]];
@@ -81,10 +80,23 @@ export class WatchGameComponent implements OnInit {
         sessionStorage.setItem("boards",JSON.stringify(this.boards));
         this.whoPlay = data.whoPlay;
         sessionStorage.setItem("whoPlay",this.whoPlay);
-        console.log("AGGIORNAMENTI PARTIA "+this.boards[chiavi[0]].player.score+" "+this.boards[chiavi[0]].player.score+"\n")
+        
 
       })
     );
+      
+    
+  }
+  initConnection(): WatchGameComponent {
+    this.socket.watchMatch({gameId:HomeComponent.gameId});
+    this.subscriptions.push(
+      this.appService.getMatches(HomeComponent.token).pipe().subscribe((data:any)=>{
+        this.matches = data.matches;
+        sessionStorage.setItem("matches",JSON.stringify(this.matches));
+       })
+      );
+    
+    
     return this;
   }
   get HomeComponent(){
@@ -160,6 +172,12 @@ export class WatchGameComponent implements OnInit {
 
   ngOnInit():void{
      this.initConnection();
+     this.subscriptions.push(
+      this.chatService.listenMessage().subscribe((data:any)=>{
+        this.messages.push(data);
+        sessionStorage.setItem("messages",JSON.stringify(this.messages));
+      })
+    );
   }
   
   getKeys():string[]{
@@ -173,6 +191,7 @@ export class WatchGameComponent implements OnInit {
     this.opponent ="";
     this.whoPlay="";
     this.players = 1;
+    this.messages=[];
     HomeComponent.gameAsVisitor=false;
     this.boardService.ngOnDestroy();
     this.dispose();
@@ -181,11 +200,20 @@ export class WatchGameComponent implements OnInit {
     sessionStorage.removeItem("opponent");
     sessionStorage.removeItem("player");
     sessionStorage.removeItem("gameAsVisitor");
+    sessionStorage.removeItem("messages");
     
     
   }
   dispose(){
     this.subscriptions.forEach(subscription =>subscription.unsubscribe());
+  }
+  sendMessage(){
+    
+    this.chatService.sendMessagetoBroadcast(this.msgForm.get("msg")?.value,this.player,HomeComponent.gameId);
+    this.messages.push({from:HomeComponent.username,message:this.msgForm.get("msg")?.value});
+
+    sessionStorage.setItem("messages",JSON.stringify(this.messages));
+    this.msgForm.reset();
   }
   
 

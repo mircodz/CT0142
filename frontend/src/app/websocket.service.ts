@@ -20,7 +20,10 @@ export class WebsocketService {
    }
 
   connection(data:any){
-    this.socket.emit("inGame",data);
+    this.socket.emit("randomMatch",data);
+  }
+  watchMatch(data:any){
+    this.socket.emit("watchMatch",data);
   }
   
   emitMoves(move:Move){
@@ -34,6 +37,9 @@ export class WebsocketService {
   }
   listenMembers(){
     return this.socket.fromEvent("new_member");
+  }
+  friendlyMatch(data:any){
+    this.socket.emit("friendlyMatch",data);
   }
   sendBoard(data:any){
     this.socket.emit('Board', data);

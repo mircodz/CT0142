@@ -15,10 +15,11 @@
         <!-- shows while waiting for 2nd user to join -->
         <div *ngIf="players < 2">
           <h2>Waiting for 2nd user to join...</h2>
+          
         </div>
   
         <!-- loops through the boards array and displays the player and board tiles -->
-        <div class="columns" *ngIf="validPlayer">
+        <div class="columns" *ngIf="validPlayer && ready">
           <div class="column has-text-centered" *ngFor="let board of getKeys(); let i = index">
             <h5>
               PLAYER {{ boards[board].player.name }} <span class="tag is-info" *ngIf="board == HomeComponent.username">You</span>
@@ -38,21 +39,60 @@
           </table>
         </div>
       </div>
+        
+        <div class="columns" *ngIf="validPlayer && !ready">
+          <div class="column has-text-centered">
+            <h5>
+              PLAYER {{ boards[HomeComponent.username].player.name }} 
+            </h5>
+            <table class="table is-bordered" >
+              <tr *ngFor="let row of boards[HomeComponent.username].tiles; let j = index">
+        
+              <td *ngFor="let col of row; let k = index" (mouseenter)=" col.canPut && mouseenter(j,k,boards[HomeComponent.username].ships[boards[HomeComponent.username].ships.length-1]) " (mouseleave)="col.canPut && mouseleave(j,k,boards[HomeComponent.username].ships[boards[HomeComponent.username].ships.length-1]) "
+                (click) = "putShip($event,boards[HomeComponent.username].ships[boards[HomeComponent.username].ships.length-1])"
+                [class.canPut] = "col.canPut == true" [class.fail] = "col.canPut==false"
+                class="battleship-tile" id="{{j}};{{k}}">
+                {{(col.value == "X"  ) ? "X" :"  "}}
+              </td>
+            </tr>
+          </table>
+        </div>
+      
+        <div class="column has-text-centered">
+          <h5>
+            Ship to put in:
+          </h5>
+          Your ship:
+          <div *ngFor="let x of counter(boards[HomeComponent.username].ships[boards[HomeComponent.username].ships.length-1]);"> 
+            X
+          </div>
+          <div class="block">
+            <button class="button" (click)="rotate()" >Rotate</button>
+          </div>
+          <div *ngIf="!canContinue() && boards[HomeComponent.username].ships.length>0" class="block">
+            <button (click)="this.getboardService().createBoardManually(10,HomeComponent.username)">Restart</button>
+          </div>
+      </div>
+        </div>
+    
+      
   
       <div class="has-text-centered">
-        <span class="tag is-warning" *ngIf="canPlay && players==2">Your turn!</span>
-        <span class="tag is-danger" *ngIf="!canPlay && players==2">Other player's turn.</span>
+        <div class="block" *ngIf="!ready && players==2"><button class="button" (click)="sendBoard()">Send my Board</button></div>
+        <div class="block" *ngIf="!ready && players==2 && boards[HomeComponent.username].ships.length==0"><button class="button" (click)="sendMyBoard()">Send my manual Board</button></div>
+        <span class="tag is-warning" *ngIf="canPlay && players==2 && ready">Your turn!</span>
+        <span class="tag is-danger" *ngIf="!canPlay && players==2 && ready">Other player's turn.</span>
         <h5 class="title"><small>{{ players }} player(s) in game</small></h5>
       </div>
       <div>
-        <button (click)="quitGame()">Quit game</button>
+        <button  class="button" (click)="quitGame()">Quit game</button>
       </div>
-      <div *ngIf="players==2">
-        <div class="tile">
+      <section class="hero is-small">
+      <div *ngIf="players==2 && ready">
+        <div class="block" style="height: 300px;">
           <!-- The magical tile element! -->
           <div *ngFor="let x of messages" class="block">
-            <p>{{x.from}} : {{x.message}}</p>
-            <br>
+            <span>{{x.from}} : {{x.message}}</span>
           </div>
           <br>
           <div class="block">
@@ -63,4 +103,5 @@
           </div>                   
         </div>
       </div>
+      </section>
  

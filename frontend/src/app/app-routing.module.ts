@@ -1,6 +1,7 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { BattleshipGameComponent } from './battleship-game/battleship-game.component';
+import { ChatComponent } from './chat/chat.component';
 import { ExpenseGuard } from './expense.guard';
 import { FriendsComponent } from './friends/friends.component';
 import { GameComponent } from './game/game.component';
@@ -22,12 +23,13 @@ const routes: Routes = [
   {path:'main',component:MainComponent,canActivate: [ExpenseGuard]},
   {path:'friends',component:FriendsComponent,canActivate: [ExpenseGuard]},
   {path:'game',component:GameComponent,canActivate: [ExpenseGuard]},
+  {path:'chat',component:ChatComponent,canActivate: [ExpenseGuard]},
 ]},
 {path: '', redirectTo: '/login', pathMatch: 'full'},
 ];
 
 @NgModule({
-  imports: [RouterModule.forRoot(routes)],
+  imports: [RouterModule.forRoot(routes,{onSameUrlNavigation: 'reload'})],
   exports: [RouterModule]
 })
 export class AppRoutingModule { }

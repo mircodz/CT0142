@@ -1,6 +1,7 @@
 import { Component, HostListener, OnInit } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { Route, Router } from '@angular/router';
+import { Socket } from 'ngx-socket-io';
 import { ToastrService } from 'ngx-toastr';
 import { Subscription } from 'rxjs';
 import { AppComponent } from '../app.component';
@@ -18,11 +19,11 @@ import { WebsocketService } from '../websocket.service';
   styleUrls: ['./home.component.css']
 })
 export class HomeComponent implements OnInit {
-  subscriptions: Subscription[]=[];
   static token: any = sessionStorage.getItem("token");
   static gameId:any=sessionStorage.getItem("gameId");
   static gameAsVisitor:boolean=LoginComponent.getBoolean(sessionStorage.getItem("gameAsVisitor"));
   static username: any=sessionStorage.getItem("username");
+  listen:boolean=LoginComponent.getBoolean(sessionStorage.getItem("listen"));
 
   get AppComponent(){
     return AppComponent;
@@ -43,8 +44,10 @@ export class HomeComponent implements OnInit {
     
   
     
-    this.subscriptions.push(
-      this.socket.listenFriendRequest().subscribe((data:any)=>{
+    if(!this.listen){
+      this.listen=true;
+      sessionStorage.setItem("listen",true+"");
+      this.socket.listenFriendRequest().pipe().subscribe((data:any)=>{
         this.confirmationDialogService.confirm('Richiesta di amicizia da '+data.username, 'Vuoi diventare mio amico?')
             .then((confirmed) => {
               if(confirmed){
@@ -58,22 +61,23 @@ export class HomeComponent implements OnInit {
               }
               }).catch(() => {this.socket.sendConfirmFriend({friend:data.username,username:HomeComponent.username,confirmed:false});});
       })
-    );
-    this.subscriptions.push(
-      this.socket.matchConfirm().subscribe((data:any)=>{
+    
+      this.socket.matchConfirm().pipe().subscribe((data:any)=>{
         console.log("GUARDA COSA E' ARRIVATO AMICO")
         console.log(data)
         if(data.confirmed){
           this.toastr.success(data.username+" has accepted your game request!","GAME REQUEST ACCEPTED!")
-          this.route.navigate(["/home/game/playGame"]);
+          BattleshipGameComponent.isFriendly=true;
+          BattleshipGameComponent.isInvited=true;
+          sessionStorage.setItem("isFriendly",true+"");
+          this.route.navigate(["/playGame"]);
         }else{
           this.toastr.error(data.username+" has rejected your game request!","GAME REQUEST REJECTED!")
         }
         
       })
-    );
-    this.subscriptions.push(
-      this.socket.friendConfirm().subscribe((data:any)=>{
+    
+      this.socket.friendConfirm().pipe().subscribe((data:any)=>{
         if(data.confirmed){
           this.toastr.success(data.username+" has accepted your friend request!","FRIEND REQUEST ACCEPTED!")
         }else{
@@ -81,32 +85,46 @@ export class HomeComponent implements OnInit {
         }
         
       })
-    );
-    this.subscriptions.push(
-    this.socket.listenMatchRequest().subscribe((data:any)=>{
+    
+    
+    this.socket.listenMatchRequest().pipe().subscribe((data:any)=>{
+      
       this.confirmationDialogService.confirm('Richiesta di partita da '+data.opponent, 'Vuoi fare una partita?')
             .then((confirmed) => {
               if(confirmed){
                 console.log('SI!');
-                this.route.navigate(["/home/game/playGame"]);
-                this.socket.sendConfirmMatch({friend:data.opponent,username:data.username,confirmed:true});
+                  this.socket.sendConfirmMatch({friend:data.opponent,username:data.username,confirmed:true});
+                  BattleshipGameComponent.isFriendly=true;
+                  BattleshipGameComponent.opponent=data.opponent;
+                  sessionStorage.setItem("isFriendly",true+"");
+                  this.route.navigate(["/playGame"]);
+                
+                
               }else{
                 this.socket.sendConfirmMatch({friend:data.opponent,username:data.username,confirmed:false});
               }
               
             }).catch(()=> {this.socket.sendConfirmMatch({friend:data.opponent,username:data.username,confirmed:false});});
       
-          }));
-    this.socket.listenFriendRemoved().subscribe((data:any)=>{
+          });
+    this.socket.listenFriendRemoved().pipe().subscribe((data:any)=>{
       this.toastr.warning(data.friend+" is not your friend!","FRIEND REMOVED");
     })
+    this.socket.listenUpdateFriends().subscribe((data:any)=>{
+      FriendsComponent.friends = JSON.parse(JSON.stringify(data));
+    })
+  
+  
+    this.socket.listenUpdateUsers().subscribe((data:any)=>{
+      FriendsComponent.users=Object.keys(data);;
+    })
+    }
     
   }
   
   
   
   logout(){
-    this.subscriptions.push(
       this.appService.logout(HomeComponent.token,{username:HomeComponent.username}).pipe().subscribe(()=>{
         
         this.socket.disconnect({username:HomeComponent.username,gameId:HomeComponent.gameId});
@@ -119,10 +137,7 @@ export class HomeComponent implements OnInit {
         this.route.navigate(['/','login']);
         
       })
-    );
-  }
-  dispose(){
-    this.subscriptions.forEach(subscription =>subscription.unsubscribe());
+    
   }
 
 }

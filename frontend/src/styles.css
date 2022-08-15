@@ -9,6 +9,10 @@
     background-color: #23d160;
     color: #fff;
   }
+  .canPut {
+    background-color: #c0d123;
+    color: #fff;
+  }
   .fail {
     background-color: #ff3860;
     color: #fff;

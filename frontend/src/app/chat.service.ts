@@ -14,6 +14,9 @@ export class ChatService {
   listenMessage(){
     return this.socket.fromEvent("message");
   }
+  listenMessageBroadcast(){
+    return this.socket.fromEvent("messageBroadcast");
+  }
   sendMessagetoBroadcast(msg: string,from:string,id_game:any) {
     this.socket.emit('messageBroadcast', {message: msg,from:from,gameId:id_game});
   }

@@ -216,28 +216,26 @@ app.post('/deleteFriend', authenticateJWT, (req, res) => {
       console.log(sub);
       let i=0;
       if(sub){
-       
-            console.log("FUNZIA")
-            User.updateOne({username:username},{$pull:{friends:sub._id}},function(err,res){
-              console.log("Utente aggiornato");
-              
-            })
-            User.updateOne({username:friend},{$pull:{friends:idFriend}},function(err,res){
-              console.log("Utente aggiornato");
-            })
-            User.find({username:username},function(err,sub){
-              User.find({_id:sub[0].friends},function(err,sub){
-                io.to(users[username]).emit("updateFriends",sub)
-                
-              })
-            })
-            User.find({username:friend},function(err,sub){
-              User.find({_id:sub[0].friends},function(err,sub){
-                io.to(users[friend]).emit("updateFriends",sub)
-                
-              })
-            })
-        res.status(200).json({message:"ok"});
+        User.updateOne({username:username},{$pull:{friends:sub._id}},function(err,res){
+          console.log("Utente aggiornato");
+          
+        })
+        User.updateOne({username:friend},{$pull:{friends:idFriend}},function(err,res){
+          console.log("Utente aggiornato");
+        })
+        User.find({username:username},function(err,sub){
+          User.find({_id:sub[0].friends},function(err,sub){
+            io.to(users[username]).emit("updateFriends",sub)
+            
+          })
+        })
+        User.find({username:friend},function(err,sub){
+          User.find({_id:sub[0].friends},function(err,sub){
+            io.to(users[friend]).emit("updateFriends",sub)
+            
+          })
+        })
+    res.status(200).json({message:"ok"});
      }else{
         res.status(400).json({message:"error"});
       }
@@ -261,7 +259,7 @@ app.post('/matchId', authenticateJWT, (req, res) => {
   const { id } = req.body;
   
   console.log("STAMPA del MATCH: "+matches[id]);
-  res.json({match:matches[id]});
+  res.json({match:matches.filter(value => value.id == id)[0]});
   
 });
 app.post('/firstLogin', authenticateJWT, (req, res) => {
@@ -382,35 +380,80 @@ app.post('/getHistoricalMatches', authenticateJWT, (req, res) => {
   
   
 });
+ 
+app.post('/chat', authenticateJWT, async (req, res) => {
+  const {username,friend} = req.body;
+  const { ChatClient } = require('./chat');
+  let c = new ChatClient(username);
+    
+     
+    c.put('Hello, World!', "filippo");
+    await c.get("filippo")
+        .then(response => response.hits.hits.map(i => i._source.text))
+        .then(items => res.status(200).json(items))
+});
 //const { logger2 } = require('./logger.ts');
 
 
 
 
 var matches:match[]=[];
-let j=0;
-matches[0]=new match();
-matches[j].id=makeid(20);
 io.on('connection', (socket) => {
   
   //logger.error({ message: 'user connected', labels: { 'key': 'value' } })
-  socket.on('Move', function (data) {
+  socket.on('Move', async function (data) {
     
-    console.log("Mossa inviata ");
-    console.log(data);
-    matches[data.gameId].boards=data.boards;
-    matches[data.gameId].whoPlay=data.opponent;
+    let match = matches.filter(value => value.id==data.gameId)[0];
+    match.boards=data.boards;
+    match.whoPlay=data.opponent;
+    if(match.boards[match.players[0]].player.score>=BOARD_SIZE || match.boards[match.players[1]].player.score>=BOARD_SIZE){
+      const r = await new Match({
+        player1: match.players[0],
+        player2: match.players[1],
+        score1: match.boards[match.players[0]].player.score,
+        score2: match.boards[match.players[1]].player.score,
+        winner: match.players[max(match.id)]
+      }).save();
+      User.updateOne({username:match.players[max(match.id)]},{$inc:{matches:1,wins:1}},function(err,res){
+        console.log("Giocatore aggiornato!")
+      });
+      User.updateOne({username:match.players[min(match.id)]},{$inc:{matches:1,looses:1}},function(err,res){
+        console.log("Giocatore aggiornato!")
+      });
+    }
+    
     io.to(users[data.opponent]).emit("Move", data);
-    io.emit("ListenGames", matches[data.gameId])
+    console.log("STO INVIANDO al "+data.gameId);
+    io.to("visitors"+data.gameId).emit("ListenGames", match);
   });
   socket.on('Board', function (data) {
-    matches[j].boards[data.username]=data.board;
+    let match = matches.filter(value => value.id==data.gameId);
+    console.log("HO RICEVUTO "+data.board);
+    match[0].boards[data.username]=data.board;
+    if(Object.keys(match[0].boards).length==2){
+      console.log("HO INVIATO LE BOARD DIOCANE")
+      const randomElement = match[0].players[Math.floor(Math.random() * match[0].players.length)];
+      if(randomElement==match[0].players[0]){
+        match[0].whoPlay=match[0].players[0];
+        io.to(users[match[0].players[0]]).emit("Board", {board: match[0].boards[match[0].players[1]],username:match[0].players[1],canPlay:true});
+        io.to(users[match[0].players[1]]).emit("Board", {board: match[0].boards[match[0].players[0]],username:match[0].players[0],canPlay:false});
+      }else{
+        match[0].whoPlay=match[0].players[1];
+        io.to(users[match[0].players[0]]).emit("Board", {board: match[0].boards[match[0].players[1]],username:match[0].players[1],canPlay:false});
+        io.to(users[match[0].players[1]]).emit("Board", {board: match[0].boards[match[0].players[0]],username:match[0].players[0],canPlay:true});
+      }
+      
+    } 
     console.log("DIOCANE");
     
   });
   socket.on('login',function(data){
-    console.log("BUONGIORNO :"+data.username)
     users[data.username] = socket.id;
+    let game = matches.filter(value => value.players.includes(data.username))[0];
+    if(game){
+      
+      socket.join(game.id);
+    }
     io.emit("updatePlayers",users);
   });
   
@@ -422,104 +465,112 @@ io.on('connection', (socket) => {
     
   })
   socket.on("matchConfirm",function(data){
-    console.log(data.username+" ha mandato la conferma a "+data.friend+" con valore: "+data.confirmed);
-    console.log(data);
     io.to(users[data.friend]).emit("matchConfirm",data);
   });
   socket.on("friendConfirm",function(data){
     io.to(users[data.friend]).emit("friendConfirm",data);
   });
-  socket.on("inGame",function(data){
-      if (data.visitor==true){
-        console.log("ENTRA UN VISITATORE!")
-        socket.join("visitors"+matches[data.gameId].id);
-      }else{
-        while(matches[j]!=null && matches[j].members==2 ){
-          j++;
-        }
-        if(matches[j]==null){
-          matches[j]=new match();
-          matches[j].id=makeid(20);
-        }
-        
-        
-        matches[j].players[matches[j].i]=data.username;
-        matches[j].i++;
-        socket.join(matches[j].id);
-        console.log("ENTRA NELLA STANZA "+matches[j].id)
-        io.emit("new_member", {members:matches[j].members+1,gameId:j});
-        console.log("si è aggiunto al gioco! "+matches[j].members);
-        matches[j].members++;
-        if(matches[j].members==2){
-          const randomElement = matches[j].players[Math.floor(Math.random() * matches[j].players.length)];
-          if(randomElement==matches[j].players[0]){
-            matches[j].whoPlay=matches[j].players[0];
-            io.to(users[matches[j].players[0]]).emit("Board", {board: matches[j].boards[matches[j].players[1]],username:matches[j].players[1],canPlay:true});
-            io.to(users[matches[j].players[1]]).emit("Board", {board: matches[j].boards[matches[j].players[0]],username:matches[j].players[0],canPlay:false});
-          }else{
-            matches[j].whoPlay=matches[j].players[1];
-            io.to(users[matches[j].players[0]]).emit("Board", {board: matches[j].boards[matches[j].players[1]],username:matches[j].players[1],canPlay:false});
-            io.to(users[matches[j].players[1]]).emit("Board", {board: matches[j].boards[matches[j].players[0]],username:matches[j].players[0],canPlay:true});
-          }
-        }
-      
-        
-      }      
-      
 
-  })
-  
-
-    
-  socket.on('message', data => {
-     // logger2.error({ message: 'message received', labels: { 'key': 'value' } })
-    
-    io.to(matches[data.gameId].id).emit("message",data);
-    
-  })
-
-  socket.on('disconnect', () => {
-      //logger2.error({ message: 'user disconnected', labels: { 'key': 'value' } })
-      
-  })
-  socket.on('quitGame', async (data) => {
-    //logger2.error({ message: 'user disconnected', labels: { 'key': 'value' } })
-    console.log("Partita numero "+data.gameId);
-    if(data.gameId!=undefined && data.gameId>=0 && matches[data.gameId].members>0 && matches[data.gameId].players.includes(data.username)){
-      if(matches[data.gameId].boards[matches[data.gameId].players[0]].player.score>=BOARD_SIZE || matches[data.gameId].boards[matches[data.gameId].players[1]].player.score>=BOARD_SIZE){
-
-      }else{ 
-        (data.username==matches[data.gameId].players[0])? matches[data.gameId].boards[matches[data.gameId].players[1]].player.score=BOARD_SIZE : matches[data.gameId].boards[matches[data.gameId].players[0]].player.score=BOARD_SIZE;
-        console.log("PUNTEGGI INVIATI"+matches[data.gameId].boards[matches[data.gameId].players[1]].player.score+" "+matches[data.gameId].boards[matches[data.gameId].players[0]].player.score)
-        socket.to("visitors"+matches[data.gameId].id).emit("ListenGames", matches[data.gameId]);
-        io.emit("new_member", {members:matches[data.gameId].members-1,gameId:data.gameId});
-        
-      }
-      const r = await new Match({
-        player1: matches[data.gameId].players[0],
-        player2: matches[data.gameId].players[1],
-        score1: matches[data.gameId].boards[matches[data.gameId].players[0]].player.score,
-        score2: matches[data.gameId].boards[matches[data.gameId].players[1]].player.score,
-        winner: matches[data.gameId].players[max(data.gameId)]
-      }).save();
-      User.updateOne({username:matches[data.gameId].players[max(data.gameId)]},{$inc:{matches:1,wins:1}},function(err,res){
-        console.log("Giocatore aggiornato!")
-      });
-      User.updateOne({username:matches[data.gameId].players[min(data.gameId)]},{$inc:{matches:1,looses:1}},function(err,res){
-        console.log("Giocatore aggiornato!")
-      });
-      console.log("CANCELLATO IL GAME");
-      j=data.gameId;
-      console.log("UN GIOCATORE HA QUITATO");
-      io.to(users[data.username]).emit("quitGame");
-
-      matches[data.gameId]=new match();
-      matches[data.gameId].id=makeid(20);
-      console.log("L'utente si è disconnesso");
+  socket.on("randomMatch",function(data){
+    console.log("ENTRA IN MATCH!")
+    let game = matches.filter(value => value.members==1)[0];
+    console.log(game)
+    if(game){
+      game.players[game.i] = data.username;
+      game.i++;
+      game.members++;
+      socket.join(game.id);
+      io.to(game.id).emit("new_member", {members:game.members,gameId:game.id});
+    }else{
+      let game = new match();
+      game.id=makeid(20);
+      game.players[game.i] = data.username;
+      game.i++;
+      game.members++;
+      matches.push(game);
+      socket.join(game.id);
+      console.log("ECCO COSA MANDO: "+game.id);
+      io.to(game.id).emit("new_member", {members:game.members,gameId:game.id});
+    }
+  });
+  socket.on("friendlyMatch",function(data){
+    let game = matches.filter(value => value.players.includes(data.player1))[0];
+    console.log(matches);
+    console.log(game);
+    if(!game){
+      console.log("SONO ENTRATO QUA")
+      let game = new match();
+      game.id=makeid(20);
+      game.players[game.i] = data.player1;
+      game.i++;
+      game.players[game.i] = data.player2;
+      game.i++;
+      game.members=2;
+      socket.join(game.id);
+      matches.push(game);
+      io.to(users[data.player1]).to(users[data.player2]).emit("new_member", {members:game.members,gameId:game.id});
+    }else{
+      socket.join(game.id);
+      io.to(users[data.player1]).to(users[data.player2]).emit("new_member", {members:game.members,gameId:game.id});
     }
     
     
-})
+  });
+  socket.on('watchMatch',(data)=>{
+    console.log(socket.rooms);
+    if(data.gameId){
+      console.log("ENTRA UN VISITATORE!");
+      matches.filter(value => value.id==data.gameId)[0].visitor++;
+      
+      socket.join("visitors"+data.gameId);
+      console.log(socket.rooms);
+    }
+  });
+  socket.on('message', data => {
+     // logger2.error({ message: 'message received', labels: { 'key': 'value' } })
+    
+    io.to(users[data.to]).emit("message",data);
+    io.to("visitors"+data.gameId).emit("message",data);
+    
+  });
+
+  socket.on('messageBroadcast',data =>{
+    io.to("visitors"+data.gameId).emit("messageBroadcast",data);
+  });
+  socket.on('quitGame',async data=>{
+    let match = matches.filter(value => value.id==data.gameId)[0];
+    console.log("SONO DENTRO "+data.gameId);
+    if(match){
+      console.log("SONO DENTRO "+data.gameId);
+      if(Object.keys(match.boards).length==2){
+        (data.username==match.players[0])? match.boards[match.players[1]].player.score=BOARD_SIZE : match.boards[match.players[0]].player.score=BOARD_SIZE;
+        const r = await new Match({
+          player1: match.players[0],
+          player2: match.players[1],
+          score1: match.boards[match.players[0]].player.score,
+          score2: match.boards[match.players[1]].player.score,
+          winner: match.players[max(match.id)]
+        }).save();
+        User.updateOne({username:match.players[max(match.id)]},{$inc:{matches:1,wins:1}},function(err,res){
+          console.log("Giocatore aggiornato!")
+        });
+        User.updateOne({username:match.players[min(match.id)]},{$inc:{matches:1,looses:1}},function(err,res){
+          console.log("Giocatore aggiornato!")
+        });
+        io.to(data.username).emit("listeQuit");
+        io.to("visitors"+match.id).emit("ListenGames", match)
+        io.to(users[match.players[max(match.id)]]).emit("Move",{canPlay:true,boards:match.boards,gameId:match.id,opponent:data.username});
+        
+      }
+      let i = matches.indexOf(match);
+      matches.splice(i,1);
+      console.log(matches);
+    }
+  })
+  socket.on('disconnect', async () => {
+
+      
+  })
 });
 
 server.listen(port, function () {
@@ -536,27 +587,22 @@ charactersLength));
  }
  return result;
 }
-app.get('/chat', async (req, res) => {
-  const { ChatClient } = require('./chat');
-    let c = new ChatClient(1)
-    c.put('Hello, World!', 3)
-    await c.get(3)
-        .then(response => response.hits.hits.map(i => i._source.text))
-        .then(items => res.json(items))
-});
+
 
 function max(id){
-  if(matches[id].boards[matches[id].players[0]].player.score>matches[id].boards[matches[id].players[1]].player.score){
+  let match = matches.filter(value => value.id == id)[0];
+  if(match.boards[match.players[0]].player.score>match.boards[match.players[1]].player.score){
     return 0;
   }else{
     return 1;
   }
 }
 function min(id){
-  if(matches[id].boards[matches[id].players[0]].player.score<=matches[id].boards[matches[id].players[1]].player.score){
-    return 0;
-  }else{
+  let match = matches.filter(value => value.id == id)[0];
+  if(match.boards[match.players[0]].player.score>match.boards[match.players[1]].player.score){
     return 1;
+  }else{
+    return 0;
   }
 }
 

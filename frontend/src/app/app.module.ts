@@ -23,8 +23,10 @@ import { RouterModule } from '@angular/router';
 import { HashLocationStrategy, LocationStrategy } from '@angular/common';
 import { GameComponent } from './game/game.component';
 import { MainComponent } from './main/main.component';
+import { ChatComponent } from './chat/chat.component';
+let localhost:any='localhost';
 const config: SocketIoConfig = {
-	url: 'http://localhost:6969',// socket server url;
+	url: 'http://'+ localhost+':6969',// socket server url;
 	options: {}
 }
 
@@ -41,7 +43,8 @@ const config: SocketIoConfig = {
     ModeratorComponent,
     FriendsComponent,
     GameComponent,
-    MainComponent
+    MainComponent,
+    ChatComponent
   ],
   imports: [
     BrowserModule,
