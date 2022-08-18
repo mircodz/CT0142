@@ -158,6 +158,29 @@
                         
                     </div>
                 </div>
+                <div class="column">
+                    <h1 class="title">Chat with Players</h1>
+                    <div class="block">
+                        <div class="select is-rounded">
+                            <select ngModel (ngModelChange)="chat($event)">
+                                <option>-</option>
+                            <option *ngFor="let x of users" [ngValue]="x.username" >{{x.username}}</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="block" style="overflow:scroll; width: 400px; height: 400px;" #chatWithPlayers>
+                        <div  class="block" *ngFor="let x of messages">
+                                {{x.from}}: {{x.message}}  {{ x.timestamp}};
+                            
+                        </div>
+                    </div>
+                    <div class="block">
+                        <form [formGroup]="msgForm" (ngSubmit)="sendMessage()">
+                      <input name="msg" class="input" type="text" formControlName="msg" placeholder="Text input">
+                      <button type="submit" class="btn btn-default pull-right">Send</button> 
+                      </form>
+                      </div> 
+                </div>
             </div>
         </div>
     </section>

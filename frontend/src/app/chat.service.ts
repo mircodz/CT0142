@@ -14,6 +14,9 @@ export class ChatService {
   listenMessage(){
     return this.socket.fromEvent("message");
   }
+  listenPrivateMessage(){
+    return this.socket.fromEvent("privateMessage");
+  }
   listenMessageBroadcast(){
     return this.socket.fromEvent("messageBroadcast");
   }

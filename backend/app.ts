@@ -65,6 +65,7 @@ try {
 
 const User = mongoose.model('User');
 const Match = mongoose.model("Match");
+const Message = mongoose.model("Message");
 
 app.post('/signup', async (req, res) => {
   const { name, username, email, password } = req.body;
@@ -156,22 +157,9 @@ app.post('/addFriends', authenticateJWT, (req, res) => {
     User.updateOne({username:friend},{$push: { friends: sub[0]._id }},function(err,res){
       console.log("Amicizia inserita!")
     })
-    
-    User.find({username:username},function(err,sub){
-      User.find({_id:sub[0].friends},function(err,sub){
-        io.to(users[username]).emit("updateFriends",sub)
-        
-      })
-    })
-    User.find({username:friend},function(err,sub){
-      User.find({_id:sub[0].friends},function(err,sub){
-        io.to(users[friend]).emit("updateFriends",sub)
-        
-      })
-    })
   });
   
-  res.sendStatus(200);
+  res.status(200).json({message:"ok"});
 });
 app.get('/allUsers', authenticateJWT, (req, res) => {
   console.log("STAMPA DI TUTTI GLI UTENTI: "+users);
@@ -192,6 +180,19 @@ app.post('/getAllUsers', authenticateJWT, (req, res) => {
   });
   
 });
+app.get('/getModerators', authenticateJWT, (req, res) => {
+  
+    User.find({isModerator:true},function(err,sub){
+      if(sub){
+        res.status(200).json({sub});
+      }else{
+        res.status(400).json({message:"We don't have any moderator!"});
+      }
+      
+    });
+    
+});
+  
 app.post('/friend', authenticateJWT, (req, res) => {
   const { username } = req.body;
   User.find({username:username},function(err,sub){
@@ -222,18 +223,6 @@ app.post('/deleteFriend', authenticateJWT, (req, res) => {
         })
         User.updateOne({username:friend},{$pull:{friends:idFriend}},function(err,res){
           console.log("Utente aggiornato");
-        })
-        User.find({username:username},function(err,sub){
-          User.find({_id:sub[0].friends},function(err,sub){
-            io.to(users[username]).emit("updateFriends",sub)
-            
-          })
-        })
-        User.find({username:friend},function(err,sub){
-          User.find({_id:sub[0].friends},function(err,sub){
-            io.to(users[friend]).emit("updateFriends",sub)
-            
-          })
         })
     res.status(200).json({message:"ok"});
      }else{
@@ -356,6 +345,7 @@ app.post('/addModeator', authenticateJWT, (req, res) => {
 
 app.get('/matches', authenticateJWT, (req, res) => {
   if(matches){
+    console.log("MANDO"+matches)
     res.status(200).json({matches});
 
   }else{
@@ -382,15 +372,29 @@ app.post('/getHistoricalMatches', authenticateJWT, (req, res) => {
 });
  
 app.post('/chat', authenticateJWT, async (req, res) => {
+  const {username,friend,msg} = req.body;
+  let time = new Date().toString();
+  await new Message({
+    from:username,
+    to:friend,
+    message:msg,
+    timestamp: time
+  }).save();
+  res.status(200).json({message:"ok"});
+  io.to(users[friend]).emit("privateMessage",{username:username,msg:msg,timestamp:time});
+        
+      });
+app.post('/getChat', authenticateJWT, async (req, res) => {
   const {username,friend} = req.body;
-  const { ChatClient } = require('./chat');
-  let c = new ChatClient(username);
-    
-     
-    c.put('Hello, World!', "filippo");
-    await c.get("filippo")
-        .then(response => response.hits.hits.map(i => i._source.text))
-        .then(items => res.status(200).json(items))
+  Message.find({$or :[{from:username,to:friend},{from:friend,to:username}]},function(err,sub){
+    console.log(sub);
+    if(sub){
+      res.status(200).json({sub});
+    }else{
+      res.status(400).json({message:"chat empty!"});
+    }
+  })
+
 });
 //const { logger2 } = require('./logger.ts');
 
@@ -458,6 +462,7 @@ io.on('connection', (socket) => {
   });
   
   socket.on("friendRequest",function(data){   
+    console.log(data.username+" a "+data.friend);
     io.to(users[data.friend]).emit("friendRequest", data);
   })
   socket.on("matchRequest",function(data){
@@ -476,12 +481,14 @@ io.on('connection', (socket) => {
     let game = matches.filter(value => value.members==1)[0];
     console.log(game)
     if(game){
+      console.log("MI COLLEGO");
       game.players[game.i] = data.username;
       game.i++;
       game.members++;
       socket.join(game.id);
       io.to(game.id).emit("new_member", {members:game.members,gameId:game.id});
     }else{
+      console.log("CREO");
       let game = new match();
       game.id=makeid(20);
       game.players[game.i] = data.username;
@@ -526,6 +533,15 @@ io.on('connection', (socket) => {
       console.log(socket.rooms);
     }
   });
+  socket.on("quitVisitor",(data)=>{
+    if(data.gameId){
+      console.log("ESCE UN VISITATORE!");
+      matches.filter(value => value.id==data.gameId)[0].visitor--;
+      
+      socket.leave("visitors"+data.gameId);
+      console.log(socket.rooms);
+    }
+  })
   socket.on('message', data => {
      // logger2.error({ message: 'message received', labels: { 'key': 'value' } })
     
@@ -557,10 +573,12 @@ io.on('connection', (socket) => {
         User.updateOne({username:match.players[min(match.id)]},{$inc:{matches:1,looses:1}},function(err,res){
           console.log("Giocatore aggiornato!")
         });
-        io.to(data.username).emit("listeQuit");
         io.to("visitors"+match.id).emit("ListenGames", match)
         io.to(users[match.players[max(match.id)]]).emit("Move",{canPlay:true,boards:match.boards,gameId:match.id,opponent:data.username});
         
+      }else{
+        console.log("STO QUITTANDO")
+        io.to(users[matches.filter(value => value.id=data.gameId)[0].players.filter(value => value != data.username)[0]]).emit("listenOpponentQuit");
       }
       let i = matches.indexOf(match);
       matches.splice(i,1);

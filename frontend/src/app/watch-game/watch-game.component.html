@@ -43,7 +43,10 @@
           <span class="tag is-warning" *ngIf="players==2 && boards[board].player.name==this.whoPlay">{{this.whoPlay}} turn!</span>
         </div>
         <div class="column has-text-centered">
-            <div class="block" *ngFor="let x of messages">{{x.from}}: {{x.message}}</div>
+            <div class="block"  style="overflow:scroll; height: max-content;" #chat>
+              <div class="block" *ngFor="let x of messagesMatch">{{x.from}}: {{x.message}}</div>
+
+              </div>
         </div>
       </div>
   
@@ -55,8 +58,8 @@
       </div>
       <div class="block" style="height: 300px;">
         <!-- The magical tile element! -->
-        <div *ngFor="let x of messages" class="block">
-          <span>{{x.from}} : {{x.message}}</span>
+        <div  class="block" style="overflow:scroll; height: 300px;" #chatBroadcast>
+          <div class="block" *ngFor="let x of messages">{{x.from}} : {{x.message}}</div>
         </div>
         <br>
         <div class="block">

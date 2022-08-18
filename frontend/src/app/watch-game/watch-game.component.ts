@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit } from '@angular/core';
+import { AfterContentChecked, Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
@@ -22,7 +22,7 @@ const SCORE_LIMIT: number = 32;
   templateUrl: './watch-game.component.html',
   styleUrls: ['./watch-game.component.css']
 })
-export class WatchGameComponent implements OnInit {
+export class WatchGameComponent implements OnInit,OnDestroy,AfterContentChecked {
 
   msgForm = new FormGroup({
     msg: new FormControl('', Validators.required),
@@ -35,9 +35,23 @@ export class WatchGameComponent implements OnInit {
   players: number =(sessionStorage.getItem("players"))? Number.parseInt(sessionStorage.getItem("players")+""):  0;
   gameUrl: string = location.protocol + '//' + location.hostname + (location.port ? ':' + location.port: '');
   messages:any[]=(sessionStorage.getItem("messages")!=null) ? JSON.parse(sessionStorage.getItem("messages")+"") :[];
+  messagesMatch:any[]=(sessionStorage.getItem("messagesMatch")!=null) ? JSON.parse(sessionStorage.getItem("messagesMatch")+"") :[];
+  @ViewChild('chat')
+  divToScroll!: ElementRef;
+  @ViewChild('chatBroadcast')
+  divToScroll2!: ElementRef;
   constructor(private socket: WebsocketService,private boardService: BoardService,private toastr: ToastrService,private appService:AppService,private route:Router,private chatService:ChatService){
     
   
+  }
+  ngAfterContentChecked(): void {
+    try {
+      this.divToScroll.nativeElement.scrollTop=this.divToScroll.nativeElement.scrollHeight;
+    this.divToScroll2.nativeElement.scrollTop=this.divToScroll2.nativeElement.scrollHeight;
+    } catch (error) {
+      console.log(error);
+    }
+    
   }
   get BattleshipGameComponent(){
     return BattleshipGameComponent;
@@ -47,10 +61,10 @@ export class WatchGameComponent implements OnInit {
     sessionStorage.setItem("gameAsVisitor","true");
     HomeComponent.gameId=x;
     sessionStorage.setItem("gameId",x);
-    this.chatService.listenMessageBroadcast().subscribe((data:any)=>{
+    this.subscriptions.push(this.chatService.listenMessageBroadcast().subscribe((data:any)=>{
       this.messages.push(data);
       sessionStorage.setItem("messages",JSON.stringify(this.messages));
-    })
+    }));
     this.socket.watchMatch({gameId:HomeComponent.gameId});
     this.subscriptions.push(
       this.appService.getMatchId(HomeComponent.token,{id:HomeComponent.gameId}).pipe().subscribe((data:any)=>{
@@ -91,6 +105,8 @@ export class WatchGameComponent implements OnInit {
     this.socket.watchMatch({gameId:HomeComponent.gameId});
     this.subscriptions.push(
       this.appService.getMatches(HomeComponent.token).pipe().subscribe((data:any)=>{
+        console.log("LE PARTITE:")
+        console.log(data);
         this.matches = data.matches;
         sessionStorage.setItem("matches",JSON.stringify(this.matches));
        })
@@ -161,8 +177,7 @@ export class WatchGameComponent implements OnInit {
     
   }
   exitGame(){
-    this.ngOnDestroy();
-    this.socket.disconnect({username:HomeComponent.username,gameId:HomeComponent.gameId});
+    this.socket.disconnectVisitor({username:HomeComponent.username,gameId:HomeComponent.gameId});
     this.route.navigate(["/home/game"]);
   }
 
@@ -174,8 +189,8 @@ export class WatchGameComponent implements OnInit {
      this.initConnection();
      this.subscriptions.push(
       this.chatService.listenMessage().subscribe((data:any)=>{
-        this.messages.push(data);
-        sessionStorage.setItem("messages",JSON.stringify(this.messages));
+        this.messagesMatch.push(data);
+        sessionStorage.setItem("messagesMatch",JSON.stringify(this.messagesMatch));
       })
     );
   }
@@ -187,20 +202,24 @@ export class WatchGameComponent implements OnInit {
   ngOnDestroy() {
     console.log('Items destroyed');
     this.player = "";
-    this.subscriptions=[]
+    
     this.opponent ="";
     this.whoPlay="";
     this.players = 1;
     this.messages=[];
+    this.messagesMatch=[]
     HomeComponent.gameAsVisitor=false;
+    HomeComponent.gameId="";
     this.boardService.ngOnDestroy();
     this.dispose();
+    this.subscriptions=[]
     sessionStorage.removeItem("boards");
     sessionStorage.removeItem("players");
     sessionStorage.removeItem("opponent");
     sessionStorage.removeItem("player");
     sessionStorage.removeItem("gameAsVisitor");
     sessionStorage.removeItem("messages");
+    sessionStorage.removeItem("messagesMatch");
     
     
   }
@@ -209,10 +228,9 @@ export class WatchGameComponent implements OnInit {
   }
   sendMessage(){
     
-    this.chatService.sendMessagetoBroadcast(this.msgForm.get("msg")?.value,this.player,HomeComponent.gameId);
-    this.messages.push({from:HomeComponent.username,message:this.msgForm.get("msg")?.value});
+    this.chatService.sendMessagetoBroadcast(this.msgForm.get("msg")?.value,HomeComponent.username,HomeComponent.gameId);
 
-    sessionStorage.setItem("messages",JSON.stringify(this.messages));
+
     this.msgForm.reset();
   }
   

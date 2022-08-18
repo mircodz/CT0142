@@ -10,9 +10,12 @@ import { HomeComponent } from '../home/home.component';
 export class MainComponent implements OnInit {
   historical:any;
   constructor(private appService:AppService) { }
-
+  get HomeComponent(){
+    return HomeComponent;
+  }
   ngOnInit(): void {
     this.appService.getHistorical(HomeComponent.token,{username:HomeComponent.username}).pipe().subscribe((data:any)=>{
+      console.log("RICEVO LA LISTA")
       this.historical = data.sub;
     });
     

@@ -56,8 +56,11 @@ export class WebsocketService {
   disconnect(data:any){
     this.socket.emit("quitGame",data);
   }
-  listeQuit(){
-    return this.socket.fromEvent("quitGame");
+  disconnectVisitor(data:any){
+    this.socket.emit("quitVisitor",data);
+  }
+  listenQuit(){
+    return this.socket.fromEvent("listenOpponentQuit");
   }
   sendFriendRequest(data:any){
     this.socket.emit("friendRequest",data);

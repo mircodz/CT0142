@@ -1,4 +1,4 @@
-import { Component, OnInit, ElementRef, HostListener, OnDestroy } from '@angular/core';
+import { Component, OnInit, ElementRef, HostListener, OnDestroy, ViewChild, AfterContentChecked } from '@angular/core';
 
 import { ToastrService } from 'ngx-toastr';
 
@@ -38,12 +38,14 @@ const SCORE_LIMIT: number = 32;
 
 
 
-export class BattleshipGameComponent implements OnInit,OnDestroy {
+export class BattleshipGameComponent implements OnInit,OnDestroy,AfterContentChecked {
   msgForm = new FormGroup({
     msg: new FormControl('', Validators.required),
   });
   canPlay: boolean = LoginComponent.getBoolean(sessionStorage.getItem("canPlay"));
-  ready:boolean = LoginComponent.getBoolean(sessionStorage.getItem("ready"));;
+  ready:boolean = LoginComponent.getBoolean(sessionStorage.getItem("ready"));
+  manual:boolean = LoginComponent.getBoolean(sessionStorage.getItem("manual"));
+  started:boolean = LoginComponent.getBoolean(sessionStorage.getItem("started"));
   connected:boolean=(sessionStorage.getItem("connected")!=null) ? LoginComponent.getBoolean(sessionStorage.getItem("connected")) : false;
   player: any = HomeComponent.username;
   static opponent:any =(sessionStorage.getItem("opponent")) ? sessionStorage.getItem("opponent") : "";
@@ -54,7 +56,17 @@ export class BattleshipGameComponent implements OnInit,OnDestroy {
   static isInvited:boolean=false;
   vertically:boolean=true;
   faPaper = faPaperPlane;
+  @ViewChild('chatMatch')
+  divToScroll!: ElementRef;
   constructor(private socket: WebsocketService,private boardService: BoardService,private toastr: ToastrService,private appService:AppService,private chatService:ChatService,private route:Router){
+    
+  }
+  ngAfterContentChecked(): void {
+    try {
+      this.divToScroll.nativeElement.scrollTop=this.divToScroll.nativeElement.scrollHeight;
+    } catch (error) {
+      console.log(error)
+    }
     
   }
   get BattleshipGameComponent(){
@@ -101,9 +113,9 @@ export class BattleshipGameComponent implements OnInit,OnDestroy {
     })
   );
     SubscriptionsService.subscriptions.push(
-      this.socket.listeQuit().subscribe((data:any)=>{
-  
-        this.ngOnDestroy();
+      this.socket.listenQuit().subscribe((data:any)=>{
+        this.toastr.warning("Your opponent quit the Game","Opponent quit!")
+        this.route.navigate(["/home/game"]);
       })
     );
     
@@ -130,7 +142,10 @@ export class BattleshipGameComponent implements OnInit,OnDestroy {
     this.ready=true;
     sessionStorage.setItem("ready",this.ready+"");
   }
-
+  isManual(){
+    this.manual=true;
+    sessionStorage.setItem("manual",this.manual+"");
+  }
   fireTorpedo(e:any) : BattleshipGameComponent | undefined {
     
     let id = e.target.id.split(";"),
@@ -214,13 +229,13 @@ export class BattleshipGameComponent implements OnInit,OnDestroy {
     if(this.vertically){
       let i=0;
 			while(i<ship){
-        this.boards[HomeComponent.username].tiles[r][c+i].value = "X";
+        this.boards[HomeComponent.username].tiles[r+i][c].value = "X";
         i++;
       }
     }else{
       let i=0;
 			while(i<ship){
-        this.boards[HomeComponent.username].tiles[r+i][c].value = "X";
+        this.boards[HomeComponent.username].tiles[r][c+i].value = "X";
         i++;
       }
     }
@@ -229,13 +244,13 @@ export class BattleshipGameComponent implements OnInit,OnDestroy {
     if(this.vertically){
       let i=0;
 			while(i<ship){
-        this.boards[HomeComponent.username].tiles[r][c+i].value = "";
+        this.boards[HomeComponent.username].tiles[r+i][c].value = "";
         i++;
       }
     }else{
       let i=0;
 			while(i<ship){
-        this.boards[HomeComponent.username].tiles[r+i][c].value = "";
+        this.boards[HomeComponent.username].tiles[r][c+i].value = "";
         i++;
       }
     }
@@ -313,6 +328,8 @@ export class BattleshipGameComponent implements OnInit,OnDestroy {
         sessionStorage.setItem("opponent",data.username);
         this.canPlay = data.canPlay;
         sessionStorage.setItem("canPlay",data.canPlay);
+        this.started = true;
+        sessionStorage.setItem("started",this.started+"");
       })
     );
     this.initConnection();
@@ -320,7 +337,7 @@ export class BattleshipGameComponent implements OnInit,OnDestroy {
       
       if(BattleshipGameComponent.isFriendly){
         if(BattleshipGameComponent.isInvited){
-          await new Promise(f => setTimeout(f, 10000));
+          await new Promise(f => setTimeout(f, 1000));
           this.socket.friendlyMatch({player1:HomeComponent.username,player2:BattleshipGameComponent.opponent})
         }else{
           this.socket.friendlyMatch({player1:HomeComponent.username,player2:BattleshipGameComponent.opponent});
@@ -351,22 +368,22 @@ export class BattleshipGameComponent implements OnInit,OnDestroy {
   }
   quitGame(){
     this.socket.disconnect({username:HomeComponent.username,gameId:HomeComponent.gameId});
-    this.ngOnDestroy();
     
     this.route.navigate(["/home/game"]);
-    console.log(AppComponent.logged)
   }
   @HostListener('unloaded')
   ngOnDestroy() {
-    console.log('Items destroyed');
+    console.log('Items destroyed home game');
     this.canPlay = true;
     this.player = HomeComponent.username;
     BattleshipGameComponent.opponent ="";
     this.players = 1;
     this.connected=false;
     this.messages=[];
+    this.started=false;
     this.ready=false;
-    HomeComponent.gameId=undefined;
+    this.manual=false;
+    HomeComponent.gameId="";
     SubscriptionsService.dispose();
     BattleshipGameComponent.isFriendly=false;
     BattleshipGameComponent.isInvited=false;
@@ -378,6 +395,8 @@ export class BattleshipGameComponent implements OnInit,OnDestroy {
     sessionStorage.removeItem("opponent");
     sessionStorage.removeItem("isFriendly");
     sessionStorage.removeItem("ready");
+    sessionStorage.removeItem("started");
+    sessionStorage.removeItem("manual");
 
     
   }

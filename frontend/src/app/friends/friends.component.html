@@ -7,7 +7,7 @@
     <h1>Friends list</h1>
     <div  class="block" *ngFor="let x of FriendsComponent.friends">
     
-    {{x.username}}   <button (click)="deleteFriend(x.username)" class="delete"></button>
+    {{x}}   <button (click)="deleteFriend(x)" class="delete"></button>
 
     </div>
     <div>
@@ -18,3 +18,55 @@
     
     </div>
     </div>
+    <section class="section">
+        <div class="container">
+            <div class="columns is-mobile">
+                <div class="column">
+                    <h1 class="title">Chat with your Friends</h1>
+                    <div class="block">
+                        <div class="select is-rounded">
+                            <select ngModel (ngModelChange)="chat($event)">
+                                <option>-</option>
+                            <option *ngFor="let x of FriendsComponent.friends" [ngValue]="x" >{{x}}</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="block" style="overflow:scroll; width: 400px; height: 400px;" #chatWithFriends>
+                        <div  class="block" *ngFor="let x of messages">
+                                {{x.from}}: {{x.message}}  {{ x.timestamp}};
+                            
+                        </div>
+                    </div>
+                    <div class="block">
+                        <form [formGroup]="msgForm" (ngSubmit)="sendMessage()">
+                      <input name="msg" class="input" type="text" formControlName="msg" placeholder="Text input">
+                      <button type="submit" class="btn btn-default pull-right">Send</button> 
+                      </form>
+                      </div> 
+                </div>
+                <div class="column">
+                    <h1 class="title">Chat with Moderators</h1>
+                    <div class="block">
+                        <div class="select is-rounded">
+                            <select ngModel (ngModelChange)="chat($event)">
+                                <option [ngValue]="'--'">-</option>
+                            <option *ngFor="let x of moderators" [ngValue]="x.username" >{{x.username}}</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="block" style="overflow:scroll; width: 400px; height: 400px;" #chatWithModerators>
+                        <div  class="block" *ngFor="let x of messagesModerator">
+                                {{x.from}}: {{x.message}}  {{ x.timestamp}};
+                            
+                        </div>
+                    </div>
+                    <div class="block">
+                        <form [formGroup]="msgFormModerator" (ngSubmit)="sendMessageModerator()">
+                      <input name="msg" class="input" type="text" formControlName="msg" placeholder="Text input">
+                      <button type="submit" class="btn btn-default pull-right">Send</button> 
+                      </form>
+                      </div> 
+                </div>
+            </div>
+        </div>
+    </section>

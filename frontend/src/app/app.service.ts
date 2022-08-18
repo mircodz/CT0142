@@ -82,6 +82,24 @@ export class AppService {
     };
     return this.http.post("http://"+ this.ipAddress+":6969/chat",data,httpOptions);
   }
+  getChat(jwt:any,data:any){
+    const httpOptions = {
+      headers: new HttpHeaders({
+        authorization: 'Bearer ' + jwt,
+        'cache-control': 'no-cache',
+        'Content-Type':  'application/json'})
+    };
+    return this.http.post("http://"+ this.ipAddress+":6969/getChat",data,httpOptions);
+  }
+  getModerators(jwt:any){
+    const httpOptions = {
+      headers: new HttpHeaders({
+        authorization: 'Bearer ' + jwt,
+        'cache-control': 'no-cache',
+        'Content-Type':  'application/json'})
+    };
+    return this.http.get("http://"+ this.ipAddress+":6969/getModerators",httpOptions);
+  }
   getMatches(jwt:any){
     const httpOptions = {
       headers: new HttpHeaders({
