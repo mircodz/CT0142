@@ -23,8 +23,8 @@ import { WebsocketService } from './websocket.service';
 })
 export class AppComponent implements OnInit {
   
-  static logged:boolean= AppComponent.getBoolean(sessionStorage.getItem("logged")) || false;
-  static isModerator:boolean=AppComponent.getBoolean(sessionStorage.getItem("isModerator")) || false;
+  static logged:boolean= AppService.getBoolean(sessionStorage.getItem("logged")) || false;
+  static isModerator:boolean=AppService.getBoolean(sessionStorage.getItem("isModerator")) || false;
   title: any;
   constructor(
     private route: ActivatedRoute,private socket:WebsocketService
@@ -40,17 +40,5 @@ export class AppComponent implements OnInit {
       this.socket.login({username:HomeComponent.username});
     }
   }
-  static getBoolean(value:any){
-    switch(value){
-         case true:
-         case "true":
-         case 1:
-         case "1":
-         case "on":
-         case "yes":
-             return true;
-         default: 
-             return false;
-     }
- }
+  
 }

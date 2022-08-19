@@ -42,17 +42,17 @@ export class BattleshipGameComponent implements OnInit,OnDestroy,AfterContentChe
   msgForm = new FormGroup({
     msg: new FormControl('', Validators.required),
   });
-  canPlay: boolean = LoginComponent.getBoolean(sessionStorage.getItem("canPlay"));
-  ready:boolean = LoginComponent.getBoolean(sessionStorage.getItem("ready"));
-  manual:boolean = LoginComponent.getBoolean(sessionStorage.getItem("manual"));
-  started:boolean = LoginComponent.getBoolean(sessionStorage.getItem("started"));
-  connected:boolean=(sessionStorage.getItem("connected")!=null) ? LoginComponent.getBoolean(sessionStorage.getItem("connected")) : false;
+  canPlay: boolean = AppService.getBoolean(sessionStorage.getItem("canPlay"));
+  ready:boolean = AppService.getBoolean(sessionStorage.getItem("ready"));
+  manual:boolean = AppService.getBoolean(sessionStorage.getItem("manual"));
+  started:boolean = AppService.getBoolean(sessionStorage.getItem("started"));
+  connected:boolean=(sessionStorage.getItem("connected")!=null) ? AppService.getBoolean(sessionStorage.getItem("connected")) : false;
   player: any = HomeComponent.username;
   static opponent:any =(sessionStorage.getItem("opponent")) ? sessionStorage.getItem("opponent") : "";
   players: number =(sessionStorage.getItem("players"))? Number.parseInt(sessionStorage.getItem("players")+""):  1;
   gameUrl: string = location.protocol + '//' + location.hostname + (location.port ? ':' + location.port: '');
   messages:any[]=(sessionStorage.getItem("messages")!=null) ? JSON.parse(sessionStorage.getItem("messages")+"") :[];
-  static isFriendly:boolean=LoginComponent.getBoolean(sessionStorage.getItem("isFriendly"));
+  static isFriendly:boolean=AppService.getBoolean(sessionStorage.getItem("isFriendly"));
   static isInvited:boolean=false;
   vertically:boolean=true;
   faPaper = faPaperPlane;

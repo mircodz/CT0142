@@ -21,7 +21,7 @@ import { WebsocketService } from '../websocket.service';
 export class HomeComponent implements OnInit,OnDestroy {
   static token: any = sessionStorage.getItem("token");
   static gameId:any=sessionStorage.getItem("gameId");
-  static gameAsVisitor:boolean=LoginComponent.getBoolean(sessionStorage.getItem("gameAsVisitor"));
+  static gameAsVisitor:boolean=AppService.getBoolean(sessionStorage.getItem("gameAsVisitor"));
   static username: any=sessionStorage.getItem("username");
   subs:Subscription[]=[];
 

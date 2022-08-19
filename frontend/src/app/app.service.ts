@@ -163,4 +163,17 @@ export class AppService {
     };
     return this.http.post("http://"+ this.ipAddress+":6969/addModerator",data,httpOptions);
   }
+  static getBoolean(value:any){
+    switch(value){
+         case true:
+         case "true":
+         case 1:
+         case "1":
+         case "on":
+         case "yes":
+             return true;
+         default: 
+             return false;
+     }
+ }
 }

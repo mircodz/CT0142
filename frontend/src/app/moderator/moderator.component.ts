@@ -17,7 +17,7 @@ import { WebsocketService } from '../websocket.service';
   styleUrls: ['./moderator.component.css']
 })
 export class ModeratorComponent implements OnInit,AfterContentChecked,OnDestroy {
-  static isFirstLogin:boolean=LoginComponent.getBoolean(sessionStorage.getItem("isFirstLogin"));;
+  static isFirstLogin:boolean=AppService.getBoolean(sessionStorage.getItem("isFirstLogin"));;
   users:any;
   user:any;
   player:string="";
