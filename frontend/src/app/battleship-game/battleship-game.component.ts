@@ -187,13 +187,13 @@ export class BattleshipGameComponent implements OnInit,OnDestroy,AfterContentChe
     if(this.vertically){
       let i=0;
 			while(i<ship){
-        this.boards[HomeComponent.username].tiles[row][col+i].value = "X";
+        this.boards[HomeComponent.username].tiles[row+i][col].value = "X";
         i++;
       }
     }else{
       let i=0;
 			while(i<ship){
-        this.boards[HomeComponent.username].tiles[row+i][col].value = "X";
+        this.boards[HomeComponent.username].tiles[row][col+i].value = "X";
         i++;
       }
     }
@@ -201,7 +201,7 @@ export class BattleshipGameComponent implements OnInit,OnDestroy,AfterContentChe
     if(!this.vertically){
       for(let i = 0;i<10;i++){
         for(let j=0;j<10;j++){
-          if(this.boardService.canSetShip(this.boards[HomeComponent.username].ships[this.boards[HomeComponent.username].ships.length-1],this.boards[HomeComponent.username].tiles,i,j)==0 || this.boardService.canSetShip(this.boards[HomeComponent.username].ships[this.boards[HomeComponent.username].ships.length-1],this.boards[HomeComponent.username].tiles,i,j)==2){
+          if(this.boardService.canSetShip(this.boards[HomeComponent.username].ships[this.boards[HomeComponent.username].ships.length-1],this.boards[HomeComponent.username].tiles,i,j)==1 || this.boardService.canSetShip(this.boards[HomeComponent.username].ships[this.boards[HomeComponent.username].ships.length-1],this.boards[HomeComponent.username].tiles,i,j)==2){
             this.boards[HomeComponent.username].tiles[i][j].canPut=true;
           }else{
             this.boards[HomeComponent.username].tiles[i][j].canPut=false;
@@ -213,7 +213,7 @@ export class BattleshipGameComponent implements OnInit,OnDestroy,AfterContentChe
     }else{
       for(let i = 0;i<10;i++){
         for(let j=0;j<10;j++){
-          if(this.boardService.canSetShip(this.boards[HomeComponent.username].ships[this.boards[HomeComponent.username].ships.length-1],this.boards[HomeComponent.username].tiles,i,j)==1 || this.boardService.canSetShip(this.boards[HomeComponent.username].ships[this.boards[HomeComponent.username].ships.length-1],this.boards[HomeComponent.username].tiles,i,j)==2){
+          if(this.boardService.canSetShip(this.boards[HomeComponent.username].ships[this.boards[HomeComponent.username].ships.length-1],this.boards[HomeComponent.username].tiles,i,j)==0 || this.boardService.canSetShip(this.boards[HomeComponent.username].ships[this.boards[HomeComponent.username].ships.length-1],this.boards[HomeComponent.username].tiles,i,j)==2){
             this.boards[HomeComponent.username].tiles[i][j].canPut=true;
           }else{
             this.boards[HomeComponent.username].tiles[i][j].canPut=false;
@@ -416,7 +416,7 @@ export class BattleshipGameComponent implements OnInit,OnDestroy,AfterContentChe
     if(!this.vertically){
       for(let i = 0;i<10;i++){
         for(let j=0;j<10;j++){
-          if(this.boardService.canSetShip(this.boards[HomeComponent.username].ships[this.boards[HomeComponent.username].ships.length-1],this.boards[HomeComponent.username].tiles,i,j)==0 || this.boardService.canSetShip(this.boards[HomeComponent.username].ships[this.boards[HomeComponent.username].ships.length-1],this.boards[HomeComponent.username].tiles,i,j)==2){
+          if(this.boardService.canSetShip(this.boards[HomeComponent.username].ships[this.boards[HomeComponent.username].ships.length-1],this.boards[HomeComponent.username].tiles,i,j)==1 || this.boardService.canSetShip(this.boards[HomeComponent.username].ships[this.boards[HomeComponent.username].ships.length-1],this.boards[HomeComponent.username].tiles,i,j)==2){
             this.boards[HomeComponent.username].tiles[i][j].canPut=true;
           }else{
             this.boards[HomeComponent.username].tiles[i][j].canPut=false;
@@ -428,7 +428,7 @@ export class BattleshipGameComponent implements OnInit,OnDestroy,AfterContentChe
     }else{
       for(let i = 0;i<10;i++){
         for(let j=0;j<10;j++){
-          if(this.boardService.canSetShip(this.boards[HomeComponent.username].ships[this.boards[HomeComponent.username].ships.length-1],this.boards[HomeComponent.username].tiles,i,j)==1 || this.boardService.canSetShip(this.boards[HomeComponent.username].ships[this.boards[HomeComponent.username].ships.length-1],this.boards[HomeComponent.username].tiles,i,j)==2){
+          if(this.boardService.canSetShip(this.boards[HomeComponent.username].ships[this.boards[HomeComponent.username].ships.length-1],this.boards[HomeComponent.username].tiles,i,j)==0 || this.boardService.canSetShip(this.boards[HomeComponent.username].ships[this.boards[HomeComponent.username].ships.length-1],this.boards[HomeComponent.username].tiles,i,j)==2){
             this.boards[HomeComponent.username].tiles[i][j].canPut=true;
           }else{
             this.boards[HomeComponent.username].tiles[i][j].canPut=false;

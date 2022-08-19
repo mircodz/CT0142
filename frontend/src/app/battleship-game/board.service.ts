@@ -56,7 +56,7 @@ export class BoardService implements OnDestroy {
     }
     for(let i = 0;i<size;i++){
       for(let j=0;j<size;j++){
-        if(this.canSetShip(2,tiles,i,j)==1  || this.canSetShip(2,tiles,i,j)==2){
+        if(this.canSetShip(2,tiles,i,j)==0  || this.canSetShip(2,tiles,i,j)==2){
           tiles[i][j].canPut=true;
         }else{
           tiles[i][j].canPut=false;

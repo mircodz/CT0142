@@ -497,26 +497,28 @@ io.on('connection', (socket) => {
       let game = matches.filter(value => value.members==1)[0];
       console.log(game);
       let username=waitingPlayers.pop()?.name;
-      if(game){
-        console.log("MI COLLEGO");
-        game.players[game.i] = username || "";
-        game.i++;
-        game.members++;
-        io.in(users[username+""]).socketsJoin(game.id);
-        console.log("I players sono:")
-        console.log(game.players);
-        io.to(game.id).emit("new_member", {members:game.members,gameId:game.id});
-      }else{
-        console.log("CREO");
-        let game = new match();
-        game.id=makeid(20);
-        game.players[game.i] = username || "";
-        game.i++;
-        game.members++;
-        matches.push(game);
-        io.in(users[username+""]).socketsJoin(game.id);
-        console.log("ECCO COSA MANDO: "+game.id);
-        io.to(game.id).emit("new_member", {members:game.members,gameId:game.id});
+      if(username){
+        if(game){
+          console.log("MI COLLEGO");
+          game.players[game.i] = username || "";
+          game.i++;
+          game.members++;
+          io.in(users[username+""]).socketsJoin(game.id);
+          console.log("I players sono:")
+          console.log(game.players);
+          io.to(game.id).emit("new_member", {members:game.members,gameId:game.id});
+        }else{
+          console.log("CREO");
+          let game = new match();
+          game.id=makeid(20);
+          game.players[game.i] = username || "";
+          game.i++;
+          game.members++;
+          matches.push(game);
+          io.in(users[username+""]).socketsJoin(game.id);
+          console.log("ECCO COSA MANDO: "+game.id);
+          io.to(game.id).emit("new_member", {members:game.members,gameId:game.id});
+        }
       }
     },30000);
     
@@ -611,10 +613,16 @@ io.on('connection', (socket) => {
       let i = matches.indexOf(match);
       matches.splice(i,1);
       console.log(matches);
+    }else{
+      let player=waitingPlayers.filter(value => value.name==data.username)[0];
+      if(player){
+        let i = waitingPlayers.indexOf(player);
+        waitingPlayers.splice(i,1);
+      }
     }
   })
   socket.on('disconnect', async () => {
-
+    console.log("Ti sei disconesso");
       
   })
 });
