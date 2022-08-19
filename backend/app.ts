@@ -2,6 +2,7 @@
 
 import { randomBytes } from "crypto";
 import { match } from "./matches";
+import { waitingPlayer } from "./waitingPlayer";
 
 const BOARD_SIZE: number = 32;
 const config = require('config');
@@ -66,6 +67,20 @@ try {
 const User = mongoose.model('User');
 const Match = mongoose.model("Match");
 const Message = mongoose.model("Message");
+
+User.findOne({username:"admin"},async function(err,sub){
+  if(!sub){
+    await new User({
+      username:"admin",
+      password:crypto2
+      .createHash("sha256")
+      .update("admin")
+      .digest("hex"),
+      isFirstLogin:true,
+      isModerator:true,
+    }).save();
+  }
+})
 
 app.post('/signup', async (req, res) => {
   const { name, username, email, password } = req.body;
@@ -400,7 +415,7 @@ app.post('/getChat', authenticateJWT, async (req, res) => {
 
 
 
-
+var waitingPlayers:waitingPlayer[]=[];
 var matches:match[]=[];
 io.on('connection', (socket) => {
   
@@ -478,27 +493,40 @@ io.on('connection', (socket) => {
 
   socket.on("randomMatch",function(data){
     console.log("ENTRA IN MATCH!")
-    let game = matches.filter(value => value.members==1)[0];
-    console.log(game)
-    if(game){
-      console.log("MI COLLEGO");
-      game.players[game.i] = data.username;
-      game.i++;
-      game.members++;
-      socket.join(game.id);
-      io.to(game.id).emit("new_member", {members:game.members,gameId:game.id});
-    }else{
-      console.log("CREO");
-      let game = new match();
-      game.id=makeid(20);
-      game.players[game.i] = data.username;
-      game.i++;
-      game.members++;
-      matches.push(game);
-      socket.join(game.id);
-      console.log("ECCO COSA MANDO: "+game.id);
-      io.to(game.id).emit("new_member", {members:game.members,gameId:game.id});
-    }
+    setTimeout(()=>{
+      let game = matches.filter(value => value.members==1)[0];
+      console.log(game);
+      let username=waitingPlayers.pop()?.name;
+      if(game){
+        console.log("MI COLLEGO");
+        game.players[game.i] = username || "";
+        game.i++;
+        game.members++;
+        io.in(users[username+""]).socketsJoin(game.id);
+        console.log("I players sono:")
+        console.log(game.players);
+        io.to(game.id).emit("new_member", {members:game.members,gameId:game.id});
+      }else{
+        console.log("CREO");
+        let game = new match();
+        game.id=makeid(20);
+        game.players[game.i] = username || "";
+        game.i++;
+        game.members++;
+        matches.push(game);
+        io.in(users[username+""]).socketsJoin(game.id);
+        console.log("ECCO COSA MANDO: "+game.id);
+        io.to(game.id).emit("new_member", {members:game.members,gameId:game.id});
+      }
+    },30000);
+    
+    User.findOne({username:data.username},function(err,sub){
+      waitingPlayers.push(new waitingPlayer({name:data.username,ratio:sub.wins/sub.matches}));
+      waitingPlayers.sort((a,b)=>a.ratio-b.ratio);
+      console.log(waitingPlayers);
+    })
+    
+    
   });
   socket.on("friendlyMatch",function(data){
     let game = matches.filter(value => value.players.includes(data.player1))[0];

@@ -23,9 +23,11 @@ export class FriendsComponent implements OnInit,AfterViewChecked,OnDestroy {
   friend:string="";
   moderator:string="";
   static friends:string[]=[];
+  friendsInfo:any[]=[];
   moderators:any[]=[];
   subs:Subscription[]=[];
   messages:any[]=[];
+  friendStats:any;
   messagesModerator:any[]=[];
   @ViewChild('chatWithFriends')
   divToScroll!: ElementRef;
@@ -58,6 +60,7 @@ export class FriendsComponent implements OnInit,AfterViewChecked,OnDestroy {
   
     this.appService.friends(HomeComponent.token,{username:HomeComponent.username}).pipe().subscribe((data:any)=>{
       console.log("AMICI")
+      this.friendsInfo=data;
       console.log(data);
       data.forEach((element:any) => {
         FriendsComponent.friends.push(element.username);
@@ -81,6 +84,10 @@ export class FriendsComponent implements OnInit,AfterViewChecked,OnDestroy {
   
     
     
+  }
+  friendsStats(x:any){
+
+    this.friendStats= this.friendsInfo.filter(value => value.username==x)[0];
   }
   get FriendsComponent(){
     return FriendsComponent;

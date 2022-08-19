@@ -45,6 +45,7 @@ export class LoginComponent implements OnInit {
         AppComponent.isModerator=data.sub.isModerator;
         sessionStorage.setItem("isModerator",AppComponent.isModerator+"");
         ModeratorComponent.isFirstLogin=data.sub.isFirstLogin;
+        sessionStorage.setItem("isFirstLogin",ModeratorComponent.isFirstLogin+"");
         AppComponent.logged=true;
         sessionStorage.setItem("logged","true");
         sessionStorage.setItem("username",this.loginForm.get("username")?.value);

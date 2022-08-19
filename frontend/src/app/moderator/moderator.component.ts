@@ -8,6 +8,7 @@ import { AppComponent } from '../app.component';
 import { AppService } from '../app.service';
 import { ChatService } from '../chat.service';
 import { HomeComponent } from '../home/home.component';
+import { LoginComponent } from '../login/login.component';
 import { WebsocketService } from '../websocket.service';
 
 @Component({
@@ -16,7 +17,7 @@ import { WebsocketService } from '../websocket.service';
   styleUrls: ['./moderator.component.css']
 })
 export class ModeratorComponent implements OnInit,AfterContentChecked,OnDestroy {
-  static isFirstLogin:boolean=false;
+  static isFirstLogin:boolean=LoginComponent.getBoolean(sessionStorage.getItem("isFirstLogin"));;
   users:any;
   user:any;
   player:string="";
@@ -89,6 +90,7 @@ export class ModeratorComponent implements OnInit,AfterContentChecked,OnDestroy 
     if(this.moderatorForm.get("password")?.value != "" && this.moderatorForm.get("name")?.value != "" && this.moderatorForm.get("email")?.value != ""){
       this.appService.firstlogin(HomeComponent.token,{username:HomeComponent.username,password:this.moderatorForm.get("password")?.value,name:this.moderatorForm.get("name")?.value,email:this.moderatorForm.get("email")?.value}).pipe().subscribe((data)=>{
         ModeratorComponent.isFirstLogin=false;
+        sessionStorage.setItem("isFirstLogin",ModeratorComponent.isFirstLogin+"");
       });
     }
   }
