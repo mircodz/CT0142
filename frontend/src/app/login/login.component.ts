@@ -4,7 +4,7 @@ import { ActivatedRoute, Router, RouterEvent, RouterLink, RouterModule, RouterOu
 
 import { faUser, faKey, faPaperPlane } from '@fortawesome/free-solid-svg-icons';
 
-
+import { ToastrService } from 'ngx-toastr';
 
 import { AppComponent } from '../app.component';
 import { AppService } from '../app.service';
@@ -28,7 +28,7 @@ export class LoginComponent implements OnInit {
   faKey = faKey;
  
 
-  constructor(private appService:AppService, private socket:WebsocketService,private route:Router) { }
+  constructor(private appService:AppService, private socket:WebsocketService,private route:Router,private toastr:ToastrService) { }
 
   ngOnInit(): void { 
 
@@ -41,7 +41,7 @@ export class LoginComponent implements OnInit {
         HomeComponent.token=JSON.parse(JSON.stringify(data)).token;
         sessionStorage.setItem("token",JSON.parse(JSON.stringify(data)).token);
         this.socket.login({username:this.loginForm.get("username")?.value});
-        this.route.navigate(["/","home"]);
+        
         AppComponent.isModerator=data.sub.isModerator;
         sessionStorage.setItem("isModerator",AppComponent.isModerator+"");
         ModeratorComponent.isFirstLogin=data.sub.isFirstLogin;
@@ -49,6 +49,10 @@ export class LoginComponent implements OnInit {
         AppComponent.logged=true;
         sessionStorage.setItem("logged","true");
         sessionStorage.setItem("username",this.loginForm.get("username")?.value);
+        if(data.newMessages){
+          this.toastr.info("You have new messages!","NEW MESSAGES!");
+        }
+        this.route.navigate(["/","home"]);
 
       });
     }

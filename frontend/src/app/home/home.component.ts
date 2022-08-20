@@ -46,7 +46,12 @@ export class HomeComponent implements OnInit,OnDestroy {
   }
 
   ngOnInit() {
-    
+    this.subs.push(
+      this.chatService.listenPrivateMessage().subscribe((data:any)=>{
+          this.toastr.info("You have received new message from "+data.username,"NEW MESSAGE!");
+        
+      })
+    );
     this.subs.push(
       this.socket.listenFriendRequest().pipe().subscribe((data:any)=>{
         console.log("Ho ricevuto la richiesta");

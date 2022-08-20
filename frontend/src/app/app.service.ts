@@ -82,6 +82,15 @@ export class AppService {
     };
     return this.http.post("http://"+ this.ipAddress+":6969/chat",data,httpOptions);
   }
+  readChat(jwt:any,data:any){
+    const httpOptions = {
+      headers: new HttpHeaders({
+        authorization: 'Bearer ' + jwt,
+        'cache-control': 'no-cache',
+        'Content-Type':  'application/json'})
+    };
+    return this.http.post("http://"+ this.ipAddress+":6969/readChat",data,httpOptions);
+  }
   getChat(jwt:any,data:any){
     const httpOptions = {
       headers: new HttpHeaders({

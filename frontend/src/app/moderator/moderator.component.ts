@@ -57,8 +57,13 @@ export class ModeratorComponent implements OnInit,AfterContentChecked,OnDestroy 
     this.subs.push(
       this.chatService.listenPrivateMessage().subscribe((data:any)=>{
         if(data.username==this.player){
-          this.messages.push({message:data.msg,from:data.username,to:HomeComponent.username,timestamp:new Date(data.timestamp+"").toTimeString().substring(0,5)});
+          this.messages.push({message:data.msg,from:data.username,to:HomeComponent.username,timestamp:new Date(data.timestamp+"").toTimeString().substring(0,5),new:false});
+        }else{
+          this.toastr.info("You have received new message from "+data.username,"NEW MESSAGE!");
         }
+        this.appService.readChat(HomeComponent.token,{username:HomeComponent.username}).pipe().subscribe((data:any)=>{
+          console.log("Messaggi letti");
+        });
       })
     );
   }

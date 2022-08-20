@@ -118,7 +118,16 @@ app.post('/signin', (req, res) => {
    
     if (sub) {
       const token = jwt.sign({ username: username,  role: user.role }, secret);
-      res.status(200).json({ token,sub });
+      Message.findOne({new:true,to:username},function(err,data){
+        console.log(data);
+        if(data){
+          res.status(200).json({ token,sub,newMessages:true });
+        }else{
+          res.status(200).json({ token,sub });
+        }
+        
+      })
+      
   
   
     } else {
@@ -401,13 +410,24 @@ app.post('/chat', authenticateJWT, async (req, res) => {
       });
 app.post('/getChat', authenticateJWT, async (req, res) => {
   const {username,friend} = req.body;
-  Message.find({$or :[{from:username,to:friend},{from:friend,to:username}]},function(err,sub){
+  Message.find({$or :[{from:username,to:friend},{from:friend,to:username}]},async function(err,sub){
+
     console.log(sub);
     if(sub){
+      await Message.updateMany({to:username},{$set:{new:false}});
       res.status(200).json({sub});
     }else{
       res.status(400).json({message:"chat empty!"});
     }
+  })
+
+});
+app.post('/readChat', authenticateJWT, async (req, res) => {
+  const {username} = req.body;
+ 
+  Message.updateMany({to:username},{$set:{new:false}},function(err,sub){
+    console.log("Messaggi letti");
+    res.status(200).json({message:"ok"});
   })
 
 });
@@ -467,7 +487,7 @@ io.on('connection', (socket) => {
     
   });
   socket.on('login',function(data){
-    users[data.username] = socket.id;
+    users[data.username]= socket.id;
     let game = matches.filter(value => value.players.includes(data.username))[0];
     if(game){
       
@@ -622,6 +642,46 @@ io.on('connection', (socket) => {
     }
   })
   socket.on('disconnect', async () => {
+    let username= getKeyByValue(users,socket.id) || "";
+    delete users[username];
+    setTimeout(async () => {
+      if(!users[username]){
+        let player=waitingPlayers.find(value => value.name==username);
+        if(player){
+          let i = waitingPlayers.indexOf(player);
+          waitingPlayers.splice(i,1);
+        }else{
+          let match = matches.find(value => value.players.includes(username));
+          if(match){
+            if(Object.keys(match.boards).length==2){
+              (username==match.players[0])? match.boards[match.players[1]].player.score=BOARD_SIZE : match.boards[match.players[0]].player.score=BOARD_SIZE;
+              const r = await new Match({
+                player1: match.players[0],
+                player2: match.players[1],
+                score1: match.boards[match.players[0]].player.score,
+                score2: match.boards[match.players[1]].player.score,
+                winner: match.players[max(match.id)]
+              }).save();
+              User.updateOne({username:match.players[max(match.id)]},{$inc:{matches:1,wins:1}},function(err,res){
+                console.log("Giocatore aggiornato!")
+              });
+              User.updateOne({username:match.players[min(match.id)]},{$inc:{matches:1,looses:1}},function(err,res){
+                console.log("Giocatore aggiornato!")
+              });
+              io.to("visitors"+match.id).emit("ListenGames", match)
+              io.to(users[match.players[max(match.id)]]).emit("Move",{canPlay:true,boards:match.boards,gameId:match.id,opponent:username});
+              
+            }else{
+              console.log("STO QUITTANDO")
+              io.to(users[match.players.find(value => value !=username) || ""]).emit("listenOpponentQuit");
+            }
+            let i = matches.indexOf(match);
+            matches.splice(i,1);
+            console.log(matches);
+          }
+        }
+      }
+    }, 3000);
     console.log("Ti sei disconesso");
       
   })
@@ -658,5 +718,8 @@ function min(id){
   }else{
     return 0;
   }
+}
+function getKeyByValue(object, value) {
+  return Object.keys(object).find(key => object[key] === value);
 }
 
