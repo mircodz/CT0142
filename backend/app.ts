@@ -662,64 +662,60 @@ io.on('connection', (socket) => {
                 score2: match.boards[match.players[1]].player.score,
                 winner: match.players[max(match.id)]
               }).save();
-              User.updateOne({username:match.players[max(match.id)]},{$inc:{matches:1,wins:1}},function(err,res){
+              User.updateOne({username: match.players[max(match.id)]}, {
+                $inc: {
+                  matches: 1,
+                  wins: 1
+                }
+              }, function (err, res) {
                 console.log("Giocatore aggiornato!")
               });
-              User.updateOne({username:match.players[min(match.id)]},{$inc:{matches:1,looses:1}},function(err,res){
+              User.updateOne({username: match.players[min(match.id)]}, {
+                $inc: {
+                  matches: 1,
+                  looses: 1
+                }
+              }, function (err, res) {
                 console.log("Giocatore aggiornato!")
               });
-              io.to("visitors"+match.id).emit("ListenGames", match)
-              io.to(users[match.players[max(match.id)]]).emit("Move",{canPlay:true,boards:match.boards,gameId:match.id,opponent:username});
-              
-            }else{
+              io.to("visitors" + match.id).emit("ListenGames", match)
+              io.to(users[match.players[max(match.id)]]).emit("Move", {
+                canPlay: true,
+                boards: match.boards,
+                gameId: match.id,
+                opponent: username
+              });
+
+            } else {
               console.log("STO QUITTANDO")
-              io.to(users[match.players.find(value => value !=username) || ""]).emit("listenOpponentQuit");
+              io.to(users[match.players.find(value => value != username) || ""]).emit("listenOpponentQuit");
             }
             let i = matches.indexOf(match);
-            matches.splice(i,1);
+            matches.splice(i, 1);
             console.log(matches);
           }
         }
       }
     }, 3000);
     console.log("Ti sei disconesso");
-      
+
   })
 });
 
-server.listen(port, function () {
+server.listen(port, () => {
   console.log(`Example app listening on ${port}!`);
 });
 
-function makeid(length) {
-  var result           = '';
-  var characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  var charactersLength = characters.length;
-  for ( var i = 0; i < length; i++ ) {
-    result += characters.charAt(Math.floor(Math.random() * 
-charactersLength));
- }
- return result;
+function max(id: String): number {
+  let match = matches.filter(value => value.id == id)[0];
+  return match.boards[match.players[0]].player.score > match.boards[match.players[1]].player.score ? 0 : 1;
 }
 
+function min(id: String): number {
+  let match = matches.filter(value => value.id == id)[0];
+  return match.boards[match.players[0]].player.score > match.boards[match.players[1]].player.score ? 1 : 0;
+}
 
-function max(id){
-  let match = matches.filter(value => value.id == id)[0];
-  if(match.boards[match.players[0]].player.score>match.boards[match.players[1]].player.score){
-    return 0;
-  }else{
-    return 1;
-  }
-}
-function min(id){
-  let match = matches.filter(value => value.id == id)[0];
-  if(match.boards[match.players[0]].player.score>match.boards[match.players[1]].player.score){
-    return 1;
-  }else{
-    return 0;
-  }
-}
 function getKeyByValue(object, value) {
   return Object.keys(object).find(key => object[key] === value);
 }
-
