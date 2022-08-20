@@ -12,11 +12,7 @@ networks:
 
 
 volumes:
-  taw_prometheus_data: {}
-  taw_grafana_data: {}
-  taw_loki_data: {}
   taw_mongo_data: {}
-  taw_elasticsearch_data: {}
 
 
 services:
@@ -29,119 +25,14 @@ services:
       default:
         ipv4_address: 172.22.0.2
     restart: always
-    logging:
-      driver: loki
-      options:
-        loki-url: http://172.22.0.5:3100/loki/api/v1/push
-        loki-pipeline-stages: |
-          - regex:
-              expression: '(level|lvl|severity)=(?P<level>\w+)'
-          - labels:
-              level:
-
 
   backend:
     build:
       context: backend
-    ports:
-      - 6969:6969
     networks:
       default:
         ipv4_address: 172.22.0.3
     restart: always
-    logging:
-      driver: loki
-      options:
-        loki-url: http://172.22.0.5:3100/loki/api/v1/push
-        loki-pipeline-stages: |
-          - regex:
-              expression: '(level|lvl|severity)=(?P<level>\w+)'
-          - labels:
-              level:
-
-
-  redis:
-    image: redis:alpine
-    ports:
-      - 6379:6379
-    networks:
-      default:
-        ipv4_address: 172.22.0.4
-    restart: unless-stopped
-    logging:
-      driver: loki
-      options:
-        loki-url: http://172.22.0.5:3100/loki/api/v1/push
-        loki-pipeline-stages: |
-          - regex:
-              expression: '(level|lvl|severity)=(?P<level>\w+)'
-          - labels:
-              level:
-
-
-  loki:
-    image: grafana/loki:2.3.0
-    volumes:
-      - ./data/loki/config/loki-config.yaml:/etc/loki/loki-config.yaml
-      - taw_loki_data:/data/loki
-    ports:
-      - 3100:3100
-    command:
-      - '-config.file=/etc/loki/loki-config.yaml'
-    networks:
-      default:
-        ipv4_address: 172.22.0.5
-    restart: unless-stopped
-
-
-  grafana:
-    image: grafana/grafana:latest
-    volumes:
-      - ./data/grafana/provisioning/:/etc/grafana/provisioning/
-      - taw_grafana_data:/var/lib/grafana
-    ports:
-      - 3000:3000
-    networks:
-      default:
-        ipv4_address: 172.22.0.6
-    restart: unless-stopped
-    logging:
-      driver: loki
-      options:
-        loki-url: http://172.22.0.5:3100/loki/api/v1/push
-        loki-pipeline-stages: |
-          - regex:
-              expression: '(level|lvl|severity)=(?P<level>\w+)'
-          - labels:
-              level:
-
-
-  prometheus:
-    image: prom/prometheus:v2.1.0
-    volumes:
-      - ./data/prometheus/config/prometheus.yaml:/etc/prometheus/prometheus.yaml
-      - taw_prometheus_data:/prometheus
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yaml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
-      - '--web.console.templates=/usr/share/prometheus/consoles'
-    ports:
-      - 9090:9090
-    networks:
-      default:
-        ipv4_address: 172.22.0.7
-    restart: unless-stopped
-    logging:
-      driver: loki
-      options:
-        loki-url: http://172.22.0.5:3100/loki/api/v1/push
-        loki-pipeline-stages: |
-          - regex:
-              expression: '(level|lvl|severity)=(?P<level>\w+)'
-          - labels:
-              level:
-
 
   mongodb:
     image : mongo
@@ -150,72 +41,7 @@ services:
       - PGID=1000
     volumes:
       - taw_mongo_data:/data/db
-    ports:
-      - "27017:27017"
     networks:
       default:
-        ipv4_address: 172.22.0.8
+        ipv4_address: 172.22.0.4
     restart: always
-    logging:
-      driver: loki
-      options:
-        loki-url: http://172.22.0.5:3100/loki/api/v1/push
-        loki-pipeline-stages: |
-          - regex:
-              expression: '(level|lvl|severity)=(?P<level>\w+)'
-          - labels:
-              level:
-
-
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.2.0
-    environment:
-      - xpack.security.enabled=false
-      - discovery.type=single-node
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-      nofile:
-        soft: 65536
-        hard: 65536
-    cap_add:
-      - IPC_LOCK
-    volumes:
-      - taw_elasticsearch_data:/usr/share/elasticsearch/data
-    ports:
-      - 9200:9200
-      - 9300:9300
-    networks:
-      default:
-        ipv4_address: 172.22.0.9
-    restart: unless-stopped
-    logging:
-      driver: loki
-      options:
-        loki-url: http://172.22.0.5:3100/loki/api/v1/push
-        loki-pipeline-stages: |
-          - regex:
-              expression: '(level|lvl|severity)=(?P<level>\w+)'
-          - labels:
-              level:
-
-
-  jaeger:
-    image: jaegertracing/all-in-one:latest
-    ports:
-      - "6831:6831/udp"
-      - "16686:16686"
-    networks:
-      default:
-        ipv4_address: 172.22.0.10
-    restart: unless-stopped
-    logging:
-      driver: loki
-      options:
-        loki-url: http://172.22.0.5:3100/loki/api/v1/push
-        loki-pipeline-stages: |
-          - regex:
-              expression: '(level|lvl|severity)=(?P<level>\w+)'
-          - labels:
-              level:
