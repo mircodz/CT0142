@@ -1,17 +1,10 @@
 {
-  "elastic": {
-      "chat_index_name": "battleship-chat",
-        "nodes": [ "http://172.22.0.9:9200" ]
-  },
   "app": {
-      "name": "battleship",
-      "port": 6969
+    "name": "battleship",
+    "port": 6969
   },
   "mongo": {
-      "url": "mongodb://172.22.0.8:27017/battleship"
+    "url": "mongodb://172.22.0.8:27017/battleship"
   },
-  "jwtSecret": "porcodio",
-  "loki": {
-      "url": "http://172.22.0.5:3100"
-  }
+  "jwtSecret": "here be dragons",
 }
