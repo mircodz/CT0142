@@ -1,8 +1,11 @@
-//require('./tracing')
+import {waitingPlayer} from "./waitingPlayer";
+import {NextFunction, Request, Response} from "express";
+import {JwtPayload, VerifyErrors} from "jsonwebtoken";
+import {CallbackError, Schema, connect, model} from "mongoose";
 
-import { randomBytes } from "crypto";
-import { match } from "./matches";
-import { waitingPlayer } from "./waitingPlayer";
+import * as crypto from "crypto";
+
+import {match} from "./matches";
 
 const BOARD_SIZE: number = 32;
 const config = require('config');
@@ -12,26 +15,26 @@ const jwtSecret = config.get('jwtSecret');
 
 const port = appConfig.port;
 
-// Express imports
-const express = require('express');
+// express import and initialization
 const cors = require('cors');
+const express = require('express');
 
-// Express Initialization
-const app = express();
-app.use(cors());
-app.use(express.json());
+const app = express()
+  .use(cors())
+  .use(express.json());
 
 // HTTP server
 const http = require('http');
 const server = http.createServer(app);
-const { Server } = require("socket.io");
+const {Server} = require("socket.io");
 
 // Sockets
 const io = new Server(server, {
   cors: {
     origin: "*",
     methods: ["*"]
-}});
+  }
+});
 
 // Crypto
 const crypto2 = require('crypto');
@@ -150,63 +153,69 @@ const mustAuth = (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
-app.get('/foo', (req, res) => {
- 
+app.get('/foo', (req: Request, res: Response) => {
   res.send('Hello World!');
 });
 
-app.get('/', authenticateJWT, (req, res) => {
+app.get('/', mustAuth, (req: Request, res: Response) => {
   res.send('Hello World!');
 });
 
-app.post('/addFriends', authenticateJWT, (req, res) => {
-  const { username, friend } = req.body;
- 
-  const f = User.find({username:friend},function(err,sub){
+// Given a username, return it's UID
+const getUserId = (username: string): Promise<Schema.Types.ObjectId> => {
+  return User.findOne({username}).then((user: typeof User) => user._id);
+}
 
-    User.updateOne({username:username},{$push: { friends: sub[0]._id }},function(err,res){
-      console.log("Amicizia inserita!")
-    })
-    
-  });
-  const f2 = User.find({username:username},function(err,sub){
-    User.updateOne({username:friend},{$push: { friends: sub[0]._id }},function(err,res){
-      console.log("Amicizia inserita!")
-    })
-  });
-  
-  res.status(200).json({message:"ok"});
+// TODO error handling
+// TODO better control flow
+app.post('/addFriends', mustAuth, async (req: Request, res: Response) => {
+  const {username, friend} = req.body;
+
+  const usernameId = await getUserId(username);
+  const friendId = await getUserId(friend);
+
+  User.updateOne({_id: usernameId}, {$push: {friends: friendId}});
+  User.updateOne({_id: friendId}, {$push: {friends: usernameId}});
+
+  res.status(200).json({message: "ok"});
 });
-app.get('/allUsers', authenticateJWT, (req, res) => {
-  console.log("STAMPA DI TUTTI GLI UTENTI: "+users);
+
+app.get('/allUsers', mustAuth, (req: Request, res: Response) => {
+  console.log("STAMPA DI TUTTI GLI UTENTI: " + users);
   res.status(200).json({users});
 });
 
-app.post('/getAllUsers', authenticateJWT, (req, res) => {
-  const {moderator} = req.body;
-  User.findOne({username:moderator},function(err,sub){
-    if(sub.isModerator){
-      User.find({isModerator:false},function(err,sub){
+const isModerator = async (username: String): Promise<Boolean> => {
+  return User.findOne({username}, function (err: CallbackError, user: typeof User) {
+    return !err ? user.isModerator : false;
+  });
+};
 
-        res.status(200).json({sub});
-      });
-    }else{
-      res.status(400).json({message:"Non sei il moderatore!"});
+app.post('/getAllUsers', mustAuth, async (req: Request, res: Response) => {
+  const {moderator} = req.body;
+  if (await isModerator(moderator)) {
+    User.find({isModerator: false}, function (err: CallbackError, users: typeof User[]) {
+      if (err) {
+        res.status(500).json({err});
+      } else {
+        res.status(200).json({users});
+      }
+    });
+  } else {
+    res.status(401).json({message: "unauthorized"});
+  }
+});
+
+app.get('/getModerators', mustAuth, (req: Request, res: Response) => {
+
+  User.find({isModerator: true}, function (err, sub) {
+    if (sub) {
+      res.status(200).json({sub});
+    } else {
+      res.status(400).json({message: "We don't have any moderator!"});
     }
   });
-  
-});
-app.get('/getModerators', authenticateJWT, (req, res) => {
-  
-    User.find({isModerator:true},function(err,sub){
-      if(sub){
-        res.status(200).json({sub});
-      }else{
-        res.status(400).json({message:"We don't have any moderator!"});
-      }
-      
-    });
-    
+
 });
   
 app.post('/friend', authenticateJWT, (req, res) => {
@@ -223,13 +232,13 @@ app.post('/friend', authenticateJWT, (req, res) => {
   })
   
 });
-app.post('/deleteFriend', authenticateJWT, (req, res) => {
-  const { username,friend } = req.body;
-  User.findOne({username:username},function(err,sub){
+app.post('/deleteFriend', mustAuth, (req: Request, res: Response) => {
+  const {username, friend} = req.body;
+  User.findOne({username: username}, function (err, sub) {
     console.log(sub);
     let friends = sub.friends;
     let idFriend = sub._id;
-    User.findOne({username:friend},function(err,sub){
+    User.findOne({username: friend}, function (err, sub) {
       console.log(sub);
       let i=0;
       if(sub){
@@ -244,41 +253,42 @@ app.post('/deleteFriend', authenticateJWT, (req, res) => {
      }else{
         res.status(400).json({message:"error"});
       }
-      
+
     })
   })
  
   io.to(users[friend]).emit("friendRemoved",{friend:username});
   
 });
-app.post('/logout', authenticateJWT, (req, res) => {
-  const { username } = req.body;
-  console.log(req.body)
+
+app.post('/logout', mustAuth, (req: Request, res: Response) => {
+  const {username} = req.body;
+
+  console.log(`deleting user session for ${username}`)
+
   delete users[username];
   io.emit("updatePlayers",users);
   
   res.status(200).json({message: "ok"});
   
 });
-app.post('/matchId', authenticateJWT, (req, res) => {
-  const { id } = req.body;
-  
-  console.log("STAMPA del MATCH: "+matches[id]);
-  res.json({match:matches.filter(value => value.id == id)[0]});
-  
+
+app.post('/matchId', mustAuth, (req: Request, res: Response) => {
+  const {id} = req.body;
+  res.json({match: matches.filter(value => value.id == id)[0]});
 });
-app.post('/firstLogin', authenticateJWT, (req, res) => {
-  const { username, password,name,email } = req.body;
-  const hashed = crypto2
-    .createHash("sha256")
-    .update(password)
-    .digest("hex");
-    const user = User.updateOne({ username:username},{$set:{password:hashed,name:name,email:email,isFirstLogin:false}},function(err,sub){
-        console.log("PASSWORD AGGIORNATA!")
-    })
-    res.status(200).json({message: "ok"});
-  
-  
+
+app.post('/firstLogin', mustAuth, (req: Request, res: Response) => {
+  const {username, password, name, email} = req.body;
+  User.updateOne({username: username}, {
+    $set: {
+      name: name,
+      email: email,
+      password: hashed(password),
+      isFirstLogin: false
+    }
+  }).then(() => res.status(200).json({message: "ok"}))
+    .catch((error: CallbackError) => res.status(500).json({error}));
 });
 
 app.post('/deleteUser', authenticateJWT, (req, res) => {
@@ -359,41 +369,43 @@ app.post('/addModeator', authenticateJWT, (req, res) => {
   
 });
 
-app.get('/matches', authenticateJWT, (req, res) => {
-  if(matches){
-    console.log("MANDO"+matches)
-    res.status(200).json({matches});
+app.post('/addModeator', mustAuth, async (req: Request, res: Response) => {
+  const {moderator, username, password} = req.body;
 
-  }else{
-    res.status(400).json({message:"Non ci sono partite in corso!"});
-  }
-  
-  
-});
-app.post('/getHistoricalMatches', authenticateJWT, (req, res) => {
-  const { username } = req.body;
-  const f = Match.find({$or: [{ player1: username },{ player2: username }]},function(err,sub){
-  
-    if(sub){
-      res.status(200).json({sub});
+  if (await isModerator(moderator)) {
+    await new User({
+      username,
+      password: hashed(password),
+      isModerator: true,
+      isFirstLogin: true
+    }).save();
 
-  }else{
-    res.status(400).json({message:"Non ci sono partite nello storico!"});
+    res.status(200).json({message: "ok"});
+  } else {
+    res.status(401).json({message: "not authorized"});
   }
-    
-  });
-    
-  
-  
 });
- 
-app.post('/chat', authenticateJWT, async (req, res) => {
-  const {username,friend,msg} = req.body;
-  let time = new Date().toString();
+
+app.get('/matches', mustAuth, (req: Request, res: Response) => {
+  res.status(200).json({matches});
+});
+
+app.post('/matches', mustAuth, (req: Request, res: Response) => {
+  const {username} = req.body;
+
+  Match.find({$or: [{player1: username}, {player2: username}]})
+    .then((matches: typeof Match[]) => res.status(200).json({matches}))
+    .catch((error: CallbackError) => res.status(500).json({error}))
+});
+
+app.post('/chat', mustAuth, async (req: Request, res: Response) => {
+  const {username, friend, msg} = req.body;
+  const time = new Date().toString();
+
   await new Message({
-    from:username,
-    to:friend,
-    message:msg,
+    from: username,
+    to: friend,
+    message: msg,
     timestamp: time
   }).save();
   res.status(200).json({message:"ok"});
@@ -413,25 +425,39 @@ app.post('/getChat', authenticateJWT, async (req, res) => {
     }
   })
 
+  res.status(200).json({message: "ok"});
 });
-app.post('/readChat', authenticateJWT, async (req, res) => {
+
+// TODO better control flow
+app.post('/getChat', mustAuth, async (req: Request, res: Response) => {
+  const {username, friend} = req.body;
+
+  Message.find({
+    $or: [{from: username, to: friend}, {
+      from: friend,
+      to: username
+    }]
+  }).then(async (messages: typeof Message[]) => {
+    await Message.updateMany({to: username}, {$set: {new: false}});
+    res.status(200).json({messages});
+  }).catch((error: CallbackError) => res.status(500).json({error}));
+});
+
+// Mark all unread messages as read
+// TODO User level "message read" policies similar to WhatsApp
+// TODO Remove this endpoint and keep "message read" logic only in `/getChat`
+app.post('/readChat', mustAuth, async (req: Request, res: Response) => {
   const {username} = req.body;
- 
-  Message.updateMany({to:username},{$set:{new:false}},function(err,sub){
-    console.log("Messaggi letti");
-    res.status(200).json({message:"ok"});
-  })
 
+  Message.updateMany({to: username}, {$set: {new: false}})
+    .then(() => res.status(200).json({message: "ok"}))
+    .catch((error: CallbackError) => res.status(500).json({error}))
 });
-//const { logger2 } = require('./logger.ts');
 
+let waitingPlayers: waitingPlayer[] = [];
+let matches: match[] = [];
 
-
-var waitingPlayers:waitingPlayer[]=[];
-var matches:match[]=[];
-io.on('connection', (socket) => {
-  
-  //logger.error({ message: 'user connected', labels: { 'key': 'value' } })
+io.on('connection', (socket: any) => {
   socket.on('Move', async function (data) {
     
     let match = matches.filter(value => value.id==data.gameId)[0];
@@ -452,11 +478,12 @@ io.on('connection', (socket) => {
         console.log("Giocatore aggiornato!")
       });
     }
-    
+
     io.to(users[data.opponent]).emit("Move", data);
     console.log("STO INVIANDO al "+data.gameId);
     io.to("visitors"+data.gameId).emit("ListenGames", match);
   });
+
   socket.on('Board', function (data) {
     let match = matches.filter(value => value.id==data.gameId);
     console.log("HO RICEVUTO "+data.board);
@@ -473,8 +500,8 @@ io.on('connection', (socket) => {
         io.to(users[match[0].players[0]]).emit("Board", {board: match[0].boards[match[0].players[1]],username:match[0].players[1],canPlay:false});
         io.to(users[match[0].players[1]]).emit("Board", {board: match[0].boards[match[0].players[0]],username:match[0].players[0],canPlay:true});
       }
-      
-    } 
+
+    }
     console.log("DIOCANE");
     
   });
@@ -532,15 +559,14 @@ io.on('connection', (socket) => {
           io.to(game.id).emit("new_member", {members:game.members,gameId:game.id});
         }
       }
-    },30000);
-    
-    User.findOne({username:data.username},function(err,sub){
-      waitingPlayers.push(new waitingPlayer({name:data.username,ratio:sub.wins/sub.matches}));
-      waitingPlayers.sort((a,b)=>a.ratio-b.ratio);
-      console.log(waitingPlayers);
-    })
-    
-    
+    }, 30000);
+
+    User.findOne({username: data.username})
+      .then((user: typeof User) => {
+        waitingPlayers.push(new waitingPlayer({name: data.username, ratio: user.wins / user.matches}));
+        waitingPlayers.sort((a, b) => a.ratio - b.ratio);
+      });
+
   });
   socket.on("friendlyMatch",function(data){
     let game = matches.filter(value => value.players.includes(data.player1))[0];
@@ -562,8 +588,8 @@ io.on('connection', (socket) => {
       socket.join(game.id);
       io.to(users[data.player1]).to(users[data.player2]).emit("new_member", {members:game.members,gameId:game.id});
     }
-    
-    
+
+
   });
   socket.on('watchMatch',(data)=>{
     console.log(socket.rooms);
@@ -583,17 +609,18 @@ io.on('connection', (socket) => {
       socket.leave("visitors"+data.gameId);
       console.log(socket.rooms);
     }
-  })
-  socket.on('message', data => {
-     // logger2.error({ message: 'message received', labels: { 'key': 'value' } })
-    
-    io.to(users[data.to]).emit("message",data);
-    io.to("visitors"+data.gameId).emit("message",data);
-    
   });
 
-  socket.on('messageBroadcast',data =>{
-    io.to("visitors"+data.gameId).emit("messageBroadcast",data);
+  socket.on('message', (data) => {
+    io.to(users[data.to])
+      .emit("message", data);
+
+    io.to("visitors" + data.gameId)
+      .emit("message", data);
+  });
+
+  socket.on('messageBroadcast', (data: any) => {
+    io.to("visitors" + data.gameId).emit("messageBroadcast", data);
   });
   socket.on('quitGame',async data=>{
     let match = matches.filter(value => value.id==data.gameId)[0];
