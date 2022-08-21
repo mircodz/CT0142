@@ -44,113 +44,105 @@ const fs = require('fs');
 const join = require('path').join;
 const models = join(__dirname, 'models');
 fs.readdirSync(models)
-  .filter(file => ~file.indexOf('.js'))
-  .forEach(file => require(join(models, file)));
+  .filter((file: string) => ~file.indexOf('.js'))
+  .forEach((file: string) => require(join(models, file)));
+
 interface Foo {
-   
-    [key: string]: string;
-}
-interface Foo2 {
-   
-  [key: string]: any;
+  [key: string]: string;
 }
 
-let users:Foo={};
-// Mongo
-const mongoose = require('mongoose');
-try {
-    mongoose.connect(mongoConfig.url);
-} catch (error) {
-    console.log('no mongo connection')
-}
+let users: Foo = {};
 
-const User = mongoose.model('User');
-const Match = mongoose.model("Match");
-const Message = mongoose.model("Message");
+// Establish mongo connection
+connect(mongoConfig.url)
+  .then(() => console.log("connection with mongo established"))
+  .catch(() => console.log("could not connect to mongo"));
 
-User.findOne({username:"admin"},async function(err,sub){
-  if(!sub){
-    await new User({
-      username:"admin",
-      password:crypto2
-      .createHash("sha256")
-      .update("admin")
-      .digest("hex"),
-      isFirstLogin:true,
-      isModerator:true,
-    }).save();
-  }
-})
+const User = model('User');
+const Match = model("Match");
+const Message = model("Message");
 
-app.post('/signup', async (req, res) => {
-  const { name, username, email, password } = req.body;
-  const user = await User.exists({ username });
-  console.log(req.body);
-  
+type UserT = typeof User;
+type MatchT = typeof Match;
+type MessageT = typeof Message;
+
+// Make sure the user `admin` exists at any times.
+User.findOne({username: "admin"})
+  .then((user: UserT) => {
+    if (!user) {
+      return new User({
+        username: "admin",
+        password: hashed("admin"),
+        isFirstLogin: true,
+        isModerator: true,
+      }).save();
+    } else {
+      throw "admin already exists";
+    }
+  }).then(() => console.log("insert default user admin:admin"))
+  .catch((error: string) => console.log(error));
+
+app.post('/signup', async (req: Request, res: Response) => {
+  const {name, username, email, password} = req.body;
+  const user = await User.exists({username});
+
   if (!user) {
-    const hashed = crypto2
-      .createHash("sha256")
-      .update(password)
-      .digest("hex");
-
-    const r = await new User({
+    await new User({
       name,
       username,
       email,
-      password: hashed
+      password: hashed(password),
     }).save();
-    
+
     res.status(200).json({message: "ok"});
   } else {
-    
     res.status(400).json({message: "user exists"});
   }
 });
 
-app.post('/signin', (req, res) => {
-  const { username, password } = req.body;
-  const hashed = crypto2
+const hashed = (s: String): String => {
+  return crypto2
     .createHash("sha256")
-    .update(password)
+    .update(s)
     .digest("hex");
-  
-  const user = User.findOne({ username:username,password:hashed},function(err,sub){
-   
-    if (sub) {
-      const token = jwt.sign({ username: username,  role: user.role }, secret);
-      Message.findOne({new:true,to:username},function(err,data){
-        console.log(data);
-        if(data){
-          res.status(200).json({ token,sub,newMessages:true });
-        }else{
-          res.status(200).json({ token,sub });
-        }
-        
-      })
-      
-  
-  
-    } else {
-      res.status(400).json({message: "Credenziali errate!"});
-    }
-  });
-  
-  
-  
-  
+};
+
+// Given a username, returns whether the user has unread messages
+const hasNewMessages = (username: string): Promise<Boolean> => {
+  return Message
+    .findOne({new: true, to: username})
+    .then((message: typeof Message) => {
+      return message;
+    })
+};
+
+app.post('/signin', (req: Request, res: Response) => {
+  const {username, password} = req.body;
+  const hashed = hashed(password);
+
+  User.findOne({username: username, password: hashed})
+    .then(async (user: typeof User) => {
+      if (user) {
+        const token = jwt.sign({username: username, role: user.role}, secret);
+        const hasMessages = await hasNewMessages(username);
+        res.status(200).json({token, user, newMessages: hasMessages});
+      } else {
+        res.status(400).json({"error": "invalid credentials"});
+      }
+    }).catch((error: CallbackError) => res.status(500).json({error}));
 });
 
-const authenticateJWT = (req, res, next) => {
+const mustAuth = (req: Request, res: Response, next: NextFunction) => {
   const header = req.headers.authorization;
 
   if (header) {
-    const [preamble, token] = header.split(' ');
-    jwt.verify(token, secret, (err, user) => {
+    const [_, token] = header.split(' ');
+    jwt.verify(token, secret, (err: VerifyErrors, user: JwtPayload) => {
       if (err) {
         return res.sendStatus(403);
       }
 
-      req.user = user;
+      req.body.username = user;
       next();
     });
   } else {
@@ -703,7 +695,7 @@ io.on('connection', (socket) => {
 });
 
 server.listen(port, () => {
-  console.log(`Example app listening on ${port}!`);
+  console.log(`listening on ${port}`);
 });
 
 function max(id: String): number {
