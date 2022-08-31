@@ -1,4 +1,4 @@
-<div *ngIf="ModeratorComoponent.isFirstLogin==true" class="hero is-primary is-fullheight">
+<div *ngIf="ModeratorComponent.isFirstLogin==true" class="hero is-primary is-fullheight">
     <div class="hero-body">
         <div class="container">
             <div class="columns is-centered">
@@ -41,7 +41,7 @@
         </div>
     </div>
 </div>
-<div *ngIf="ModeratorComoponent.isFirstLogin==false">
+<div *ngIf="ModeratorComponent.isFirstLogin==false">
     <nav class="breadcrumb" aria-label="breadcrumbs">
         <ul>
             <li>
@@ -60,7 +60,7 @@
                     <span>Logout</span>
                 </a>
                 </li>
-            
+
         </ul>
         </nav>
     <section class="section">
@@ -99,15 +99,15 @@
             <div class="columns is-mobile">
                 <div class="column">
                     <h1 class="title">Remove players</h1>
-                   
+
                     <div *ngFor="let x of users" class="block">
                         <span  class="tag is-danger">
                             {{x.username}}
                             <button class="delete is-small" (click)="removeUser(x.username)"></button>
                         </span>
                     </div>
-                    
-                    
+
+
                 </div>
                 <div class="column">
                     <h1 class="title">Statistic of players</h1>
@@ -152,10 +152,10 @@
                                 <span><h2 class="subtitle">Looses: {{user.looses}}</h2></span>
                             </span>
                         </div>
-                        
-                        
-                        
-                        
+
+
+
+
                     </div>
                 </div>
                 <div class="column">
@@ -171,15 +171,15 @@
                     <div class="block" style="overflow:scroll; width: 400px; height: 400px;" #chatWithPlayers>
                         <div  class="block" *ngFor="let x of messages">
                                 {{x.from}}: {{x.message}}  {{ x.timestamp}};
-                            
+
                         </div>
                     </div>
                     <div class="block">
                         <form [formGroup]="msgForm" (ngSubmit)="sendMessage()">
                       <input name="msg" class="input" type="text" formControlName="msg" placeholder="Text input">
-                      <button type="submit" class="btn btn-default pull-right">Send</button> 
+                      <button type="submit" class="btn btn-default pull-right">Send</button>
                       </form>
-                      </div> 
+                      </div>
                 </div>
             </div>
         </div>

@@ -1,13 +1,16 @@
-import {Foo} from "./foo"
+import {Foo} from "./foo";
+
 export class match {
-    members: number= 0;
-    id: string ="";
-    whoPlay: string ="";
-    players:string[]=[];
-    boards:Foo={}
-    i: number=0;
-    visitor:number=0;
-    constructor(values: Object = {}){
+    members = 0;
+    id = "";
+    whoPlay = "";
+    players: string[] = [];
+    boards: Foo = {};
+    i = 0;
+    visitor = 0;
+
+    // eslint-disable-next-line @typescript-eslint/ban-types
+    constructor(values: Object = {}) {
         Object.assign(this, values);
     }
 }

@@ -22,11 +22,18 @@
                                 </span>
                             </div>
                         </div>
-                        <div class="field">
-                            <button type="submit"  class="button is-success">Login</button>
-                            <a  routerLink="/register"
-                            routerLinkActive="activebutton"
-                            ariaCurrentWhenActive="page"><small>Not a member?</small></a>
+                        <div class="field columns">
+                            <div class="column is-half">
+                                <input type="submit" 
+                                       class="button is-success is-fullwidth" 
+                                       value="Login"/>
+                            </div>
+                            <div class="column is-half">
+                                <input routerLink="/register" 
+                                       type="submit" 
+                                       class="button is-success is-fullwidth" 
+                                       value="Not a member?"/>
+                            </div>
                         </div>
                     </form>
                 </div>

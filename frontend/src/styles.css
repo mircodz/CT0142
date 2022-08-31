@@ -1,36 +1,44 @@
 /* You can add global styles to this file, and also import other style files */
 .container {
-    padding: 50px;
-  }
-  .battleship-tile {
-    color: black;
-  }
-  .win {
-    background-color: #23d160;
-    color: #fff;
-  }
-  .canPut {
-    background-color: #c0d123;
-    color: #fff;
-  }
-  .fail {
-    background-color: #ff3860;
-    color: #fff;
-  }
-  .content table td, .content table th {
-      border: 1px solid #dbdbdb;
-      padding: 0.5em 0.75em;
-      vertical-align: middle;
-      height: 50px;
-      text-align: center;
-  }
-  .content table {
-    width: 80%;
-    margin: 0 auto;
-  }
-  .content table tr:hover {
-      background-color: transparent;
-  }
-  .battleship-tile:hover {
-    cursor: pointer;
-  }
+  padding: 50px;
+}
+
+.battleship-tile {
+  color: black;
+}
+
+.win {
+  background-color: #23d160;
+  color: #fff;
+}
+
+.canPut {
+  background-color: #c0d123;
+  color: #fff;
+}
+
+.fail {
+  background-color: #ff3860;
+  color: #fff;
+}
+
+.content table td, .content table th {
+  border: 1px solid #dbdbdb;
+  padding: 0.5em 0.75em;
+  vertical-align: middle;
+  height: 50px;
+  text-align: center;
+}
+
+.content table {
+  width: 80%;
+  margin: 0 auto;
+}
+
+.content table tr:hover {
+  background-color: transparent;
+}
+
+.battleship-tile:hover {
+  cursor: pointer;
+}

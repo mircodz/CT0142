@@ -1,25 +1,25 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from "@angular/core/testing";
 
-import { BattleshipGameComponent } from './battleship-game.component';
+import { BattleshipGameComponent } from "./battleship-game.component";
 
-describe('BattleshipGameComponent', () => {
-  let component: BattleshipGameComponent;
-  let fixture: ComponentFixture<BattleshipGameComponent>;
+describe("BattleshipGameComponent", () => {
+    let component: BattleshipGameComponent;
+    let fixture: ComponentFixture<BattleshipGameComponent>;
 
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      declarations: [ BattleshipGameComponent ]
-    })
-    .compileComponents();
-  });
+    beforeEach(async () => {
+        await TestBed.configureTestingModule({
+            declarations: [ BattleshipGameComponent ]
+        })
+            .compileComponents();
+    });
 
-  beforeEach(() => {
-    fixture = TestBed.createComponent(BattleshipGameComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-  });
+    beforeEach(() => {
+        fixture = TestBed.createComponent(BattleshipGameComponent);
+        component = fixture.componentInstance;
+        fixture.detectChanges();
+    });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
+    it("should create", () => {
+        expect(component).toBeTruthy();
+    });
 });

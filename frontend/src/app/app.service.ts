@@ -11,18 +11,7 @@ export class AppService {
 
     address = "http://localhost:6969";
 
-    constructor(private http: HttpClient) {
-    }
-
-    register(user: any) {
-        return this.http.post(this.address + "/signup", user);
-    }
-
-    login(user: any) {
-        return this.http.post(this.address +  "/signin", user);
-    }
-
-    getOptions(token: string) {
+    private static getOptions(token: string) {
         return {
             headers: new HttpHeaders({
                 authorization: "Bearer " + token,
@@ -32,68 +21,79 @@ export class AppService {
         };
     }
 
+    constructor(private http: HttpClient) {
+    }
+
+    register(user: any) {
+        return this.http.post(this.address + "/signup", user).pipe();
+    }
+
+    login(user: any) {
+        return this.http.post(this.address +  "/signin", user).pipe();
+    }
+
     addFriends(jwt: string, user: any) {
-        return this.http.post(this.address + "/addFriends", user, this.getOptions(jwt));
+        return this.http.post(this.address + "/addFriends", user, AppService.getOptions(jwt));
     }
 
     friends(jwt: string, user: any) {
-        return this.http.post(this.address + "/friend", user, this.getOptions(jwt));
+        return this.http.post(this.address + "/friend", user, AppService.getOptions(jwt));
     }
 
     getAllUsers(jwt: string, data: any) {
-        return this.http.post(this.address + "/getAllUsers", data, this.getOptions(jwt));
+        return this.http.post(this.address + "/getAllUsers", data, AppService.getOptions(jwt)).pipe();
     }
 
     deleteFriend(jwt: string, data: any) {
-        return this.http.post(this.address + "/deleteFriend", data, this.getOptions(jwt));
+        return this.http.post(this.address + "/deleteFriend", data, AppService.getOptions(jwt));
     }
 
     allUsers(jwt: string) {
-        return this.http.get(this.address + "/allUsers", this.getOptions(jwt));
+        return this.http.get(this.address + "/allUsers", AppService.getOptions(jwt));
     }
 
     chat(jwt: string, data: any) {
-        return this.http.post(this.address+ "/chat", data, this.getOptions(jwt));
+        return this.http.post(this.address+ "/chat", data, AppService.getOptions(jwt));
     }
 
     readChat(jwt: string, data: any) {
-        return this.http.post(this.address +"/readChat", data, this.getOptions(jwt));
+        return this.http.post(this.address +"/readChat", data, AppService.getOptions(jwt)).pipe();
     }
 
     getChat(jwt: string, data: any) {
-        return this.http.post(this.address + "/getChat", data, this.getOptions(jwt));
+        return this.http.post(this.address + "/getChat", data, AppService.getOptions(jwt));
     }
 
     getModerators(jwt: string) {
-        return this.http.get(this.address+"/getModerators", this.getOptions(jwt));
+        return this.http.get(this.address+"/getModerators", AppService.getOptions(jwt));
     }
 
     getMatches(jwt: string) {
-        return this.http.get(this.address+"/matches", this.getOptions(jwt));
+        return this.http.get(this.address+"/matches", AppService.getOptions(jwt));
     }
 
     getMatchId(jwt: string, data: any) {
-        return this.http.post(this.address+"/matchId", data, this.getOptions(jwt));
+        return this.http.post(this.address+"/matchId", data, AppService.getOptions(jwt));
     }
 
     getHistorical(jwt: string, data: any) {
-        return this.http.post(this.address+"/getHistoricalMatches", data, this.getOptions(jwt));
+        return this.http.post(this.address+"/history", data, AppService.getOptions(jwt)).pipe();
     }
 
     logout(jwt: string, data: any) {
-        return this.http.post(this.address+"/logout", data, this.getOptions(jwt));
+        return this.http.post(this.address+"/logout", data, AppService.getOptions(jwt)).pipe();
     }
 
     firstLogin(jwt: string, data: any) {
-        return this.http.post(this.address+"/firstLogin", data, this.getOptions(jwt));
+        return this.http.post(this.address+"/firstLogin", data, AppService.getOptions(jwt));
     }
 
     deleteUser(jwt: string, data: any) {
-        return this.http.post(this.address+"/deleteUser", data, this.getOptions(jwt));
+        return this.http.post(this.address+"/deleteUser", data, AppService.getOptions(jwt));
     }
 
     addModerator(jwt: string, data: any) {
-        return this.http.post(this.address+"/addModerator", data, this.getOptions(jwt));
+        return this.http.post(this.address+"/addModerator", data, AppService.getOptions(jwt)).pipe();
     }
 
     static getBoolean(value: any) {

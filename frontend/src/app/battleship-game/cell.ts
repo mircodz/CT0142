@@ -1,9 +1,10 @@
 export class Cell {
-    used: boolean= false;
-    value: string ="";
-    status: string="";
-    canPut:boolean=true;
-    constructor(values: Object = {}){
+    used = false;
+    value = "";
+    status = "";
+    canPut = true;
+
+    constructor(values: Object = {}) {
         Object.assign(this, values);
     }
 }

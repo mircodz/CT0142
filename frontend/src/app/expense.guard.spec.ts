@@ -1,16 +1,16 @@
-import { TestBed } from '@angular/core/testing';
+import { TestBed } from "@angular/core/testing";
 
-import { ExpenseGuard } from './expense.guard';
+import { ExpenseGuard } from "./expense.guard";
 
-describe('ExpenseGuard', () => {
-  let guard: ExpenseGuard;
+describe("ExpenseGuard", () => {
+    let guard: ExpenseGuard;
 
-  beforeEach(() => {
-    TestBed.configureTestingModule({});
-    guard = TestBed.inject(ExpenseGuard);
-  });
+    beforeEach(() => {
+        TestBed.configureTestingModule({});
+        guard = TestBed.inject(ExpenseGuard);
+    });
 
-  it('should be created', () => {
-    expect(guard).toBeTruthy();
-  });
+    it("should be created", () => {
+        expect(guard).toBeTruthy();
+    });
 });

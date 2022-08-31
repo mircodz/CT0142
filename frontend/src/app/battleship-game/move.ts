@@ -1,13 +1,12 @@
-import { Board } from "./board";
-import { Foo } from "./foo";
+import {Foo} from "./foo";
 
 export class Move {
-   
-    score: number = 0;
-    canPlay: boolean = false;
+    score = 0;
+    canPlay = false;
     boards: Foo = {};
-    gameId:number=0;
-    constructor(values: Object = {}){
+    gameId = 0;
+
+    constructor(values: Object = {}) {
         Object.assign(this, values);
     }
 }

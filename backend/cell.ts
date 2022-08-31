@@ -1,8 +1,10 @@
 export class Cell {
-    used: boolean= false;
-    value: string ="";
-    status: string="";
-    constructor(values: Object = {}){
+    used = false;
+    value = "";
+    status = "";
+
+    // eslint-disable-next-line @typescript-eslint/ban-types
+    constructor(values: Object = {}) {
         Object.assign(this, values);
     }
 }

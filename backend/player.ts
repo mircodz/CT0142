@@ -1,8 +1,9 @@
 export class Player {
-    name: string = "";
-    score: number = 0;
+    name = "";
+    score = 0;
 
-    constructor(values: Object = {}){
+    // eslint-disable-next-line @typescript-eslint/ban-types
+    constructor(values: Object = {}) {
         Object.assign(this, values);
     }
 }

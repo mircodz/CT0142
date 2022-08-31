@@ -1,48 +1,43 @@
-<nav class="breadcrumb" aria-label="breadcrumbs">
-<ul>
-    <li>
-    <a style="text-decoration: none;"class="navbar-item" routerLink="/home/main" routerLinkActive="activebutton" ariaCurrentWhenActive="page">
-        <span class="icon is-small">
-        <i class="fas fa-home" aria-hidden="true"></i>
-        </span>
-        <span>Home</span>
+<nav class="navbar is-light px-3" role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item">
+      <i class="fa fa-ship" aria-hidden="true"></i>
     </a>
-    </li>
-    <li>
-    <a style="text-decoration: none;" class="navbar-item" routerLink="/home/game" routerLinkActive="activebutton" ariaCurrentWhenActive="page">
-        <span class="icon is-small">
+  </div>
+
+  <div class="navbar-menu">
+    <div class="navbar-start">
+      <a style="text-decoration: none;" class="navbar-item icon-text" routerLink="/home/friends"
+         routerLinkActive="activebutton">
+        <span class="icon">
+          <i class="fa-solid fa-users" aria-hidden="true"></i>
+        </span>
+        <span>Friends</span>
+      </a>
+      <a style="text-decoration: none;" class="navbar-item icon-texts" routerLink="/home/game"
+         routerLinkActive="activebutton">
+        <span class="icon">
             <i class="fa-solid fa-gamepad" aria-hidden="true"></i>
         </span>
         <span>Game</span>
-    </a>
-    </li>
-    <li>
-    <a style="text-decoration: none;" class="navbar-item" routerLink="/home/friends" routerLinkActive="activebutton" ariaCurrentWhenActive="page">
-        <span class="icon is-small">
-        <i class="fa-solid fa-users" aria-hidden="true"></i>
+      </a>
+      <a style="text-decoration: none;" class="navbar-item icon-text" routerLink="/home/chat"
+         routerLinkActive="activebutton">
+        <span class="icon">
+            <i class="fa-solid fa-comments" aria-hidden="true"></i>
         </span>
-        <span>Friends</span>
-    </a>
-    </li>
-    <li>
-        <a style="text-decoration: none;" class="navbar-item" routerLink="/home/chat" routerLinkActive="activebutton" ariaCurrentWhenActive="page">
-            <span class="icon is-small">
-                <i class="fa-solid fa-comments" aria-hidden="true"></i>
-            </span>
-            <span>Chat</span>
-        </a>
-        </li>
-    <li>
-        <a style="text-decoration: none;" class="navbar-item" (click)="logout()">
-            <span class="icon is-small">
-                <i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i>
-            </span>
-            <span>Logout</span>
-        </a>
-        </li>
-    
-</ul>
+        <span>Chat</span>
+      </a>
+    </div>
+
+    <div class="navbar-end">
+      <a style="text-decoration: none;" class="navbar-item icon-text is-light button" (click)="logout()">
+        <span class="icon">
+            <i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i>
+        </span>
+        <span>Logout</span>
+      </a>
+    </div>
+  </div>
 </nav>
 <router-outlet></router-outlet>
-  
- 

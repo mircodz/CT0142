@@ -1,18 +1,18 @@
-import { Component, Input, OnInit } from '@angular/core';
-import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
+import { Component, Input, OnInit } from "@angular/core";
+import { NgbActiveModal } from "@ng-bootstrap/ng-bootstrap";
 
 
 @Component({
-  selector: 'app-confirmation-dialog',
-  templateUrl: './confirmation-dialog.component.html',
-  styleUrls: ['./confirmation-dialog.component.css']
+    selector: "app-confirmation-dialog",
+    templateUrl: "./confirmation-dialog.component.html",
+    styleUrls: ["./confirmation-dialog.component.css"]
 })
 export class ConfirmationDialogComponent implements OnInit {
 
-  @Input() title: string ="";
-  @Input() message: string="";
-  @Input() btnOkText: string="";
-  @Input() btnCancelText: string="";
+  @Input() title ="";
+  @Input() message="";
+  @Input() btnOkText="";
+  @Input() btnCancelText="";
 
   constructor(private activeModal: NgbActiveModal) { }
 
@@ -20,14 +20,14 @@ export class ConfirmationDialogComponent implements OnInit {
   }
 
   public decline() {
-    this.activeModal.close(false);
+      this.activeModal.close(false);
   }
 
   public accept() {
-    this.activeModal.close(true);
+      this.activeModal.close(true);
   }
 
   public dismiss() {
-    this.activeModal.dismiss();
+      this.activeModal.dismiss();
   }
 }

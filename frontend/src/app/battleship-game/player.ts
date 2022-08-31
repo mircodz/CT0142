@@ -1,6 +1,6 @@
 export class Player {
-    name: string = "";
-    score: number = 0;
+    name = "";
+    score = 0;
 
     constructor(values: Object = {}){
         Object.assign(this, values);

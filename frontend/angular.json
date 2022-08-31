@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "c4": {
+    "battleship": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:application": {
@@ -17,7 +17,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:browser",
           "options": {
-            "outputPath": "dist/c4",
+            "outputPath": "dist/battleship",
             "index": "src/index.html",
             "main": "src/main.ts",
             "polyfills": "src/polyfills.ts",
@@ -28,7 +28,6 @@
             ],
             "styles": [
               "src/styles.css",
-              "src/css/style.css",
               "node_modules/bulma/css/bulma.min.css",
               "node_modules/ngx-toastr/toastr.css",
               "node_modules/bootstrap/dist/css/bootstrap.min.css"
@@ -72,10 +71,10 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "browserTarget": "c4:build:production"
+              "browserTarget": "battleship:build:production"
             },
             "development": {
-              "browserTarget": "c4:build:development"
+              "browserTarget": "battleship:build:development"
             }
           },
           "defaultConfiguration": "development"
@@ -83,7 +82,7 @@
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "c4:build"
+            "browserTarget": "battleship:build"
           }
         },
         "test": {
@@ -106,5 +105,5 @@
       }
     }
   },
-  "defaultProject": "c4"
+  "defaultProject": "battleship"
 }

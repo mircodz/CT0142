@@ -1,8 +1,9 @@
-export class waitingPlayer{
-    name: string = "";
-    ratio: number = 0;
+export class waitingPlayer {
+    name = "";
+    ratio = 0;
 
-    constructor(values: Object = {}){
+    // eslint-disable-next-line @typescript-eslint/ban-types
+    constructor(values: Object = {}) {
         Object.assign(this, values);
     }
 }

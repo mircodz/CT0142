@@ -3,12 +3,12 @@ FROM node:latest
 WORKDIR /usr/src/app
 
 COPY package.json ./
+COPY yarn.lock ./
 RUN yarn install
 COPY . .
 
-EXPOSE 6969
-
 RUN yarn tsc *.ts
 
-CMD [ "node", "-r", "app.js" ]
-CMD [ "node", "app" ]
+EXPOSE 6969
+
+CMD [ "node", "dist/app.js" ]

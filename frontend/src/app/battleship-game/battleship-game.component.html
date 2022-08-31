@@ -5,7 +5,7 @@
         <h1 class="title">Ready to sink some battleships?</h1>
         <h6 class="subtitle is-6"><strong>Battleship</strong></h6>
         <hr>
-  
+
         <!-- shows when a player has won the game -->
         <section *ngIf="winner" class="notification is-success has-text-centered" style="color:white">
           <h1>Player {{ winner.player.name }} has won the game!</h1>
@@ -15,9 +15,9 @@
         <!-- shows while waiting for 2nd user to join -->
         <div *ngIf="players < 2">
           <h2>Waiting for 2nd user to join...</h2>
-          
+
         </div>
-  
+
         <!-- loops through the boards array and displays the player and board tiles -->
         <div class="columns" *ngIf="validPlayer && ready">
           <div class="column has-text-centered" *ngFor="let board of getKeys(); let i = index">
@@ -27,13 +27,13 @@
             </h5>
             <table class="is-bordered" [style.opacity] = "board == HomeComponent.username ? 0.5 : 1">
               <tr *ngFor="let row of boards[board].tiles; let j = index">
-        
+
               <td width="200" *ngFor="let col of row; let k = index"
                 (click) = "fireTorpedo($event)"
                 [style.background-color] = "col.used ? '' : 'transparent'"
                 [class.win] = "col.status == 'win'" [class.fail] = "col.status == 'fail'"
                 class="battleship-tile" id="{{board}};{{j}};{{k}}">
-                {{ (col.used==true || board==HomeComponent.username) ? (col.value == "X"  ) ? "X" : "💀":" "}}
+                {{ (col.used==true || board==HomeComponent.username) ? (col.value == "X"  ) ? "⬛" : "":" "}}
               </td>
             </tr>
           </table>
@@ -46,22 +46,22 @@
           </h5>
           <div class="column">
             <div class="block"><button class="button" (click)="sendBoard()">Send a random Board</button></div>
-        
+
           </div>
           <div class="column">
             <div class="block"><button class="button" (click)="isManual()">Create your board</button></div>
           </div>
       </div>
     </div>
-        
+
         <div class="columns" *ngIf="validPlayer && !ready && manual">
           <div class="column has-text-centered">
             <h5>
-              PLAYER {{ boards[HomeComponent.username].player.name }} 
+              PLAYER {{ boards[HomeComponent.username].player.name }}
             </h5>
             <table class="table is-bordered" >
               <tr *ngFor="let row of boards[HomeComponent.username].tiles; let j = index">
-        
+
               <td width="200" *ngFor="let col of row; let k = index" (mouseenter)=" col.canPut && mouseenter(j,k,boards[HomeComponent.username].ships[boards[HomeComponent.username].ships.length-1]) " (mouseleave)="col.canPut && mouseleave(j,k,boards[HomeComponent.username].ships[boards[HomeComponent.username].ships.length-1]) "
                 (click) = "putShip($event,boards[HomeComponent.username].ships[boards[HomeComponent.username].ships.length-1])"
                 [class.canPut] = "col.canPut == true" [class.fail] = "col.canPut==false"
@@ -71,19 +71,19 @@
             </tr>
           </table>
         </div>
-      
+
         <div class="column has-text-centered">
           <h5>
             Ship to put in:
           </h5>
           Your ship:
           <div class="block" *ngIf="vertically" >
-          <div  *ngFor="let x of counter(boards[HomeComponent.username].ships[boards[HomeComponent.username].ships.length-1]);"> 
+          <div  *ngFor="let x of counter(boards[HomeComponent.username].ships[boards[HomeComponent.username].ships.length-1]);">
             X
           </div>
           </div>
           <div class="block" *ngIf="!vertically" >
-            <div style="display:inline-block;" *ngFor="let x of counter(boards[HomeComponent.username].ships[boards[HomeComponent.username].ships.length-1]);"> 
+            <div style="display:inline-block;" *ngFor="let x of counter(boards[HomeComponent.username].ships[boards[HomeComponent.username].ships.length-1]);">
               X
             </div>
             </div>
@@ -91,13 +91,13 @@
             <button class="button" (click)="rotate()" >Rotate</button>
           </div>
           <div *ngIf="!canContinue() && boards[HomeComponent.username].ships.length>0" class="block">
-            <button (click)="this.getboardService().createBoardManually(10,HomeComponent.username)">Restart</button>
+            <button (click)="this.getBoardService().createBoardManually(10,HomeComponent.username)">Restart</button>
           </div>
       </div>
         </div>
-    
-      
-  
+
+
+
       <div class="has-text-centered">
         <div class="block" *ngIf="!ready && players==2 && boards[HomeComponent.username].ships.length==0"><button class="button" (click)="sendMyBoard()">Send my board</button></div>
         <span class="tag is-warning" *ngIf="canPlay && players==2 && ready">Your turn!</span>
@@ -118,10 +118,9 @@
           <div class="block">
             <form [formGroup]="msgForm" (ngSubmit)="sendMessage()">
           <input name="msg" class="input" type="text" formControlName="msg" placeholder="Text input">
-          <button type="submit" class="btn btn-default pull-right">Send</button> 
+          <button type="submit" class="btn btn-default pull-right">Send</button>
           </form>
-          </div>                   
+          </div>
         </div>
       </div>
       </section>
- 

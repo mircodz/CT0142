@@ -27,7 +27,7 @@
                             <div class="control has-icons-left">
                                 <input type="email" class="input" name="email" placeholder="Email" formControlName="email"  ngModel required>
                                 <span class="icon is-small is-left">
-                                    <fa-icon [icon]="faUser"></fa-icon>
+                                    <fa-icon [icon]="faEnvelope"></fa-icon>
                                 </span>
                             </div>
                         </div>
@@ -40,11 +40,18 @@
                                 </span>
                             </div>
                         </div>
-                        <div class="field">
-                            <button type="submit"  class="button is-success">Login</button>
-                            <a  routerLink="/login"
-                            routerLinkActive="activebutton"
-                            ariaCurrentWhenActive="page"><small>Already a member?</small></a>
+                        <div class="field columns">
+                            <div class="column is-half">
+                                <input type="submit"
+                                       class="button is-success is-fullwidth"
+                                       value="Login"/>
+                            </div>
+                            <div class="column is-half">
+                                <input routerLink="/login"
+                                       type="submit"
+                                       class="button is-success is-fullwidth"
+                                       value="Already a member?"/>
+                            </div>
                         </div>
                     </form>
                 </div>
