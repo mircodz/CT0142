@@ -71,36 +71,38 @@ type MessageT = typeof Message;
 
 // Make sure the user `admin` exists at any times.
 User.findOne({username: "admin"})
-  .then((user: UserT) => {
+    .then((user: UserT) => {
+        if (!user) {
+            new User({
+                username: "admin",
+                password: hashed("admin"),
+                isFirstLogin: true,
+                isModerator: true,
+            }).save();
+        } else {
+            throw "admin already exists";
+        }
+    }).then(() => console.log("insert default user admin:admin"))
+    .catch(console.log);
+
+app.post("/signup", async (req: Request, res: Response) => {
+    const {name, username, email, password} = req.body;
+    const user = await User.exists({username});
+
     if (!user) {
-      return new User({
-        username: "admin",
-        password: hashed("admin"),
-        isFirstLogin: true,
-        isModerator: true,
-      }).save();
+        await new User({
+            name,
+            username,
+            email,
+            password: hashed(password),
+        }).save();
+
+        console.log("user has successfully signed up");
+        res.status(200).json({message: "ok"});
     } else {
-      throw "admin already exists";
+        console.log("error signing up user");
+        res.status(400).json({message: "user exists"});
     }
-  }).then(() => console.log("insert default user admin:admin"))
-  .catch((error: string) => console.log(error));
-
-app.post('/signup', async (req: Request, res: Response) => {
-  const {name, username, email, password} = req.body;
-  const user = await User.exists({username});
-
-  if (!user) {
-    await new User({
-      name,
-      username,
-      email,
-      password: hashed(password),
-    }).save();
-
-    res.status(200).json({message: "ok"});
-  } else {
-    res.status(400).json({message: "user exists"});
-  }
 });
 
 const hashed = (s: String): String => {
