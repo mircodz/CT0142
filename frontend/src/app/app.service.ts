@@ -1,188 +1,112 @@
-import { Injectable } from '@angular/core';
-import {HttpClient, HttpHeaders} from '@angular/common/http'
+import {Injectable} from "@angular/core";
+import {HttpClient, HttpHeaders} from "@angular/common/http";
 
 @Injectable({
-  providedIn: 'root'
+    providedIn: "root"
 })
 export class AppService {
-  ipAddress:any="localhost";
-  constructor(private http: HttpClient) { 
-    
-  }
-  
+    // TODO update service and fetch JWT from local storage, avoiding polluting method signatures
+    // TODO type all parameters and return types
+    // TODO return callback function instead of having to call `.pipe.stream` each time
 
-  register(user:any){
-    return this.http.post("http://"+ this.ipAddress+":6969/signup",user);
-  }
+    address = "http://localhost:6969";
 
-  login(user:any){
-    return this.http.post("http://"+ this.ipAddress+":6969/signin",user);
-  }
-  addFriends(jwt:any,user:any){
-    const httpOptions = {
-      headers: new HttpHeaders({
-        authorization: 'Bearer ' + jwt,
-        'cache-control': 'no-cache',
-        'Content-Type':  'application/json'})
-    };
-    
-    return this.http.post("http://"+ this.ipAddress+":6969/addFriends",user,httpOptions);
-  }
-  friends(jwt:any,user:any){
+    constructor(private http: HttpClient) {
+    }
 
-    const httpOptions = {
-      headers: new HttpHeaders({
-        authorization: 'Bearer ' + jwt,
-        'cache-control': 'no-cache',
-        'Content-Type':  'application/json'})
-    };
-  
-    return this.http.post("http://"+ this.ipAddress+":6969/friend",user,httpOptions);
-  }
-  getAllUsers(jwt:any,data:any){
+    register(user: any) {
+        return this.http.post(this.address + "/signup", user);
+    }
 
-    const httpOptions = {
-      headers: new HttpHeaders({
-        authorization: 'Bearer ' + jwt,
-        'cache-control': 'no-cache',
-        'Content-Type':  'application/json'})
-    };
-  
-    return this.http.post("http://"+ this.ipAddress+":6969/getAllUsers",data,httpOptions);
-  }
-  deleteFriend(jwt:any,data:any){
+    login(user: any) {
+        return this.http.post(this.address +  "/signin", user);
+    }
 
-    const httpOptions = {
-      headers: new HttpHeaders({
-        authorization: 'Bearer ' + jwt,
-        'cache-control': 'no-cache',
-        'Content-Type':  'application/json'})
-    };
-  
-    return this.http.post("http://"+ this.ipAddress+":6969/deleteFriend",data,httpOptions);
-  }
-  allUsers(jwt:any){
-    const httpOptions = {
-      headers: new HttpHeaders({
-        authorization: 'Bearer ' + jwt,
-        'cache-control': 'no-cache',
-        'Content-Type':  'application/json'})
-    };
-    return this.http.get("http://"+ this.ipAddress+":6969/allUsers",httpOptions);
-  }
-  getFoo(){
-    return this.http.get("http://"+ this.ipAddress+":6969/foo");
-  }
-  chat(jwt:any,data:any){
-    const httpOptions = {
-      headers: new HttpHeaders({
-        authorization: 'Bearer ' + jwt,
-        'cache-control': 'no-cache',
-        'Content-Type':  'application/json'})
-    };
-    return this.http.post("http://"+ this.ipAddress+":6969/chat",data,httpOptions);
-  }
-  readChat(jwt:any,data:any){
-    const httpOptions = {
-      headers: new HttpHeaders({
-        authorization: 'Bearer ' + jwt,
-        'cache-control': 'no-cache',
-        'Content-Type':  'application/json'})
-    };
-    return this.http.post("http://"+ this.ipAddress+":6969/readChat",data,httpOptions);
-  }
-  getChat(jwt:any,data:any){
-    const httpOptions = {
-      headers: new HttpHeaders({
-        authorization: 'Bearer ' + jwt,
-        'cache-control': 'no-cache',
-        'Content-Type':  'application/json'})
-    };
-    return this.http.post("http://"+ this.ipAddress+":6969/getChat",data,httpOptions);
-  }
-  getModerators(jwt:any){
-    const httpOptions = {
-      headers: new HttpHeaders({
-        authorization: 'Bearer ' + jwt,
-        'cache-control': 'no-cache',
-        'Content-Type':  'application/json'})
-    };
-    return this.http.get("http://"+ this.ipAddress+":6969/getModerators",httpOptions);
-  }
-  getMatches(jwt:any){
-    const httpOptions = {
-      headers: new HttpHeaders({
-        authorization: 'Bearer ' + jwt,
-        'cache-control': 'no-cache',
-        'Content-Type':  'application/json'})
-    };
-    return this.http.get("http://"+ this.ipAddress+":6969/matches",httpOptions);
-  }
-  getMatchId(jwt:any,data:any){
-    const httpOptions = {
-      headers: new HttpHeaders({
-        authorization: 'Bearer ' + jwt,
-        'cache-control': 'no-cache',
-        'Content-Type':  'application/json'})
-    };
-    return this.http.post("http://"+ this.ipAddress+":6969/matchId",data,httpOptions);
-  }
-  getHistorical(jwt:any,data:any){
-    const httpOptions = {
-      headers: new HttpHeaders({
-        authorization: 'Bearer ' + jwt,
-        'cache-control': 'no-cache',
-        'Content-Type':  'application/json'})
-    };
-    return this.http.post("http://"+ this.ipAddress+":6969/getHistoricalMatches",data,httpOptions);
-  }
-  logout(jwt:any,data:any){
-    const httpOptions = {
-      headers: new HttpHeaders({
-        authorization: 'Bearer ' + jwt,
-        'cache-control': 'no-cache',
-        'Content-Type':  'application/json'})
-    };
-    return this.http.post("http://"+ this.ipAddress+":6969/logout",data,httpOptions);
-  }
-  firstlogin(jwt:any,data:any){
-    const httpOptions = {
-      headers: new HttpHeaders({
-        authorization: 'Bearer ' + jwt,
-        'cache-control': 'no-cache',
-        'Content-Type':  'application/json'})
-    };
-    return this.http.post("http://"+ this.ipAddress+":6969/firstLogin",data,httpOptions);
-  }
-  deleteUser(jwt:any,data:any){
-    const httpOptions = {
-      headers: new HttpHeaders({
-        authorization: 'Bearer ' + jwt,
-        'cache-control': 'no-cache',
-        'Content-Type':  'application/json'})
-    };
-    return this.http.post("http://"+ this.ipAddress+":6969/deleteUser",data,httpOptions);
-  }
-  addModerator(jwt:any,data:any){
-    const httpOptions = {
-      headers: new HttpHeaders({
-        authorization: 'Bearer ' + jwt,
-        'cache-control': 'no-cache',
-        'Content-Type':  'application/json'})
-    };
-    return this.http.post("http://"+ this.ipAddress+":6969/addModerator",data,httpOptions);
-  }
-  static getBoolean(value:any){
-    switch(value){
-         case true:
-         case "true":
-         case 1:
-         case "1":
-         case "on":
-         case "yes":
-             return true;
-         default: 
-             return false;
-     }
- }
+    getOptions(token: string) {
+        return {
+            headers: new HttpHeaders({
+                authorization: "Bearer " + token,
+                "cache-control": "no-cache",
+                "Content-Type": "application/json"
+            })
+        };
+    }
+
+    addFriends(jwt: string, user: any) {
+        return this.http.post(this.address + "/addFriends", user, this.getOptions(jwt));
+    }
+
+    friends(jwt: string, user: any) {
+        return this.http.post(this.address + "/friend", user, this.getOptions(jwt));
+    }
+
+    getAllUsers(jwt: string, data: any) {
+        return this.http.post(this.address + "/getAllUsers", data, this.getOptions(jwt));
+    }
+
+    deleteFriend(jwt: string, data: any) {
+        return this.http.post(this.address + "/deleteFriend", data, this.getOptions(jwt));
+    }
+
+    allUsers(jwt: string) {
+        return this.http.get(this.address + "/allUsers", this.getOptions(jwt));
+    }
+
+    chat(jwt: string, data: any) {
+        return this.http.post(this.address+ "/chat", data, this.getOptions(jwt));
+    }
+
+    readChat(jwt: string, data: any) {
+        return this.http.post(this.address +"/readChat", data, this.getOptions(jwt));
+    }
+
+    getChat(jwt: string, data: any) {
+        return this.http.post(this.address + "/getChat", data, this.getOptions(jwt));
+    }
+
+    getModerators(jwt: string) {
+        return this.http.get(this.address+"/getModerators", this.getOptions(jwt));
+    }
+
+    getMatches(jwt: string) {
+        return this.http.get(this.address+"/matches", this.getOptions(jwt));
+    }
+
+    getMatchId(jwt: string, data: any) {
+        return this.http.post(this.address+"/matchId", data, this.getOptions(jwt));
+    }
+
+    getHistorical(jwt: string, data: any) {
+        return this.http.post(this.address+"/getHistoricalMatches", data, this.getOptions(jwt));
+    }
+
+    logout(jwt: string, data: any) {
+        return this.http.post(this.address+"/logout", data, this.getOptions(jwt));
+    }
+
+    firstLogin(jwt: string, data: any) {
+        return this.http.post(this.address+"/firstLogin", data, this.getOptions(jwt));
+    }
+
+    deleteUser(jwt: string, data: any) {
+        return this.http.post(this.address+"/deleteUser", data, this.getOptions(jwt));
+    }
+
+    addModerator(jwt: string, data: any) {
+        return this.http.post(this.address+"/addModerator", data, this.getOptions(jwt));
+    }
+
+    static getBoolean(value: any) {
+        switch (value) {
+        case true:
+        case "true":
+        case 1:
+        case "1":
+        case "on":
+        case "yes":
+            return true;
+        default:
+            return false;
+        }
+    }
 }
