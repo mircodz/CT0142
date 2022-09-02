@@ -27,9 +27,9 @@ export class HomeComponent implements OnInit, OnDestroy {
         friend: new FormControl("", Validators.required)
     });
 
-  faShip = faShip;
+    faShip = faShip;
 
-  constructor(private chatService: ChatService, private appService: AppService, private socket: WebsocketService, private confirmationDialogService: ConfirmationDialogService, private route: Router, private toastr: ToastrService) {
+    constructor(private chatService: ChatService, private appService: AppService, private socket: WebsocketService, private confirmationDialogService: ConfirmationDialogService, private route: Router, private toastr: ToastrService) {
 
     }
 

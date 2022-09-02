@@ -129,7 +129,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   }
 
   sendMessage() {
-    this.appService.chat(HomeComponent.token, {
+      this.appService.chat(HomeComponent.token, {
           username: HomeComponent.username,
           friend: this.friend,
           msg: this.msgForm.get("msg")?.value

@@ -41,9 +41,9 @@ export class RegisterComponent implements OnInit {
             this.appService.register({username, name, email, password}).subscribe(
                 () => this.route.navigate(["/", "login"]),
                 error => {
-                  // I don't get paid for this, so you won't get proper errors, only generic ones :)
-                  this.toaster.error("There has been an error, most likely a user with the same already exists");
-            });
+                    // I don't get paid for this, so you won't get proper errors, only generic ones :)
+                    this.toaster.error("There has been an error, most likely a user with the same already exists");
+                });
         }
     }
 }
