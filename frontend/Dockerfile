@@ -10,6 +10,6 @@ COPY . .
 RUN yarn build
 
 FROM nginx:latest
-COPY --from=build /usr/local/app/dist/battleship /usr/share/nginx/html
+COPY --from=build /usr/src/app/dist/battleship /usr/share/nginx/html
 
 EXPOSE 80
