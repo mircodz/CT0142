@@ -1,44 +1,41 @@
-<nav class="navbar is-light px-3" role="navigation" aria-label="main navigation">
-  <div class="navbar-brand">
-    <a class="navbar-item">
-      <i class="fa fa-ship" aria-hidden="true"></i>
-    </a>
-  </div>
-
-  <div class="navbar-menu">
-    <div class="navbar-start">
-      <a style="text-decoration: none;" class="navbar-item icon-text" routerLink="/home/friends"
-         routerLinkActive="activebutton">
-        <span class="icon">
-          <i class="fa-solid fa-users" aria-hidden="true"></i>
+<nav class="navbar px-3 is-primary" role=" navigation " aria-label="main navigation ">
+    <div class="navbar-brand ">
+        <span class="navbar-item ">
+            <i class="fa fa-ship " aria-hidden="true "></i>
         </span>
-        <span>Friends</span>
-      </a>
-      <a style="text-decoration: none;" class="navbar-item icon-texts" routerLink="/home/game"
-         routerLinkActive="activebutton">
-        <span class="icon">
-            <i class="fa-solid fa-gamepad" aria-hidden="true"></i>
-        </span>
-        <span>Game</span>
-      </a>
-      <a style="text-decoration: none;" class="navbar-item icon-text" routerLink="/home/chat"
-         routerLinkActive="activebutton">
-        <span class="icon">
-            <i class="fa-solid fa-comments" aria-hidden="true"></i>
-        </span>
-        <span>Chat</span>
-      </a>
     </div>
 
-    <div class="navbar-end">
-      <a style="text-decoration: none;" class="navbar-item icon-text is-light button" (click)="logout()">
-        <span class="icon">
-            <i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i>
-        </span>
-        <span>Logout</span>
-      </a>
+    <div class="navbar-menu ">
+        <div class="navbar-start ">
+            <a style="text-decoration: none; " class="navbar-item icon-text " routerLink="/home/friends " routerLinkActive="activebutton ">
+                <span class="icon ">
+          			<i class="fa-solid fa-users " aria-hidden="true "></i>
+        		</span>
+                <span>Friends</span>
+            </a>
+            <a style="text-decoration: none; " class="navbar-item icon-texts " routerLink="/home/game " routerLinkActive="activebutton ">
+                <span class="icon ">
+            		<i class="fa-solid fa-gamepad " aria-hidden="true "></i>
+        		</span>
+                <span>Game</span>
+            </a>
+            <a style="text-decoration: none; " class="navbar-item icon-text " routerLink="/home/chat " routerLinkActive="activebutton ">
+                <span class="icon ">
+           			<i class="fa-solid fa-comments " aria-hidden="true "></i>
+        		</span>
+                <span>Chat</span>
+            </a>
+        </div>
+
+        <div class="navbar-end ">
+            <a style="text-decoration: none; " class="navbar-item icon-text is-light button " (click)="logout() ">
+                <span class="icon ">
+                	<i class="fa-solid fa-right-from-bracket is-danger" aria-hidden="true "></i>
+        		</span>
+                <span>Logout</span>
+            </a>
+        </div>
     </div>
-  </div>
 </nav>
 
 <router-outlet></router-outlet>

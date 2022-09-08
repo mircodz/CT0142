@@ -5,7 +5,7 @@
                 <div class="column is-4">
                     <form [formGroup]="moderatorForm" (ngSubmit)="onSubmit()" class="box">
                         <label class="label">Update your credentials as your first Login</label>
-                        <div class="field">
+                        <div class="field mb-3">
                             <label for="email" class="label">Email</label>
                             <div class="control has-icons-left">
                                 <input type="text" class="input" name="emial" placeholder="Email" formControlName="email" ngModel required>
@@ -14,7 +14,7 @@
                                 </span>
                             </div>
                         </div>
-                        <div class="field">
+                        <div class="field mb-3">
                             <label for="name" class="label">Name</label>
                             <div class="control has-icons-left">
                                 <input type="text" class="input" name="name" placeholder="Name" formControlName="name" ngModel required>
@@ -23,7 +23,7 @@
                                 </span>
                             </div>
                         </div>
-                        <div class="field">
+                        <div class="field mb-4">
                             <label for="password" class="label">Password</label>
                             <div class="control has-icons-left">
                                 <input type="password" class="input" name="password" placeholder="Password" formControlName="password" ngModel required>
@@ -33,7 +33,7 @@
                             </div>
                         </div>
                         <div class="field">
-                            <button type="submit"  class="button is-success">Update</button>
+                            <button type="submit" class="button is-success">Update</button>
                         </div>
                     </form>
                 </div>
@@ -42,144 +42,203 @@
     </div>
 </div>
 <div *ngIf="ModeratorComponent.isFirstLogin==false">
-    <nav class="breadcrumb" aria-label="breadcrumbs">
-        <ul>
-            <li>
-            <a style="text-decoration: none;"class="navbar-item" routerLink="/moderator" routerLinkActive="activebutton" ariaCurrentWhenActive="page">
-                <span class="icon is-small">
-                <i class="fas fa-home" aria-hidden="true"></i>
-                </span>
-                <span>Home</span>
-            </a>
-            </li>
-            <li>
-                <a style="text-decoration: none;" class="navbar-item" (click)="logout()">
-                    <span class="icon is-small">
-                        <i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i>
+    <nav class="navbar px-3 is-primary" role=" navigation " aria-label="main navigation ">
+        <div class="navbar-brand ">
+            <span class="navbar-item ">
+                <i class="fa fa-ship" aria-hidden="true "></i>
+            </span>
+        </div>
+        <div class="navbar-menu ">
+            <div class="navbar-start ">
+                <a style="text-decoration: none; " class="navbar-item icon-text " routerLink="/home/friends " routerLinkActive="activebutton ">
+                    <span class="icon ">
+                        <i class="fas fa-home " aria-hidden="true "></i>
+                    </span>
+                    <span>Home</span>
+                </a>
+            </div>
+            <div class="navbar-end ">
+                <a style="text-decoration: none; " class="navbar-item icon-text is-danger button " (click)="logout()">
+                    <span class="icon">
+                        <i class="fa-solid fa-right-from-bracket " aria-hidden="true"></i>
                     </span>
                     <span>Logout</span>
                 </a>
-                </li>
+            </div>
+        </div>
+    </nav>
 
+    <!--nav class="breadcrumb " aria-label="breadcrumbs ">
+        <ul>
+            <div class="navbar-start ">
+                <a style="text-decoration: none; " class="navbar-item " routerLink="/moderator " routerLinkActive="activebutton " ariaCurrentWhenActive="page ">
+                    <span class="icon is-small ">
+                        <i class="fas fa-home " aria-hidden="true "></i>
+                    </span>
+                    <span>Home</span>
+                </a>
+            </div>
+            <div class="navbar-end ">
+                <a style="text-decoration: none; " class="navbar-item " (click)="logout() ">
+                    <span class="icon is-small ">
+                        <i class="fa-solid fa-right-from-bracket " aria-hidden="true "></i>
+                    </span>
+                    <span>Logout</span>
+                </a>
+            </div>
         </ul>
-        </nav>
-    <section class="section">
-        <div class="container">
-            <div class="columns is-centered">
-                <div class="column is-4">
-                    <form [formGroup]="addModeratorForm" (ngSubmit)="onSubmitAddModerator()" class="box">
-                        <div class="field">
-                            <label for="username" class="label">Username</label>
-                            <div class="control has-icons-left">
-                                <input type="text" class="input" name="username" placeholder="Username" formControlName="username" ngModel required>
-                                <span class="icon is-small is-left">
-                                    <fa-icon [icon]="faUser"></fa-icon>
+    </!--nav-->
+    <section class="section ">
+        <div class="container ">
+            <div class="columns is-centered ">
+                <div class="column is-4 ">
+                    <form [formGroup]="addModeratorForm " (ngSubmit)="onSubmitAddModerator() " class="box ">
+                        <div class="field mb-3 ">
+                            <label for="username " class="label ">Username</label>
+                            <div class="control has-icons-left ">
+                                <input type="text " class="input " name="username " placeholder="Username " formControlName="username " ngModel required>
+                                <span class="icon is-small is-left ">
+                                    <fa-icon [icon]="faUser "></fa-icon>
                                 </span>
                             </div>
                         </div>
-                        <div class="field">
-                            <label for="password" class="label">Password</label>
-                            <div class="control has-icons-left">
-                                <input type="password" class="input" name="password" placeholder="Password" formControlName="password" ngModel required>
-                                <span class="icon is-small is-left">
-                                    <fa-icon [icon]="faKey"></fa-icon>
+                        <div class="field mb-4 ">
+                            <label for="password " class="label ">Password</label>
+                            <div class="control has-icons-left ">
+                                <input type="password " class="input " name="password " placeholder="Password " formControlName="password " ngModel required>
+                                <span class="icon is-small is-left ">
+                                    <fa-icon [icon]="faKey "></fa-icon>
                                 </span>
                             </div>
                         </div>
-                        <div class="field">
-                            <button type="submit"  class="button is-success">Add moderator</button>
+                        <div class="field ">
+                            <button type="submit " class="button is-success ">Add moderator</button>
                         </div>
                     </form>
                 </div>
             </div>
         </div>
     </section>
-    <section class="section">
-        <div class="container">
-            <div class="columns is-mobile">
-                <div class="column">
-                    <h1 class="title">Remove players</h1>
+    <section class="section ">
+        <div class="container ">
+            <div class="columns is-mobile ">
+                <div class="column card mx-3 px-4 py-4 ">
+                    <h1 class="title is-4 pb-2 ">Remove players</h1>
+                    <p class="subtitle is-6 mb-5 ">Remove players from the app</p>
 
-                    <div *ngFor="let x of users" class="block">
-                        <span  class="tag is-danger">
-                            {{x.username}}
-                            <button class="delete is-small" (click)="removeUser(x.username)"></button>
-                        </span>
+                    <div *ngFor="let user of users " class="block ">
+                        <table class="table is-fullwidth is-mobile ">
+                            <tbody>
+                                <tr class="tag is-danger w-100 text-white py-3 ">
+                                    <td>
+                                        <strong class="text-white ">{{user.username}}</strong>
+                                    </td>
+                                    <td class=" ">
+                                        <button class="delete ms-5 " (click)="removeUser(user.username) "></button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <!--span class="tag is-danger w-100 text-white py-3 ">
+                            <strong class="text-white ">{{user.username}}</strong>
+                            <button class="delete ms-5 " (click)="removeUser(user.username) "></button>
+                        </!--span-->
                     </div>
 
-
                 </div>
-                <div class="column">
-                    <h1 class="title">Statistic of players</h1>
-                    <div class="block">
-                        <div class="select is-rounded">
-                            <select ngModel (ngModelChange)="userInfo($event)">
-                                <option>-</option>
-                            <option *ngFor="let x of users" [ngValue]="x.username" >{{x.username}}</option>
+                <div class="column card mx-3 px-4 py-4 ">
+                    <h1 class="title is-4 pb-2 ">Statistic of players</h1>
+                    <p class="subtitle is-6 mb-5 ">Displays player statistics</p>
+
+                    <div class="select is-rounded is-fullwidth mb-5 ">
+                        <select ngModel (ngModelChange)="userInfo($event) ">
+                            <option>-- Select a player --</option>
+                            <option *ngFor="let user of users " [ngValue]="user.username " ><strong class="text-capitalize ">{{user.username}}</strong></option>
+                        </select>
+                    </div>
+
+                    <div *ngIf="user " class="is-mobile ">
+                        <table class="table is-fullwidth is-mobile ">
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <span class="icon ">
+                                        <i class="fa-solid fa-face-smile "></i>
+                                    </span>
+                                    </td>
+                                    <td class="has-text-weight-bold ">
+                                        Username
+                                    </td>
+                                    <td>
+                                        {{ user.username }}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <span class="icon ">
+                                            <i class="fa-solid fa-flag-checkered "></i>
+                                        </span>
+                                    </td>
+                                    <td class="has-text-weight-bold ">
+                                        Total matches
+                                    </td>
+                                    <td>
+                                        {{ user.matches }}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <span class="icon ">
+                                            <i class="fa-solid fa-trophy "></i>
+                                        </span>
+                                    </td>
+                                    <td class="has-text-weight-bold ">
+                                        Wins
+                                    </td>
+                                    <td>
+                                        {{ user.wins }}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <span class="icon ">
+                                            <i class="fa-solid fa-circle-xmark "></i>
+                                        </span>
+                                    </td>
+                                    <td class="has-text-weight-bold ">
+                                        Wins
+                                    </td>
+                                    <td>
+                                        {{ user.looses }}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="column card mx-3 px-4 py-4 ">
+                    <h1 class="title is-4 pb-2 ">Chat with players</h1>
+                    <p class="subtitle is-6 mb-5 ">Chat with other players</p>
+
+                    <div class="block ">
+                        <div class="select is-rounded is-fullwidth mb-5 ">
+                            <select ngModel (ngModelChange)="chat($event) ">
+                                <option>-- Select a player --</option>
+                            <option *ngFor="let x of users " [ngValue]="x.username " >{{x.username}}</option>
                             </select>
                         </div>
                     </div>
-                    <div *ngIf="user" class="block">
-                        <div class="block">
-                            <span class="icon-text">
-                                <span class="icon">
-                                    <i class="fa-solid fa-face-smile"></i>
-                                </span>
-                                <span><h2 class="subtitle">Username: {{user.username}}</h2></span>
-                            </span>
-                        </div>
-                        <div class="block">
-                            <span class="icon-text">
-                                <span class="icon">
-                                    <i class="fa-solid fa-flag-checkered"></i>
-                                </span>
-                                <span><h2 class="subtitle">Total matches: {{user.matches}}</h2></span>
-                            </span>
-                        </div>
-                        <div class="block">
-                            <span class="icon-text">
-                                <span class="icon">
-                                    <i class="fa-solid fa-trophy"></i>
-                                </span>
-                                <span><h2 class="subtitle">Wins: {{user.wins}}</h2></span>
-                            </span>
-                        </div>
-                        <div class="block">
-                            <span class="icon-text">
-                                <span class="icon">
-                                    <i class="fa-solid fa-circle-xmark"></i>
-                                </span>
-                                <span><h2 class="subtitle">Looses: {{user.looses}}</h2></span>
-                            </span>
-                        </div>
-
-
-
-
-                    </div>
-                </div>
-                <div class="column">
-                    <h1 class="title">Chat with Players</h1>
-                    <div class="block">
-                        <div class="select is-rounded">
-                            <select ngModel (ngModelChange)="chat($event)">
-                                <option>-</option>
-                            <option *ngFor="let x of users" [ngValue]="x.username" >{{x.username}}</option>
-                            </select>
+                    <div class="block " style="overflow:scroll; width: auto; height: 300px; " #chatWithPlayers>
+                        <div class="block " *ngFor="let x of messages ">
+                            {{x.from}}: {{x.message}} {{ x.timestamp}};
                         </div>
                     </div>
-                    <div class="block" style="overflow:scroll; width: 400px; height: 400px;" #chatWithPlayers>
-                        <div  class="block" *ngFor="let x of messages">
-                                {{x.from}}: {{x.message}}  {{ x.timestamp}};
-
-                        </div>
+                    <div class="block ">
+                        <form [formGroup]="msgForm " (ngSubmit)="sendMessage() ">
+                            <input name="msg " class="input w-75 " type="text " formControlName="msg " placeholder="Type here ">
+                            <button type="submit " class="btn btn-default has-background-primary has-text-weight-bold text-white w-25 ">Send</button>
+                        </form>
                     </div>
-                    <div class="block">
-                        <form [formGroup]="msgForm" (ngSubmit)="sendMessage()">
-                      <input name="msg" class="input" type="text" formControlName="msg" placeholder="Text input">
-                      <button type="submit" class="btn btn-default pull-right">Send</button>
-                      </form>
-                      </div>
                 </div>
             </div>
         </div>
