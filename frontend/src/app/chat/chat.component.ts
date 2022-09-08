@@ -96,7 +96,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
           console.log(data);
           if (this.moderators.filter(value => value.username == x)[0]) {
               this.moderator = x;
-              this.messagesModerator = data.sub;
+              this.messagesModerator = data.messages;
               this.messagesModerator.forEach(value => {
                   const time = new Date(value.timestamp);
                   const now = new Date();
@@ -108,7 +108,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
               });
           } else if (FriendsComponent.friends.filter(value => value == x)[0]) {
               this.friend = x;
-              this.messages = data.sub;
+              this.messages = data.messages;
               this.messages.forEach(value => {
                   const time = new Date(value.timestamp);
                   const now = new Date();

@@ -9,7 +9,7 @@ export class AppService {
     // TODO type all parameters and return types
     // TODO return callback function instead of having to call `.pipe.stream` each time
 
-    address = "http://localhost:6969";
+    address = "http://backend:6969";
 
     private static getOptions(token: string) {
         return {

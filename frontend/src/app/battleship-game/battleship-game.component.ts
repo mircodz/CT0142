@@ -387,7 +387,7 @@ export class BattleshipGameComponent implements OnInit, OnDestroy, AfterContentC
       this.boardService.ngOnDestroy();
 
       ["canPlay", "connected", "boards", "players", "opponent", "isFriendly", "ready", "started", "manual"]
-          .map(sessionStorage.removeItem);
+          .map((value)=>sessionStorage.removeItem(value));
   }
 
   sendMessage() {
