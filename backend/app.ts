@@ -90,6 +90,7 @@ User.findOne({username: "admin"})
 
 app.post("/signup", async (req: Request, res: Response) => {
     const {name, username, email, password} = req.body;
+
     const user = await User.exists({username});
 
     if (!user) {
