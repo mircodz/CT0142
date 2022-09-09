@@ -27,7 +27,7 @@ import {MainComponent} from "./main/main.component";
 import {ChatComponent} from "./chat/chat.component";
 
 const config: SocketIoConfig = {
-    url: "http://backend:6969",
+    url: "http://localhost:6969",
     options: {}
 };
 
