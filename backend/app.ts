@@ -165,13 +165,6 @@ const mustAuth = (req: Request, res: Response, next: NextFunction) => {
     }
 };
 
-app.get("/foo", (req: Request, res: Response) => {
-    res.send("Hello World!");
-});
-
-app.get("/", mustAuth, (req: Request, res: Response) => {
-    res.send("Hello World!");
-});
 
 // Given a username, return it's UID
 const getUserId = (username: string): Promise<Schema.Types.ObjectId> => {
@@ -193,7 +186,6 @@ app.post("/addFriends", mustAuth, async (req: Request, res: Response) => {
 });
 
 app.get("/allUsers", mustAuth, (req: Request, res: Response) => {
-    console.log("STAMPA DI TUTTI GLI UTENTI: " + users);
     res.status(200).json({users});
 });
 
@@ -244,7 +236,6 @@ app.post("/friend", mustAuth, (req: Request, res: Response) => {
 app.post("/deleteFriend", mustAuth, (req: Request, res: Response) => {
     const {username, friend} = req.body;
     User.findOne({username: username}, function (err, sub) {
-        console.log(sub);
         const friends = sub.friends;
         const idFriend = sub._id;
         User.findOne({username: friend}, function (err, sub) {
@@ -282,7 +273,12 @@ app.post("/logout", mustAuth, (req: Request, res: Response) => {
 
 app.post("/matchId", mustAuth, (req: Request, res: Response) => {
     const {id} = req.body;
-    res.json({match: matches.filter(value => value.id == id)[0]});
+    if(matches.filter(value => value.id == id)[0]){
+        res.json({match: matches.filter(value => value.id == id)[0]});
+    }else{
+        res.status(400).json({message: "error"});
+    }
+    
 });
 
 app.post("/firstLogin", mustAuth, (req: Request, res: Response) => {
