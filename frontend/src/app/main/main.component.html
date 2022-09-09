@@ -1,10 +1,27 @@
-<h1>Hello {{HomeComponent.username}}</h1>
-<h1>Historical matches</h1>
-    <div *ngFor="let x of historical">
-    <div>
-        {{x.player1}} : {{x.score1}}
-        {{x.player2}} : {{x.score2}}
+<section class="section ">
+    <div class="container ">
+        <div class="columns is-centered ">
+            <div class="column card is-fullwidth mx-3 px-4 py-4 ">
+                <h1 class="title is-4 pb-2 ">Hello {{HomeComponent.username}}</h1>
+                <p class="subtitle is-6 mb-5 ">Historical matches</p>
+                <table class="table is-fullwidth is-mobile ">
+                    <thead>
+                        <tr>
+                            <th>Player 1</th>
+                            <th>Player 2</th>
+                            <th>Score</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let x of historical">
+                            <td>{{x.player1}}</td>
+                            <td>{{x.player2}}</td>
+                            <td>{{x.score1}} - {{x.score2}}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
-        
-    
-    </div>
+</section>

@@ -10,7 +10,7 @@ import {WebsocketService} from "./websocket.service";
     styleUrls: ["./app.component.css"]
 })
 export class AppComponent implements OnInit {
-    static logged: boolean = AppService.getBoolean(sessionStorage.getItem("logged")) || true;
+    static logged: boolean = AppService.getBoolean(sessionStorage.getItem("logged")) || false;
     static isModerator: boolean = AppService.getBoolean(sessionStorage.getItem("isModerator")) || false;
     static title = "battleship";
 

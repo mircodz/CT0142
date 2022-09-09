@@ -11,7 +11,7 @@
                 </div>
                 <div class="block" style="overflow:scroll; width: auto; height: 300px; " #chatWithFriends>
                     <div  class="block" *ngFor="let x of messages">
-                        {{x.from}}: {{x.message}}  {{ x.timestamp}};
+                        <strong>{{x.from}}</strong>: <em>{{x.message}}</em><small>&nbsp;[{{ x.timestamp}}]</small>
                     </div>
                 </div>
                 <div class="block">
@@ -31,7 +31,7 @@
                 </div>
                 <div class="block" style="overflow:scroll; width: auto; height: 300px; " #chatWithModerators>
                     <div  class="block" *ngFor="let x of messagesModerator">
-                        {{x.from}}: {{x.message}}  {{ x.timestamp}}; 
+                        <strong>{{x.from}}</strong>: <em>{{x.message}}</em><small>&nbsp;[{{ x.timestamp}}]</small>
                     </div>
                 </div>
                 <div class="block">

@@ -14,9 +14,9 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr *ngFor="let x of FriendsComponent.friends" class="tag is-danger w-100 text-white py-3 ">
+                        <tr *ngFor="let x of FriendsComponent.friends" class="is-danger w-100 text-white py-3 ">
                             <td>
-                                <strong class="text-white ">{{x}}</strong>
+                                <strong>{{x}}</strong>
                             </td>
                             <td>
                                 <button style="border:none;" class="is-fullwidth w-100 has-background-info"
@@ -30,37 +30,9 @@
                                 <button style="border:none;" class="is-fullwidth w-100 has-background-danger"
                                     (click)="deleteFriend(x)">
                                     <span class="icon">
-                                        <i class="fas fa-gun "></i>
+                                        <i class="fas fa-x "></i>
                                     </span>
                                 </button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-
-                <p class="subtitle is-6 mb-2 mt-4 ">Offline friends</p>
-
-                <table class="table is-fullwidth is-mobile ">
-                    <thead>
-                        <tr>
-                            <th>Username</th>
-                            <th>Send match request</th>
-                            <th>Remove from friends</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr *ngFor="let x of FriendsComponent.friends" class="tag is-danger w-100 text-white py-3 ">
-                            <td>
-                                <strong class="text-white ">{{x}}</strong>
-                            </td>
-                            <td class=" ">
-                                <span class="icon level-item">
-                                    <i class="fas fa-gun"></i>
-                                </span>
-                                <button class="delete ms-5 " (click)="sendMatchRequest(x)"></button>
-                            </td>
-                            <td>
-
                             </td>
                         </tr>
                     </tbody>
@@ -94,7 +66,7 @@
                             </td>
                             <td>
                                 <button style="border:none;" class="is-fullwidth w-100 has-background-success"
-                                    (click)="sendMatchRequest(x)">
+                                    (click)="sendFriendsRequest(x)">
                                     <span class="icon">
                                         <i class="fas fa-plus "></i>
                                     </span>
@@ -107,74 +79,6 @@
         </div>
     </div>
 </section>
-
-<!--div class="container ">
-    <div class="notification is-primary ">
-        Friends
-    </div>
-    <div class="columns ">
-        <div class="column is-half m-2 " *ngFor="let x of FriendsComponent.friends ">
-            <div style="text-decoration: none; " class="button is-primary is-fullwidth " (click)="sendMatchRequest(x) ">
-                <div class="level ">
-                    <div class="level-left ">
-                        <span class="level-item ">{{ x }}</span>
-                    </div>
-                    <div class="level-right ">
-                        <span class="icon level-item ">
-             				<i class="fas fa-gun "></i>
-           				</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</!--div>
-
-<div class="container ">
-    <div class="notification is-primary ">
-        Online Friends
-    </div>
-
-    <div class="columns is-multiline ">
-        <div class="column is-one-fifth m-2 " *ngFor="let x of friendsOnline ">
-            <div style="text-decoration: none; " class="button is-primary is-fullwidth " (click)="sendMatchRequest(x) ">
-                <div class="level ">
-                    <div class="level-left ">
-                        <span class="level-item ">{{ x }}</span>
-                    </div>
-                    <div class="level-right ">
-                        <span class="icon level-item ">
-             				<i class="fas fa-gun "></i>
-           				</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div-- class="container ">
-    <div class="notification is-primary ">
-        Online Players
-    </div>
-
-    <div class="columns is-multiline ">
-        <div class="column is-one-fifth m-2 " *ngFor="let x of usersNotFriends ">
-            <div style="text-decoration: none; " class="button is-primary is-fullwidth " (click)="sendFriendsRequest(x) ">
-                <div class="level ">
-                    <div class="level-left ">
-                        <span class="level-item ">{{ x }}</span>
-                    </div>
-                    <div class="level-right ">
-                        <span class="icon level-item ">
-             				<i class="fas fa-plus "></i>
-           				</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div-->
 
 <section class="section ">
     <div class="columns ">
