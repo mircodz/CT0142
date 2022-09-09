@@ -434,6 +434,7 @@ const waitingPlayers: waitingPlayer[] = [];
 const matches: match[] = [];
 
 io.on("connection", (socket: any) => {
+    console.log("SONO DENTRO AMICO")
     socket.on("Move", async function (data) {
 
         const match = matches.filter(value => value.id == data.gameId)[0];

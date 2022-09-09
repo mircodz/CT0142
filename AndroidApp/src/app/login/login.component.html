@@ -1,0 +1,34 @@
+<div class="hero is-primary is-fullheight">
+    <div class="hero-body">
+        <div class="container">
+            <div class="columns is-centered">
+                <div class="column is-4">
+                    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="box">
+                        <div class="field mb-3">
+                            <label for="username" class="label">Username</label>
+                            <div class="control has-icons-left">
+                                <input type="text" class="input" name="username" placeholder="Username" formControlName="username" ngModel required>
+                                <span class="icon is-small is-left">
+                                    <fa-icon [icon]="faUser"></fa-icon>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="field mb-4">
+                            <label for="password" class="label">Password</label>
+                            <div class="control has-icons-left">
+                                <input type="password" class="input" name="password" placeholder="Password" formControlName="password" ngModel required>
+                                <span class="icon is-small is-left">
+                                    <fa-icon [icon]="faKey"></fa-icon>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="field has-text-centered">
+                            <button type="submit" class="button is-success is-fullwidth mb-3">Login</button>
+                            <a routerLink="/register" routerLinkActive="activebutton" ariaCurrentWhenActive="page"><small class="is-size-7 is-fullwidth">Not a member?</small></a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
