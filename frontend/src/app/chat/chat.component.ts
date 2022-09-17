@@ -78,7 +78,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
           this.moderators = data.sub;
       });
 
-      this.appService.friends(HomeComponent.token, {username: HomeComponent.username}).pipe().subscribe((data: any) => {
+      this.appService.friends(HomeComponent.token).pipe().subscribe((data: any) => {
           FriendsComponent.friends = [];
           data.forEach((element: any) => {
               FriendsComponent.friends.push(element.username);

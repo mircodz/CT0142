@@ -60,7 +60,7 @@ export class ModeratorComponent implements OnInit, AfterContentChecked, OnDestro
     }
 
     ngOnInit(): void {
-        this.appService.getAllUsers(HomeComponent.token, {moderator: HomeComponent.username}).subscribe((data: any) => {
+        this.appService.getUsers(HomeComponent.token, 'user+admin').subscribe((data: any) => {
             this.users = data.users;
         });
 

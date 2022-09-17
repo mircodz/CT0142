@@ -27,9 +27,8 @@ export class LoginComponent implements OnInit {
     faUser = faUser;
     faKey = faKey;
 
-
-    constructor(private appService: AppService, 
-                private socket: WebsocketService, 
+    constructor(private appService: AppService,
+                private socket: WebsocketService,
                 private route: Router,
                 private toaster: ToastrService) {
     }
