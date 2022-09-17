@@ -16,11 +16,11 @@
                     <tbody>
                         <tr *ngFor="let x of FriendsComponent.friends" class="is-danger w-100 text-white py-3 ">
                             <td>
-                                <strong>{{x}}</strong>
+                                <strong>{{x.username}}</strong>
                             </td>
                             <td>
                                 <button style="border:none;" class="is-fullwidth w-100 has-background-info"
-                                    (click)="sendMatchRequest(x)">
+                                    (click)="sendMatchRequest(x.username)">
                                     <span class="icon">
                                         <i class="fas fa-gun "></i>
                                     </span>
@@ -28,7 +28,7 @@
                             </td>
                             <td>
                                 <button style="border:none;" class="is-fullwidth w-100 has-background-danger"
-                                    (click)="deleteFriend(x)">
+                                    (click)="deleteFriend(x.username)">
                                     <span class="icon">
                                         <i class="fas fa-x "></i>
                                     </span>
@@ -86,9 +86,8 @@
             <h1 class="title ">Statistic of players</h1>
             <div class="block ">
                 <div class="select is-rounded ">
-                    <select ngModel (ngModelChange)="friendsStats($event) ">
-                        <option>-- Select a player --</option>
-                        <option *ngFor="let x of friendsInfo " [ngValue]="x.username ">{{x.username}}</option>
+                    <select ngModel (ngModelChange)="setFriendStats($event) ">
+                        <option *ngFor="let x of FriendsComponent.friends" [ngValue]="x ">{{x}}</option>
                     </select>
                 </div>
             </div>

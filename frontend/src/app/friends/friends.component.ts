@@ -12,127 +12,76 @@ import {ChatService} from "../chat.service";
     styleUrls: ["./friends.component.css"]
 })
 export class FriendsComponent implements OnInit, OnDestroy {
+    // TODO this should probably go into the Angular store
+    static users: string[] = [];
+    static friends: any[] = [];
 
-    static users: any = [];
-
-
-    static friends: string[] = [];
     friendsInfo: any[] = [];
-
     subs: Subscription[] = [];
-
     friendStats: any;
-
 
     constructor(private appService: AppService, private socket: WebsocketService, private toastr: ToastrService, private elementRef: ElementRef, private chatService: ChatService) {
     }
 
-
     ngOnInit(): void {
-
-        this.appService.allUsers(HomeComponent.token).pipe().subscribe((data) => {
-            FriendsComponent.users = JSON.parse(JSON.stringify(data));
-            FriendsComponent.users = Object.keys(FriendsComponent.users.users);
+        this.appService.getUsers(HomeComponent.token, "user").subscribe((data) => {
+            // TODO type correctly `appService`, refer to `app.service.ts`
+            // @ts-ignore
+            FriendsComponent.users = JSON.parse(JSON.stringify(data)).users.map(u => u.username);
         });
 
-
-        this.appService.friends(HomeComponent.token, {username: HomeComponent.username}).pipe().subscribe((data: any) => {
-            console.log("AMICI");
-            this.friendsInfo = data;
-            console.log(data);
-            FriendsComponent.friends = [];
-            data.forEach((element: any) => {
-                FriendsComponent.friends.push(element.username);
-            });
-            console.log("FUNZIA");
-
+        this.appService.friends(HomeComponent.token).subscribe((data: any) => {
+            // TODO type correctly `appService`, refer to `app.service.ts`
+            // @ts-ignore
+            FriendsComponent.friends = JSON.parse(JSON.stringify(data)).users;
         });
-
-
-    }
-
-    friendsStats(x: any) {
-
-        this.friendStats = this.friendsInfo.filter(value => value.username == x)[0];
     }
 
     get FriendsComponent() {
         return FriendsComponent;
     }
 
-    get Date() {
-        return Date;
-    }
-
     get HomeComponent() {
         return HomeComponent;
     }
 
+    setFriendStats(username: string) {
+      this.friendStats = this.friendsInfo.filter(value => value.username == username)[0];
+    }
 
-    deleteFriend(x: any) {
-        this.appService.deleteFriend(HomeComponent.token, {
-            username: HomeComponent.username,
-            friend: x
-        }).pipe().subscribe((data: any) => {
-            if (FriendsComponent.friends.indexOf(x) != -1) {
-                FriendsComponent.friends.splice(FriendsComponent.friends.indexOf(x), 1);
+    deleteFriend(username: string) {
+        this.appService.deleteFriend(HomeComponent.token, username).subscribe((data: any) => {
+            const index = FriendsComponent.friends.map(f => f.username).indexOf(username);
+            if (index != -1) {
+                FriendsComponent.friends.splice(index, 1);
             }
-            this.toastr.warning(x + " is not your friend!", "FRIEND REMOVED");
+
+            this.toastr.warning(username + " is not your friend anymore!", "Friend Removed");
         });
     }
 
+    // Currently friend requests are not asynchronous, for a friend request to be accepted, the recipient must be online. There is also no way to attach messages to the request.
+    // TODO model pending friend requests in data store, modal for attachment
+    sendFriendsRequest(username: string) {
+        this.socket.sendFriendRequest({username: HomeComponent.username, friend: username});
+    }
+
+    sendMatchRequest(username: string) {
+        this.socket.sendMatchRequest({opponent: HomeComponent.username, username: username});
+    }
+
     get friendsOnline() {
-        const friendsOnline: any[] = [];
-        try {
-            FriendsComponent.users.forEach((x: string) => {
-                FriendsComponent.friends.forEach((y: string) => {
-                    if (x === y) {
-
-                        friendsOnline.push(x);
-                    }
-                });
-            });
-            return friendsOnline;
-        } catch (error) {
-            return undefined;
-        }
-
-    }
-
-    sendFriendsRequest(x: any) {
-        this.socket.sendFriendRequest({username: HomeComponent.username, friend: x});
-    }
-
-    sendMatchRequest(x: any) {
-        this.socket.sendMatchRequest({opponent: HomeComponent.username, username: x});
+        return FriendsComponent.friends
+            .filter(f => FriendsComponent.users.indexOf(f.username) != -1);
     }
 
     get usersNotFriends() {
-        const usersNotFriends: any[] = [];
-        let flag = false;
-        try {
-            FriendsComponent.users.forEach((x: string) => {
-                flag = false;
-                FriendsComponent.friends.forEach((y: string) => {
-                    if (x === y) {
-                        flag = true;
-                    }
-                });
-                if (flag == false) {
-                    usersNotFriends.push(x);
-                }
-            });
-            return usersNotFriends;
-        } catch (err) {
-            return FriendsComponent.users;
-        }
+      return FriendsComponent.users
+            .filter((f: any) => FriendsComponent.friends.map(u => u.username).indexOf(f) == -1);
     }
 
-  @HostListener("unloaded")
+    @HostListener("unloaded")
     ngOnDestroy() {
         this.subs.forEach(value => value.unsubscribe());
-
     }
-
-
 }

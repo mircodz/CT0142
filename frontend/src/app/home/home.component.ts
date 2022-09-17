@@ -12,6 +12,7 @@ import {FriendsComponent} from "../friends/friends.component";
 import {WebsocketService} from "../websocket.service";
 
 import {faShip} from "@fortawesome/free-solid-svg-icons";
+
 @Component({
     selector: "app-home",
     templateUrl: "./home.component.html",
@@ -62,12 +63,14 @@ export class HomeComponent implements OnInit, OnDestroy {
                     .then((confirmed) => {
                         if (confirmed) {
                             console.log(data.username);
-                            FriendsComponent.friends.push(data.username);
+                            if (FriendsComponent.friends == undefined) {
+                              FriendsComponent.friends = [];
+                            }
+                            FriendsComponent.friends.push({username:data.username});
                             console.log("SI!");
-                            this.appService.addFriends(HomeComponent.token, {
-                                username: data.username,
-                                friend: HomeComponent.username
-                            }).pipe().subscribe(() => {
+                          console.log(HomeComponent.token);
+                          this.appService.addFriends(HomeComponent.token, data.username)
+                              .subscribe(() => {
                                 console.log("Amicizia inserita");
                             });
                             this.socket.sendConfirmFriend({friend: data.username, username: HomeComponent.username, confirmed: true});
