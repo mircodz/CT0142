@@ -70,11 +70,6 @@ export class FriendsComponent implements OnInit, OnDestroy {
         this.socket.sendMatchRequest({opponent: HomeComponent.username, username: username});
     }
 
-    get friendsOnline() {
-        return FriendsComponent.friends
-            .filter(f => FriendsComponent.users.indexOf(f.username) != -1);
-    }
-
     get usersNotFriends() {
       return FriendsComponent.users
             .filter((f: any) => FriendsComponent.friends.map(u => u.username).indexOf(f) == -1);

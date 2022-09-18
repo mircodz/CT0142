@@ -14,7 +14,8 @@ export class AppService {
     // TODO update service and fetch JWT from local storage, avoiding polluting method signatures
     // TODO type all parameters and return types
 
-    address = "http://localhost:6969";
+    // TODO read address from configuration file
+    static address = "http://localhost:6969";
 
     constructor(private http: HttpClient) {
     }
@@ -44,70 +45,72 @@ export class AppService {
     }
 
     register(user: any) {
-        return this.http.post(this.address + "/signup", user).pipe();
+        return this.http.post(AppService.address + "/signup", user).pipe();
     }
 
     login(user: any) {
-        return this.http.post(this.address + "/signin", user).pipe();
+        return this.http.post(AppService.address + "/signin", user).pipe();
     }
 
     friends(jwt: string) {
-      return this.http.get(this.address + "/friend", AppService.getOptions(jwt)).pipe();
+      return this.http.get(AppService.address + "/friend", AppService.getOptions(jwt)).pipe();
     }
 
     addFriends(jwt: string, friend: any) {
-        return this.http.put(this.address + `/friend/${friend}`, {}, AppService.getOptions(jwt)).pipe();
+        return this.http.put(AppService.address + `/friend/${friend}`, {}, AppService.getOptions(jwt)).pipe();
     }
 
     deleteFriend(jwt: string, friend: string) {
-        return this.http.delete(this.address + `/friend/${friend}`, AppService.getOptions(jwt)).pipe();
+        return this.http.delete(AppService.address + `/friend/${friend}`, AppService.getOptions(jwt)).pipe();
     }
 
     getUsers(jwt: string, role: RoleType) {
-        return this.http.get(this.address + `/users?role=${role}`, AppService.getOptions(jwt)).pipe();
+        return this.http.get(AppService.address + `/users?role=${role}`, AppService.getOptions(jwt)).pipe();
     }
 
     chat(jwt: string, data: any) {
-        return this.http.post(this.address + "/chat", data, AppService.getOptions(jwt));
+        return this.http.post(AppService.address + "/chat", data, AppService.getOptions(jwt));
     }
 
     readChat(jwt: string, data: any) {
-        return this.http.post(this.address + "/readChat", data, AppService.getOptions(jwt)).pipe();
+        return this.http.post(AppService.address + "/readChat", data, AppService.getOptions(jwt)).pipe();
     }
 
     getChat(jwt: string, data: any) {
-        return this.http.post(this.address + "/getChat", data, AppService.getOptions(jwt));
+        return this.http.post(AppService.address + "/getChat", data, AppService.getOptions(jwt));
     }
 
+    // TODO refactor endpoint
     getModerators(jwt: string) {
-        return this.http.get(this.address + "/getModerators", AppService.getOptions(jwt));
+        return this.http.get(AppService.address + "/getModerators", AppService.getOptions(jwt));
     }
 
     getMatches(jwt: string) {
-        return this.http.get(this.address + "/matches", AppService.getOptions(jwt));
+        return this.http.get(AppService.address + "/matches", AppService.getOptions(jwt));
     }
 
     getMatchId(jwt: string, data: any) {
-        return this.http.post(this.address + "/matchId", data, AppService.getOptions(jwt));
+        return this.http.post(AppService.address + "/matchId", data, AppService.getOptions(jwt));
     }
 
+    // TODO refactor endpoint
     getHistorical(jwt: string, data: any) {
-        return this.http.post(this.address + "/history", data, AppService.getOptions(jwt)).pipe();
+        return this.http.post(AppService.address + "/history", data, AppService.getOptions(jwt)).pipe();
     }
 
     logout(jwt: string, data: any) {
-        return this.http.post(this.address + "/logout", data, AppService.getOptions(jwt)).pipe();
+        return this.http.post(AppService.address + "/logout", data, AppService.getOptions(jwt)).pipe();
     }
 
     firstLogin(jwt: string, data: any) {
-        return this.http.post(this.address + "/firstLogin", data, AppService.getOptions(jwt));
+        return this.http.post(AppService.address + "/firstLogin", data, AppService.getOptions(jwt));
     }
 
-    deleteUser(jwt: string, data: any) {
-        return this.http.post(this.address + "/deleteUser", data, AppService.getOptions(jwt));
+    deleteUser(jwt: string, username: string) {
+        return this.http.delete(AppService.address + `/user/${username}`, AppService.getOptions(jwt)).pipe();
     }
 
     addModerator(jwt: string, data: any) {
-        return this.http.post(this.address + "/addModerator", data, AppService.getOptions(jwt)).pipe();
+        return this.http.put(AppService.address + "/moderator", data, AppService.getOptions(jwt)).pipe();
     }
 }

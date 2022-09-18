@@ -43,7 +43,6 @@ export class HomeComponent implements OnInit, OnDestroy {
     }
 
     ngOnDestroy(): void {
-        console.log("Sono entrato");
         this.subs.forEach(sub => sub.unsubscribe());
 
     }
@@ -57,23 +56,21 @@ export class HomeComponent implements OnInit, OnDestroy {
 
         this.subs.push(
             this.socket.listenFriendRequest().pipe().subscribe((data: any) => {
-                console.log("Ho ricevuto la richiesta");
-                console.log(data);
                 this.confirmationDialogService.confirm("Richiesta di amicizia da " + data.username, "Vuoi diventare mio amico?")
                     .then((confirmed) => {
                         if (confirmed) {
-                            console.log(data.username);
                             if (FriendsComponent.friends == undefined) {
-                              FriendsComponent.friends = [];
+                                FriendsComponent.friends = [];
                             }
-                            FriendsComponent.friends.push({username:data.username});
-                            console.log("SI!");
-                          console.log(HomeComponent.token);
-                          this.appService.addFriends(HomeComponent.token, data.username)
-                              .subscribe(() => {
-                                console.log("Amicizia inserita");
+                            FriendsComponent.friends.push({username: data.username});
+                            this.appService.addFriends(HomeComponent.token, data.username)
+                                .subscribe(() => {
+                                });
+                            this.socket.sendConfirmFriend({
+                                friend: data.username,
+                                username: HomeComponent.username,
+                                confirmed: true
                             });
-                            this.socket.sendConfirmFriend({friend: data.username, username: HomeComponent.username, confirmed: true});
                         } else {
                             this.socket.sendConfirmFriend({
                                 friend: data.username,
@@ -86,8 +83,6 @@ export class HomeComponent implements OnInit, OnDestroy {
 
         this.subs.push(
             this.socket.matchConfirm().pipe().subscribe((data: any) => {
-                console.log("GUARDA COSA E' ARRIVATO AMICO");
-                console.log(data);
                 if (data.confirmed) {
                     this.toastr.success(data.username + " has accepted your game request!", "GAME REQUEST ACCEPTED!");
                     BattleshipGameComponent.isFriendly = true;
@@ -97,7 +92,6 @@ export class HomeComponent implements OnInit, OnDestroy {
                 } else {
                     this.toastr.error(data.username + " has rejected your game request!", "GAME REQUEST REJECTED!");
                 }
-
             }));
 
         this.subs.push(
@@ -108,16 +102,13 @@ export class HomeComponent implements OnInit, OnDestroy {
                 } else {
                     this.toastr.error(data.username + " has rejected your friend request!", "FRIEND REQUEST REJECTED!");
                 }
-
             }));
 
         this.subs.push(
             this.socket.listenMatchRequest().pipe().subscribe((data: any) => {
-
                 this.confirmationDialogService.confirm("Richiesta di partita da " + data.opponent, "Vuoi fare una partita?")
                     .then((confirmed) => {
                         if (confirmed) {
-                            console.log("SI!");
                             this.socket.sendConfirmMatch({friend: data.opponent, username: data.username, confirmed: true});
                             BattleshipGameComponent.isFriendly = true;
                             BattleshipGameComponent.opponent = data.opponent;
@@ -126,9 +117,7 @@ export class HomeComponent implements OnInit, OnDestroy {
                         } else {
                             this.socket.sendConfirmMatch({friend: data.opponent, username: data.username, confirmed: false});
                         }
-
                     });
-
             }));
 
         this.subs.push(

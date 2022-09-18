@@ -28,7 +28,7 @@ const BOARD_SIZE = 32;
 
 const appConfig = config.get("app");
 const mongoConfig = config.get("mongo");
-const jwtSecret = config.get("jwtSecret");
+const secret = config.get("jwtSecret");
 
 const port = appConfig.port;
 
@@ -48,15 +48,13 @@ const io = require("socket.io")(server, {
     }
 });
 
-const secret = jwtSecret;
-
-// Auto-load modules
-
+// Auto-load models
 const models = join(__dirname, "models");
 fs.readdirSync(models)
     .filter((file: string) => ~file.indexOf(".js"))
     .forEach((file: string) => require(join(models, file)));
 
+// TODO list of online users should not be kept in memory, possibly store the user status in the data store
 const users: Foo = {};
 
 // Establish mongo connection
@@ -131,6 +129,7 @@ const hasNewMessages = (username: string): Promise<boolean> => {
         });
 };
 
+// TODO for the entire project, add appropriate logging
 app.post("/signin", (req: Request, res: Response) => {
     const {username, password} = req.body;
 
@@ -140,6 +139,7 @@ app.post("/signin", (req: Request, res: Response) => {
                 const token = jwt.sign({username: username, role: user.role}, secret);
                 const hasMessages = await hasNewMessages(username);
 
+                // TODO rename `newMessages` to `hasNewMessages`
                 res.status(200).json({token, user, newMessages: hasMessages});
             } else {
                 res.status(400).json({"error": "invalid credentials"});
@@ -148,7 +148,9 @@ app.post("/signin", (req: Request, res: Response) => {
 });
 
 const mustBeAdmin = (req: Request, res: Response, next: NextFunction) => {
-    User.findOne({username: req.body.username})
+    const {username} = req.body.username;
+
+    User.findOne({username})
         .then((user: UserType) => {
             if (user.isModerator) {
                 next();
@@ -182,13 +184,13 @@ const getUserId = (username: string): Promise<Schema.Types.ObjectId> => {
     return User.findOne({username}).then((user: UserType) => user._id);
 };
 
-
 const isModerator = async (username: string): Promise<boolean> => {
     return User
         .findOne({username})
         .then((user: UserType) => user.isModerator);
 };
 
+// TODO support nested data structures, field notation should be "a.b.c"
 const _with = <T extends Object>(obj: T | T[], fields: string[]): (Object | Object[]) => {
     if (Array.isArray(obj)) {
         const ret: any[] = [];
@@ -203,14 +205,13 @@ const _with = <T extends Object>(obj: T | T[], fields: string[]): (Object | Obje
     }
 };
 
+// TODO write views for all models
 const viewUser = (user: UserType) => _with(user, ["username", "matches", "wins", "loses"]);
 
 // Return a list off all user of a given role
 // TODO refactor `isModerator` to `role` enum
 app.get("/users", mustAuth, async (req: Request, res: Response) => {
     const username = req.body.username;
-
-    console.log(username)
 
     // TODO switch should be over enum values
     switch (req.query.role) {
@@ -247,7 +248,7 @@ app.get("/friend", mustAuth, (req: Request, res: Response) => {
     // TODO this could probably be converted to a single chain of `then`s, refactor
     User.findOne({username})
         .then((user: UserType) => {
-            User.find({_id: { $in: user.friends }})
+            User.find({_id: {$in: user.friends}})
                 .then((users: UserType[]) => res.status(200).json({users: viewUser(users)}))
                 .catch((error: CallbackError) => res.status(500).json({error}));
         }).catch((error: CallbackError) => res.status(500).json({error}));
@@ -297,7 +298,9 @@ app.post("/logout", mustAuth, (req: Request, res: Response) => {
 
     delete users[username];
 
+    // TODO correctly update list of online users
     io.emit("updatePlayers", users);
+
     res.status(200).json({message: "ok"});
 });
 
@@ -313,6 +316,7 @@ app.post("/matchId", mustAuth, (req: Request, res: Response) => {
 
 app.post("/firstLogin", mustAuth, (req: Request, res: Response) => {
     const {username, password, name, email} = req.body;
+
     User.updateOne({username: username}, {
         $set: {
             name: name,
@@ -321,63 +325,46 @@ app.post("/firstLogin", mustAuth, (req: Request, res: Response) => {
             isFirstLogin: false
         }
     }).then(() => res.status(200).json({message: "ok"}))
-        .catch((error: CallbackError) => res.status(500).json({error}));
+      .catch((error: CallbackError) => res.status(500).json({error}));
 });
 
-app.post("/deleteUser", mustAuth, (req: Request, res: Response) => {
-    const {moderator, username} = req.body;
+// TODO more TOCCTU and ugly control flow, the entire logic could probably be archieved through a single complex query
+app.delete("/delete/:username", mustAuth, mustBeAdmin, (req: Request, res: Response) => {
+    const {username} = req.query;
 
-    User.findOne({username: moderator}, function (err, sub) {
-        if (sub.isModerator) {
-            User.deleteOne({username: username}).then(function () {
-                Match.find({player1: username}, (err, sub: MatchType[]) => {
-                    sub.map(m => {
-                        if (m.winner == username) {
-                            User.updateOne({username: m.player2}, {$inc: {matches: -1, looses: -1}}, function (err, sub) {
-                                console.log("UTENTE AGGIORNATA!");
-                            });
-                        } else {
-                            User.updateOne({username: m.player2}, {$inc: {matches: -1, wins: -1}}, function (err, sub) {
-                                console.log("UTENTE AGGIORNATA!");
-                            });
-                        }
+    User.deleteOne({username: username}).then(() => {
+        Match.find({player1: username}).then((matches: MatchType[]) => {
+            matches.forEach((m: MatchType) => {
+                User.updateOne({username: m.player2}, {
+                    $inc: {
+                        matches: -1,
+                        wins: m.winner == username ? 0 : -1,
+                        looses: m.winner == username ? -1 : 0,
                     }
-                    );
                 });
-
-                Match.find({player2: username}, function (err, sub: MatchType[]) {
-                    sub.map(m => {
-                        if (m.winner == username) {
-                            User.updateOne({username: m.player1}, {$inc: {matches: -1, looses: -1}}, function (err, sub) {
-                                console.log("UTENTE AGGIORNATA!");
-                            });
-                        } else {
-                            User.updateOne({username: m.player1}, {$inc: {matches: -1, wins: -1}}, function (err, sub) {
-                                console.log("UTENTE AGGIORNATA!");
-                            });
-                        }
-                    });
-                });
-
-                Match.deleteMany({$or: [{player1: username}, {player2: username}]})
-                // .then(() => res.status(200).json({message: "ok"}))
-                    .catch((error: CallbackError) => res.status(500).json({error}));
-
-                User.find({isModerator: false})
-                    .then((users: UserType[]) => res.status(200).json({users}))
-                    .catch((error: CallbackError) => res.status(500).json({error}));
-
-            }).catch((error: any) => {
-                res.status(400).json({message: error});
             });
+        });
 
-        } else {
-            res.status(400).json({message: "Non sei il moderatore!"});
-        }
-    });
+        Match.find({player2: username}).then((matches: MatchType[]) => {
+            matches.forEach((m: MatchType) => {
+                User.updateOne({username: m.player1}, {
+                    $inc: {
+                        matches: -1,
+                        wins: m.winner == username ? 0 : -1,
+                        looses: m.winner.username ? -1 : 0,
+                    }
+                });
+            });
+        });
+
+        Match.deleteMany({$or: [{player1: username}, {player2: username}]});
+
+        User.find({isModerator: false})
+            .then((users: UserType[]) => res.status(200).json({users}));
+    }).catch((error: CallbackError) => res.status(500).json({error}));
 });
 
-app.post("/addModeator", mustAuth, mustBeAdmin, async (req: Request, res: Response) => {
+app.put("/moderator", mustAuth, mustBeAdmin, async (req: Request, res: Response) => {
     const {username, password} = req.body;
 
     await new User({
@@ -456,8 +443,8 @@ const matches: match[] = [];
 
 io.on("connection", (socket: any) => {
     socket.on("Move", async function (data) {
-
         const match = matches.filter(value => value.id == data.gameId)[0];
+
         match.boards = data.boards;
         match.whoPlay = data.opponent;
 
@@ -470,11 +457,8 @@ io.on("connection", (socket: any) => {
                 winner: match.players[max(match.id)]
             }).save();
 
-            User.updateOne({username: match.players[max(match.id)]}, {$inc: {matches: 1, wins: 1}}, function (err, res) {
-            });
-
-            User.updateOne({username: match.players[min(match.id)]}, {$inc: {matches: 1, looses: 1}}, function (err, res) {
-            });
+            await User.updateOne({username: match.players[max(match.id)]}, {$inc: {matches: 1, wins: 1}});
+            await User.updateOne({username: match.players[min(match.id)]}, {$inc: {matches: 1, looses: 1}});
         }
 
         io.to(users[data.opponent]).emit("Move", data);
@@ -483,9 +467,12 @@ io.on("connection", (socket: any) => {
 
     socket.on("Board", function (data) {
         const match = matches.filter(value => value.id == data.gameId);
+
         match[0].boards[data.username] = data.board;
+
         if (Object.keys(match[0].boards).length == 2) {
             const randomElement = match[0].players[Math.floor(Math.random() * match[0].players.length)];
+
             if (randomElement == match[0].players[0]) {
                 match[0].whoPlay = match[0].players[0];
                 io.to(users[match[0].players[0]]).emit("Board", {
@@ -511,17 +498,19 @@ io.on("connection", (socket: any) => {
                     canPlay: true
                 });
             }
-
         }
-
     });
 
+    // TODO correctly update list of online users
     socket.on("login", (data) => {
         users[data.username] = socket.id;
+
         const game = matches.filter(value => value.players.includes(data.username))[0];
+
         if (game) {
             socket.join(game.id);
         }
+
         io.emit("updatePlayers", users);
     });
 
@@ -541,6 +530,7 @@ io.on("connection", (socket: any) => {
         io.to(users[data.friend]).emit("friendConfirm", data);
     });
 
+    // TODO refactor this mess
     socket.on("randomMatch", function (data) {
         setTimeout(() => {
             const game = matches.filter(value => value.members == 1)[0];
@@ -554,7 +544,7 @@ io.on("connection", (socket: any) => {
                     io.to(game.id).emit("new_member", {members: game.members, gameId: game.id});
                 } else {
                     const game = new match();
-                    game.id = randomUUID();
+                    game.id = ;
                     game.players[game.i] = username || "";
                     game.i++;
                     game.members++;
@@ -570,9 +560,9 @@ io.on("connection", (socket: any) => {
                 waitingPlayers.push(new waitingPlayer({name: data.username, ratio: user.wins / user.matches}));
                 waitingPlayers.sort((a, b) => a.ratio - b.ratio);
             });
-
     });
 
+    // TODO more refactoring, match should have a bunch of methods to deal with this recurring pattern
     socket.on("friendlyMatch", (data) => {
         const game = matches.filter(value => value.players.includes(data.player1))[0];
         if (!game) {
@@ -586,16 +576,14 @@ io.on("connection", (socket: any) => {
             socket.join(game.id);
             matches.push(game);
             io.to(users[data.player1])
-                .to(users[data.player2])
-                .emit("new_member", {members: game.members, gameId: game.id});
+              .to(users[data.player2])
+              .emit("new_member", {members: game.members, gameId: game.id});
         } else {
             socket.join(game.id);
             io.to(users[data.player1])
-                .to(users[data.player2])
-                .emit("new_member", {members: game.members, gameId: game.id});
+              .to(users[data.player2])
+              .emit("new_member", {members: game.members, gameId: game.id});
         }
-
-
     });
 
     socket.on("watchMatch", (data) => {
@@ -625,7 +613,10 @@ io.on("connection", (socket: any) => {
         const match = matches.filter(value => value.id == data.gameId)[0];
         if (match) {
             if (Object.keys(match.boards).length == 2) {
-                (data.username == match.players[0]) ? match.boards[match.players[1]].player.score = BOARD_SIZE : match.boards[match.players[0]].player.score = BOARD_SIZE;
+                (data.username == match.players[0])
+                  ? match.boards[match.players[1]].player.score = BOARD_SIZE
+                  : match.boards[match.players[0]].player.score = BOARD_SIZE;
+
                 await new Match({
                     player1: match.players[0],
                     player2: match.players[1],
@@ -634,15 +625,9 @@ io.on("connection", (socket: any) => {
                     winner: match.players[max(match.id)]
                 }).save();
 
-                User.updateOne({username: match.players[max(match.id)]}, {$inc: {matches: 1, wins: 1}}, function (err, res) {
-                });
-                User.updateOne({username: match.players[min(match.id)]}, {
-                    $inc: {
-                        matches: 1,
-                        looses: 1
-                    }
-                }, function (err, res) {
-                });
+                await User.updateOne({username: match.players[max(match.id)]}, {$inc: {matches: 1, wins: 1}});
+                await User.updateOne({username: match.players[min(match.id)]}, {$inc: {matches: 1, looses: 1}});
+
                 io.to("visitors" + match.id).emit("ListenGames", match);
                 io.to(users[match.players[max(match.id)]]).emit("Move", {
                     canPlay: true,
@@ -650,10 +635,10 @@ io.on("connection", (socket: any) => {
                     gameId: match.id,
                     opponent: data.username
                 });
-
             } else {
                 io.to(users[matches.filter(value => value.id = data.gameId)[0].players.filter(value => value != data.username)[0]]).emit("listenOpponentQuit");
             }
+
             const i = matches.indexOf(match);
             matches.splice(i, 1);
         } else {
@@ -668,6 +653,7 @@ io.on("connection", (socket: any) => {
     socket.on("disconnect", async () => {
         const username = getKeyByValue(users, socket.id) || "";
         delete users[username];
+
         setTimeout(async () => {
             if (!users[username]) {
                 const player = waitingPlayers.find(value => value.name == username);
@@ -678,28 +664,32 @@ io.on("connection", (socket: any) => {
                     const match = matches.find(value => value.players.includes(username));
                     if (match) {
                         if (Object.keys(match.boards).length == 2) {
-                            (username == match.players[0]) ? match.boards[match.players[1]].player.score = BOARD_SIZE : match.boards[match.players[0]].player.score = BOARD_SIZE;
-                            const r = await new Match({
+                            (username == match.players[0])
+                                ? match.boards[match.players[1]].player.score = BOARD_SIZE
+                                : match.boards[match.players[0]].player.score = BOARD_SIZE;
+
+                            await new Match({
                                 player1: match.players[0],
                                 player2: match.players[1],
                                 score1: match.boards[match.players[0]].player.score,
                                 score2: match.boards[match.players[1]].player.score,
                                 winner: match.players[max(match.id)]
                             }).save();
-                            User.updateOne({username: match.players[max(match.id)]}, {
+
+                            await User.updateOne({username: match.players[max(match.id)]}, {
                                 $inc: {
                                     matches: 1,
                                     wins: 1
                                 }
-                            }, function (err, res) {
                             });
-                            User.updateOne({username: match.players[min(match.id)]}, {
+
+                            await User.updateOne({username: match.players[min(match.id)]}, {
                                 $inc: {
                                     matches: 1,
                                     looses: 1
                                 }
-                            }, function (err, res) {
                             });
+
                             io.to("visitors" + match.id).emit("ListenGames", match);
                             io.to(users[match.players[max(match.id)]]).emit("Move", {
                                 canPlay: true,
@@ -711,13 +701,13 @@ io.on("connection", (socket: any) => {
                         } else {
                             io.to(users[match.players.find(value => value != username) || ""]).emit("listenOpponentQuit");
                         }
+
                         const i = matches.indexOf(match);
                         matches.splice(i, 1);
                     }
                 }
             }
         }, 3000);
-
     });
 });
 

@@ -17,6 +17,7 @@ import {WebsocketService} from "../websocket.service";
 })
 export class ModeratorComponent implements OnInit, AfterContentChecked, OnDestroy {
     static isFirstLogin: boolean = AppService.getBoolean(sessionStorage.getItem("isFirstLogin"));
+
     users: any;
     user: any;
     player = "";
@@ -24,7 +25,7 @@ export class ModeratorComponent implements OnInit, AfterContentChecked, OnDestro
     messages: any[] = [];
 
     @ViewChild("chatWithPlayers")
-        divToScroll!: ElementRef;
+    divToScroll!: ElementRef;
 
     msgForm = new FormGroup({
         msg: new FormControl("", Validators.required),
@@ -141,7 +142,6 @@ export class ModeratorComponent implements OnInit, AfterContentChecked, OnDestro
 
         if (username != "" && password != "") {
             this.appService.addModerator(HomeComponent.token, {
-                moderator: HomeComponent.username,
                 username: username,
                 password: password,
             });
@@ -149,10 +149,7 @@ export class ModeratorComponent implements OnInit, AfterContentChecked, OnDestro
     }
 
     removeUser(username: string) {
-        this.appService.deleteUser(HomeComponent.token, {
-            moderator: HomeComponent.username,
-            username: username
-        }).pipe().subscribe((data: any) => {
+        this.appService.deleteUser(HomeComponent.token,username).subscribe((data: any) => {
             this.toaster.success("You deleted user " + username + "!", "User deleted!");
             this.users = data.users;
         });
@@ -162,7 +159,7 @@ export class ModeratorComponent implements OnInit, AfterContentChecked, OnDestro
         return ModeratorComponent;
     }
 
-  @HostListener("unloaded")
+    @HostListener("unloaded")
     ngOnDestroy() {
         HomeComponent.token = "";
         AppComponent.logged = false;
@@ -170,18 +167,18 @@ export class ModeratorComponent implements OnInit, AfterContentChecked, OnDestro
         this.subs.forEach(value => value.unsubscribe());
     }
 
-  logout() {
-      this.appService.logout(HomeComponent.token, {username: HomeComponent.username}).subscribe(() => {
-          sessionStorage.clear();
-          this.route.navigate(["/", "login"]);
-      });
-  }
+    logout() {
+        this.appService.logout(HomeComponent.token, {username: HomeComponent.username}).subscribe(() => {
+            sessionStorage.clear();
+            this.route.navigate(["/", "login"]);
+        });
+    }
 
-  userInfo(username: string) {
-      this.users.forEach((u: any) => {
-          if (u.username == username) {
-              this.user = u;
-          }
-      });
-  }
+    userInfo(username: string) {
+        this.users.forEach((u: any) => {
+            if (u.username == username) {
+                this.user = u;
+            }
+        });
+    }
 }

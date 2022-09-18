@@ -22,13 +22,12 @@ const NUM_PLAYERS = 2;
 const BOARD_SIZE = 10;
 const SCORE_LIMIT = 32;
 
+// TODO BattleshipGameComponent and WatchGameComponent are really similar, we should inherit from a GameController class that holds the common logic
 @Component({
     selector: "app-battleship-game",
     templateUrl: "./battleship-game.component.html",
     styleUrls: ["./battleship-game.component.css"]
 })
-
-
 export class BattleshipGameComponent implements OnInit, OnDestroy, AfterContentChecked {
     static opponent: any = (sessionStorage.getItem("opponent")) ? sessionStorage.getItem("opponent") : "";
     static isFriendly: boolean = AppService.getBoolean(sessionStorage.getItem("isFriendly"));
@@ -49,377 +48,364 @@ export class BattleshipGameComponent implements OnInit, OnDestroy, AfterContentC
     messages: any[] = (sessionStorage.getItem("messages") != null) ? JSON.parse(sessionStorage.getItem("messages") + "") : [];
     vertically = true;
     faPaper = faPaperPlane;
-  @ViewChild("chatMatch")
-      divToScroll!: ElementRef;
 
-  constructor(private socket: WebsocketService, private boardService: BoardService, private toaster: ToastrService, private appService: AppService, private chatService: ChatService, private route: Router) {
-  }
+    @ViewChild("chatMatch")
+    divToScroll!: ElementRef;
 
-  get BattleshipGameComponent() {
-      return BattleshipGameComponent;
-  }
+    constructor(private socket: WebsocketService, private boardService: BoardService, private toaster: ToastrService, private appService: AppService, private chatService: ChatService, private route: Router) {
+    }
 
-  get HomeComponent() {
-      return HomeComponent;
-  }
+    get BattleshipGameComponent() {
+        return BattleshipGameComponent;
+    }
 
-  get validPlayer(): boolean {
-      return (this.players >= NUM_PLAYERS);
-  }
+    get HomeComponent() {
+        return HomeComponent;
+    }
 
-  get winner(): Board | undefined {
-      try {
-          if (this.boards[this.player].player.score >= SCORE_LIMIT) {
-              return this.boards[this.player];
-          } else if (this.boards[BattleshipGameComponent.opponent].player.score >= SCORE_LIMIT) {
-              return this.boards[BattleshipGameComponent.opponent];
-          } else {
-              return undefined;
-          }
-      } catch (error) {
-          return undefined;
-      }
-  }
+    get validPlayer(): boolean {
+        return (this.players >= NUM_PLAYERS);
+    }
 
-  get boards(): Foo {
-      return this.boardService.getBoards();
-  }
+    get winner(): Board | undefined {
+        try {
+            if (this.boards[this.player].player.score >= SCORE_LIMIT) {
+                return this.boards[this.player];
+            } else if (this.boards[BattleshipGameComponent.opponent].player.score >= SCORE_LIMIT) {
+                return this.boards[BattleshipGameComponent.opponent];
+            } else {
+                return undefined;
+            }
+        } catch (error) {
+            return undefined;
+        }
+    }
 
-  ngAfterContentChecked(): void {
-      try {
-          this.divToScroll.nativeElement.scrollTop = this.divToScroll.nativeElement.scrollHeight;
-      } catch (error) {
-          console.log(error);
-      }
-  }
+    get boards(): Foo {
+        return this.boardService.getBoards();
+    }
 
-  initConnection(): BattleshipGameComponent {
-      SubscriptionsService.subscriptions.push(
-          this.socket.listenMembers().subscribe((data: any) => {
-              if (data.members < this.players) {
-                  this.boards[this.player].player.score = SCORE_LIMIT;
-              } else {
-                  this.players = data.members;
-                  sessionStorage.setItem("players", this.players + "");
-              }
-              HomeComponent.gameId = data.gameId;
-              sessionStorage.setItem("gameId", data.gameId + "");
-          })
-      );
+    ngAfterContentChecked(): void {
+        try {
+            this.divToScroll.nativeElement.scrollTop = this.divToScroll.nativeElement.scrollHeight;
+        } catch (error) {
+            console.log(error);
+        }
+    }
 
-      SubscriptionsService.subscriptions.push(
-          this.chatService.listenMessage().subscribe((data: any) => {
-              this.messages.push(data);
-              sessionStorage.setItem("messages", JSON.stringify(this.messages));
-          })
-      );
+    initConnection(): BattleshipGameComponent {
+        SubscriptionsService.subscriptions.push(
+            this.socket.listenMembers().subscribe((data: any) => {
+                if (data.members < this.players) {
+                    this.boards[this.player].player.score = SCORE_LIMIT;
+                } else {
+                    this.players = data.members;
+                    sessionStorage.setItem("players", this.players + "");
+                }
+                HomeComponent.gameId = data.gameId;
+                sessionStorage.setItem("gameId", data.gameId + "");
+            })
+        );
 
-      SubscriptionsService.subscriptions.push(
-          this.socket.listenMoves().subscribe((data: any) => {
-              this.canPlay = data.canPlay;
-              this.boards[this.player] = data.boards[this.player];
-              this.boards[BattleshipGameComponent.opponent] = data.boards[BattleshipGameComponent.opponent];
-              sessionStorage.setItem("canPlay", this.canPlay + "");
-              sessionStorage.setItem("boards", JSON.stringify(this.boards));
-          })
-      );
+        SubscriptionsService.subscriptions.push(
+            this.chatService.listenMessage().subscribe((data: any) => {
+                this.messages.push(data);
+                sessionStorage.setItem("messages", JSON.stringify(this.messages));
+            })
+        );
 
-      SubscriptionsService.subscriptions.push(
-          this.socket.listenQuit().subscribe((data: any) => {
-              this.toaster.warning("Your opponent quit the Game", "Opponent quit!");
-              this.route.navigate(["/home/game"]);
-          })
-      );
+        SubscriptionsService.subscriptions.push(
+            this.socket.listenMoves().subscribe((data: any) => {
+                this.canPlay = data.canPlay;
+                this.boards[this.player] = data.boards[this.player];
+                this.boards[BattleshipGameComponent.opponent] = data.boards[BattleshipGameComponent.opponent];
+                sessionStorage.setItem("canPlay", this.canPlay + "");
+                sessionStorage.setItem("boards", JSON.stringify(this.boards));
+            })
+        );
 
-      return this;
-  }
+        SubscriptionsService.subscriptions.push(
+            this.socket.listenQuit().subscribe((data: any) => {
+                this.toaster.warning("Your opponent quit the Game", "Opponent quit!");
+                this.route.navigate(["/home/game"]);
+            })
+        );
 
-  sendBoard() {
-      this.createBoards(HomeComponent.username);
-      this.socket.sendBoard({
-          board: this.boards[HomeComponent.username],
-          username: HomeComponent.username,
-          gameId: HomeComponent.gameId
-      });
+        return this;
+    }
 
-      this.ready = true;
-      sessionStorage.setItem("ready", this.ready + "");
-  }
+    sendBoard() {
+        this.createBoards(HomeComponent.username);
+        this.socket.sendBoard({
+            board: this.boards[HomeComponent.username],
+            username: HomeComponent.username,
+            gameId: HomeComponent.gameId
+        });
 
-  sendMyBoard() {
-      this.socket.sendBoard({
-          board: this.boards[HomeComponent.username],
-          username: HomeComponent.username,
-          gameId: HomeComponent.gameId
-      });
+        this.ready = true;
+        sessionStorage.setItem("ready", this.ready + "");
+    }
 
-      this.ready = true;
-      sessionStorage.setItem("ready", this.ready + "");
-  }
+    sendMyBoard() {
+        this.socket.sendBoard({
+            board: this.boards[HomeComponent.username],
+            username: HomeComponent.username,
+            gameId: HomeComponent.gameId
+        });
 
-  isManual() {
-      this.manual = true;
-      sessionStorage.setItem("manual", this.manual + "");
-  }
+        this.ready = true;
+        sessionStorage.setItem("ready", this.ready + "");
+    }
 
-  fireTorpedo(e: any): BattleshipGameComponent | undefined {
-      const id = e.target.id.split(";");
-      const boardId = id[0];
-      const row = Number.parseInt(id[1]);
-      const col = Number.parseInt(id[2]);
-      const tile = this.boards[boardId].tiles[row][col];
+    isManual() {
+        this.manual = true;
+        sessionStorage.setItem("manual", this.manual + "");
+    }
 
-      if (!this.checkValidHit(boardId, tile)) {
-          return;
-      }
+    fireTorpedo(e: any): BattleshipGameComponent | undefined {
+        const id = e.target.id.split(";");
+        const boardId = id[0];
+        const row = Number.parseInt(id[1]);
+        const col = Number.parseInt(id[2]);
+        const tile = this.boards[boardId].tiles[row][col];
 
-      if (tile.value == "X") {
-          this.toaster.success("You got this.", "HURRAAA! YOU SANK A SHIP!");
-          this.boards[boardId].tiles[row][col].status = "win";
-          this.boards[this.player].player.score++;
-      } else {
-          this.toaster.info("Keep trying.", "OOPS! YOU MISSED THIS TIME");
-          this.boards[boardId].tiles[row][col].status = "fail";
-      }
+        if (!this.checkValidHit(boardId, tile)) {
+            return;
+        }
 
-      this.canPlay = false;
-      sessionStorage.setItem("canPlay", this.canPlay + "");
-      this.boards[boardId].tiles[row][col].used = true;
-      sessionStorage.setItem("boards", JSON.stringify(this.boards));
-      this.socket.emitMoves(new Move({
-          canPlay: true,
-          boards: this.boards,
-          gameId: HomeComponent.gameId,
-          opponent: BattleshipGameComponent.opponent
-      }));
+        if (tile.value == "X") {
+            this.toaster.success("You got this.", "HURRAAA! YOU SANK A SHIP!");
+            this.boards[boardId].tiles[row][col].status = "win";
+            this.boards[this.player].player.score++;
+        } else {
+            this.toaster.info("Keep trying.", "OOPS! YOU MISSED THIS TIME");
+            this.boards[boardId].tiles[row][col].status = "fail";
+        }
 
-      return this;
-  }
+        this.canPlay = false;
+        sessionStorage.setItem("canPlay", this.canPlay + "");
+        this.boards[boardId].tiles[row][col].used = true;
+        sessionStorage.setItem("boards", JSON.stringify(this.boards));
+        this.socket.emitMoves(new Move({
+            canPlay: true,
+            boards: this.boards,
+            gameId: HomeComponent.gameId,
+            opponent: BattleshipGameComponent.opponent
+        }));
 
-  getBoardService() {
-      return this.boardService;
-  }
+        return this;
+    }
 
-  putShip(e: any, ship: any) {
-      const id = e.target.id.split(";");
-      const row = Number.parseInt(id[0]);
-      const col = Number.parseInt(id[1]);
+    getBoardService() {
+        return this.boardService;
+    }
 
-      if (!this.boards[HomeComponent.username].tiles[row][col].canPut) {
-          this.toaster.error("You can't put here your ship.", "You can't put");
-          return;
-      }
+    putShip(e: any, ship: any) {
+        const id = e.target.id.split(";");
+        const row = Number.parseInt(id[0]);
+        const col = Number.parseInt(id[1]);
 
-      if (this.vertically) {
-          let i = 0;
-          while (i < ship) {
-              this.boards[HomeComponent.username].tiles[row + i][col].value = "X";
-              i++;
-          }
-      } else {
-          let i = 0;
-          while (i < ship) {
-              this.boards[HomeComponent.username].tiles[row][col + i].value = "X";
-              i++;
-          }
-      }
+        if (!this.boards[HomeComponent.username].tiles[row][col].canPut) {
+            this.toaster.error("You can't put here your ship.", "You can't put");
+            return;
+        }
 
-      this.boards[HomeComponent.username].ships.pop();
+        if (this.vertically) {
+            let i = 0;
+            while (i < ship) {
+                this.boards[HomeComponent.username].tiles[row + i][col].value = "X";
+                i++;
+            }
+        } else {
+            let i = 0;
+            while (i < ship) {
+                this.boards[HomeComponent.username].tiles[row][col + i].value = "X";
+                i++;
+            }
+        }
 
-      if (!this.vertically) {
-          for (let i = 0; i < 10; i++) {
-              for (let j = 0; j < 10; j++) {
-                  if (this.boardService.canSetShip(this.boards[HomeComponent.username].ships[this.boards[HomeComponent.username].ships.length - 1], this.boards[HomeComponent.username].tiles, i, j) == 1 || this.boardService.canSetShip(this.boards[HomeComponent.username].ships[this.boards[HomeComponent.username].ships.length - 1], this.boards[HomeComponent.username].tiles, i, j) == 2) {
-                      this.boards[HomeComponent.username].tiles[i][j].canPut = true;
-                  } else {
-                      this.boards[HomeComponent.username].tiles[i][j].canPut = false;
-                  }
-              }
-          }
-      } else {
-          for (let i = 0; i < 10; i++) {
-              for (let j = 0; j < 10; j++) {
-                  if (this.boardService.canSetShip(this.boards[HomeComponent.username].ships[this.boards[HomeComponent.username].ships.length - 1], this.boards[HomeComponent.username].tiles, i, j) == 0 || this.boardService.canSetShip(this.boards[HomeComponent.username].ships[this.boards[HomeComponent.username].ships.length - 1], this.boards[HomeComponent.username].tiles, i, j) == 2) {
-                      this.boards[HomeComponent.username].tiles[i][j].canPut = true;
-                  } else {
-                      this.boards[HomeComponent.username].tiles[i][j].canPut = false;
-                  }
-              }
-          }
-      }
+        this.boards[HomeComponent.username].ships.pop();
 
-      return this;
-  }
+        if (!this.vertically) {
+            for (let i = 0; i < 10; i++) {
+                for (let j = 0; j < 10; j++) {
+                    this.boards[HomeComponent.username].tiles[i][j].canPut = this.boardService.canSetShip(this.boards[HomeComponent.username].ships[this.boards[HomeComponent.username].ships.length - 1], this.boards[HomeComponent.username].tiles, i, j) == 1 || this.boardService.canSetShip(this.boards[HomeComponent.username].ships[this.boards[HomeComponent.username].ships.length - 1], this.boards[HomeComponent.username].tiles, i, j) == 2;
+                }
+            }
+        } else {
+            for (let i = 0; i < 10; i++) {
+                for (let j = 0; j < 10; j++) {
+                    this.boards[HomeComponent.username].tiles[i][j].canPut = this.boardService.canSetShip(this.boards[HomeComponent.username].ships[this.boards[HomeComponent.username].ships.length - 1], this.boards[HomeComponent.username].tiles, i, j) == 0 || this.boardService.canSetShip(this.boards[HomeComponent.username].ships[this.boards[HomeComponent.username].ships.length - 1], this.boards[HomeComponent.username].tiles, i, j) == 2;
+                }
+            }
+        }
 
-  mouseenter(r: any, c: any, ship: any) {
-      if (this.vertically) {
-          let i = 0;
-          while (i < ship) {
-              this.boards[HomeComponent.username].tiles[r + i][c].value = "X";
-              i++;
-          }
-      } else {
-          let i = 0;
-          while (i < ship) {
-              this.boards[HomeComponent.username].tiles[r][c + i].value = "X";
-              i++;
-          }
-      }
-  }
+        return this;
+    }
 
-  mouseleave(r: any, c: any, ship: any) {
-      if (this.vertically) {
-          let i = 0;
-          while (i < ship) {
-              this.boards[HomeComponent.username].tiles[r + i][c].value = "";
-              i++;
-          }
-      } else {
-          let i = 0;
-          while (i < ship) {
-              this.boards[HomeComponent.username].tiles[r][c + i].value = "";
-              i++;
-          }
-      }
-  }
+    mouseenter(r: any, c: any, ship: any) {
+        if (this.vertically) {
+            let i = 0;
+            while (i < ship) {
+                this.boards[HomeComponent.username].tiles[r + i][c].value = "X";
+                i++;
+            }
+        } else {
+            let i = 0;
+            while (i < ship) {
+                this.boards[HomeComponent.username].tiles[r][c + i].value = "X";
+                i++;
+            }
+        }
+    }
 
-  canContinue() {
-      for (let i = 0; i < 10; i++) {
-          for (let j = 0; j < 10; j++) {
-              if (this.boards[HomeComponent.username].tiles[i][j].canPut) {
-                  return true;
-              }
-          }
-      }
+    mouseleave(r: any, c: any, ship: any) {
+        if (this.vertically) {
+            let i = 0;
+            while (i < ship) {
+                this.boards[HomeComponent.username].tiles[r + i][c].value = "";
+                i++;
+            }
+        } else {
+            let i = 0;
+            while (i < ship) {
+                this.boards[HomeComponent.username].tiles[r][c + i].value = "";
+                i++;
+            }
+        }
+    }
 
-      return false;
-  }
+    canContinue() {
+        return this.boards[HomeComponent.username].tiles.some(
+          row => row.some(col => col.canPut)
+        )
+    }
 
-  checkValidHit(boardId: string, tile: any): boolean {
-      if (boardId == this.player) {
-          this.toaster.error("Don't commit suicide.", "You can't hit your own board.");
-          return false;
-      }
+    checkValidHit(boardId: string, tile: any): boolean {
+        if (boardId == this.player) {
+            this.toaster.error("Don't commit suicide.", "You can't hit your own board.");
+            return false;
+        }
 
-      if (this.winner) {
-          this.toaster.error("Game is over");
-          return false;
-      }
+        if (this.winner) {
+            this.toaster.error("Game is over");
+            return false;
+        }
 
-      if (!this.canPlay) {
-          this.toaster.error("A bit too eager.", "It's not your turn to play.");
-          return false;
-      }
+        if (!this.canPlay) {
+            this.toaster.error("A bit too eager.", "It's not your turn to play.");
+            return false;
+        }
 
-      if (tile.used == true) {
-          this.toaster.error("Don't waste your torpedos.", "You already shot here.");
-          return false;
-      }
-      return true;
-  }
+        if (tile.used == true) {
+            this.toaster.error("Don't waste your torpedos.", "You already shot here.");
+            return false;
+        }
+        return true;
+    }
 
-  createBoards(player: string): BattleshipGameComponent {
-      this.boardService.createBoard(BOARD_SIZE, player);
-      return this;
-  }
+    createBoards(player: string): BattleshipGameComponent {
+        this.boardService.createBoard(BOARD_SIZE, player);
+        return this;
+    }
 
-  async ngOnInit(): Promise<void> {
-      if (!this.connected) {
-          this.boardService.createBoardManually(10, HomeComponent.username);
-      }
+    async ngOnInit(): Promise<void> {
+        if (!this.connected) {
+            this.boardService.createBoardManually(10, HomeComponent.username);
+        }
 
-      SubscriptionsService.subscriptions.push(
-          this.socket.getBoard().subscribe((data: any) => {
-              // TODO again, we should abstract this away
-              this.boards[data.username] = data.board;
-              sessionStorage.setItem("boards", JSON.stringify(this.boards));
-              BattleshipGameComponent.opponent = data.username;
-              sessionStorage.setItem("opponent", data.username);
-              this.canPlay = data.canPlay;
-              sessionStorage.setItem("canPlay", data.canPlay);
-              this.started = true;
-              sessionStorage.setItem("started", this.started + "");
-          })
-      );
+        SubscriptionsService.subscriptions.push(
+            this.socket.getBoard().subscribe((data: any) => {
+                // TODO again, we should abstract this away
+                this.boards[data.username] = data.board;
+                sessionStorage.setItem("boards", JSON.stringify(this.boards));
+                BattleshipGameComponent.opponent = data.username;
+                sessionStorage.setItem("opponent", data.username);
+                this.canPlay = data.canPlay;
+                sessionStorage.setItem("canPlay", data.canPlay);
+                this.started = true;
+                sessionStorage.setItem("started", this.started + "");
+            })
+        );
 
-      this.initConnection();
+        this.initConnection();
 
-      if (!this.connected) {
-          if (BattleshipGameComponent.isFriendly) {
-              if (BattleshipGameComponent.isInvited) {
-                  await new Promise(f => setTimeout(f, 1000));
-                  this.socket.friendlyMatch({player1: HomeComponent.username, player2: BattleshipGameComponent.opponent});
-              } else {
-                  this.socket.friendlyMatch({player1: HomeComponent.username, player2: BattleshipGameComponent.opponent});
-              }
-          } else {
-              this.socket.connection({username: HomeComponent.username});
-          }
-          this.connected = true;
-          sessionStorage.setItem("connected", this.connected + "");
-      }
-  }
+        if (!this.connected) {
+            if (BattleshipGameComponent.isFriendly) {
+                if (BattleshipGameComponent.isInvited) {
+                    await new Promise(f => setTimeout(f, 1000));
+                    this.socket.friendlyMatch({player1: HomeComponent.username, player2: BattleshipGameComponent.opponent});
+                } else {
+                    this.socket.friendlyMatch({player1: HomeComponent.username, player2: BattleshipGameComponent.opponent});
+                }
+            } else {
+                this.socket.connection({username: HomeComponent.username});
+            }
+            this.connected = true;
+            sessionStorage.setItem("connected", this.connected + "");
+        }
+    }
 
-  getKeys(): string[] {
-      return Object.keys(this.boards);
-  }
+    getKeys(): string[] {
+        return Object.keys(this.boards);
+    }
 
-  quitGame() {
-      this.socket.disconnect({username: HomeComponent.username, gameId: HomeComponent.gameId});
-      this.route.navigate(["/home/game"]);
-  }
+    quitGame() {
+        this.socket.disconnect({username: HomeComponent.username, gameId: HomeComponent.gameId});
+        this.route.navigate(["/home/game"]);
+    }
 
-  @HostListener("unloaded")
-  ngOnDestroy() {
-      this.canPlay = true;
-      this.player = HomeComponent.username;
-      BattleshipGameComponent.opponent = "";
-      this.players = 1;
-      this.connected = false;
-      this.messages = [];
-      this.started = false;
-      this.ready = false;
-      this.manual = false;
-      HomeComponent.gameId = "";
-      SubscriptionsService.dispose();
-      BattleshipGameComponent.isFriendly = false;
-      BattleshipGameComponent.isInvited = false;
-      this.boardService.ngOnDestroy();
+    @HostListener("unloaded")
+    ngOnDestroy() {
+        this.canPlay = true;
+        this.player = HomeComponent.username;
+        BattleshipGameComponent.opponent = "";
+        this.players = 1;
+        this.connected = false;
+        this.messages = [];
+        this.started = false;
+        this.ready = false;
+        this.manual = false;
+        HomeComponent.gameId = "";
+        SubscriptionsService.dispose();
+        BattleshipGameComponent.isFriendly = false;
+        BattleshipGameComponent.isInvited = false;
+        this.boardService.ngOnDestroy();
 
-      ["canPlay", "connected", "boards", "players", "opponent", "isFriendly", "ready", "started", "manual"]
-          .map((value)=>sessionStorage.removeItem(value));
-  }
+        ["canPlay", "connected", "boards", "players", "opponent", "isFriendly", "ready", "started", "manual"]
+            .map((value)=>sessionStorage.removeItem(value));
+    }
 
-  sendMessage() {
-      this.chatService.sendMessage(this.msgForm.get("msg")?.value, this.player, BattleshipGameComponent.opponent, HomeComponent.gameId);
+    sendMessage() {
+        this.chatService.sendMessage(this.msgForm.get("msg")?.value, this.player, BattleshipGameComponent.opponent, HomeComponent.gameId);
 
-      this.messages.push({
-          from: HomeComponent.username,
-          to: BattleshipGameComponent.opponent,
-          message: this.msgForm.get("msg")?.value
-      });
+        this.messages.push({
+            from: HomeComponent.username,
+            to: BattleshipGameComponent.opponent,
+            message: this.msgForm.get("msg")?.value
+        });
 
-      sessionStorage.setItem("messages", JSON.stringify(this.messages));
-      this.msgForm.reset();
-  }
+        sessionStorage.setItem("messages", JSON.stringify(this.messages));
+        this.msgForm.reset();
+    }
 
-  counter(i: number) {
-      return new Array(i);
-  }
+    counter(i: number) {
+        return new Array(i);
+    }
 
-  rotate() {
-      this.vertically = !this.vertically;
+    rotate() {
+        this.vertically = !this.vertically;
 
-      for (let i = 0; i < 10; i++) {
-          for (let j = 0; j < 10; j++) {
-              this.boards[HomeComponent.username].tiles[i][j].canPut =
-                  this.boardService.canSetShip(
-                      this.boards[HomeComponent.username].ships[this.boards[HomeComponent.username].ships.length - 1],
-                      this.boards[HomeComponent.username].tiles, i, j) == (this.vertically ? 0 : 1) ||
-                  this.boardService.canSetShip(
-                      this.boards[HomeComponent.username].ships[this.boards[HomeComponent.username].ships.length - 1],
-                      this.boards[HomeComponent.username].tiles, i, j) == 2;
-          }
-      }
-  }
+        for (let i = 0; i < 10; i++) {
+            for (let j = 0; j < 10; j++) {
+                this.boards[HomeComponent.username].tiles[i][j].canPut =
+                    this.boardService.canSetShip(
+                        this.boards[HomeComponent.username].ships[this.boards[HomeComponent.username].ships.length - 1],
+                        this.boards[HomeComponent.username].tiles, i, j) == (this.vertically ? 0 : 1) ||
+                    this.boardService.canSetShip(
+                        this.boards[HomeComponent.username].ships[this.boards[HomeComponent.username].ships.length - 1],
+                        this.boards[HomeComponent.username].tiles, i, j) == 2;
+            }
+        }
+    }
 }

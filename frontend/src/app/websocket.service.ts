@@ -1,12 +1,8 @@
-import { Injectable } from "@angular/core";
-import { Socket } from "ngx-socket-io";
-import { ignoreElements, map } from "rxjs";
-import { AppComponent } from "./app.component";
+import {Injectable} from "@angular/core";
+import {Socket} from "ngx-socket-io";
 
-
-import { Board } from "./battleship-game/board";
-import { Move } from "./battleship-game/move";
-
+import {Board} from "./battleship-game/board";
+import {Move} from "./battleship-game/move";
 
 
 @Injectable({
@@ -15,88 +11,112 @@ import { Move } from "./battleship-game/move";
 
 export class WebsocketService {
     members = 0;
-    constructor(private socket:Socket) {
-    
+
+    constructor(private socket: Socket) {
     }
 
-    connection(data:any){
-        this.socket.emit("randomMatch",data);
+    connection(data: any) {
+        this.socket.emit("randomMatch", data);
     }
-    watchMatch(data:any){
-        this.socket.emit("watchMatch",data);
+
+    watchMatch(data: any) {
+        this.socket.emit("watchMatch", data);
     }
-  
-    emitMoves(move:Move){
+
+    emitMoves(move: Move) {
         this.socket.emit("Move", move);
     }
-    login(user:any){
-        this.socket.emit("login",user);
+
+    login(user: any) {
+        this.socket.emit("login", user);
     }
-    listenMoves(){
+
+    listenMoves() {
         return this.socket.fromEvent("Move");
     }
-    listenMembers(){
+
+    listenMembers() {
         return this.socket.fromEvent("new_member");
     }
-    friendlyMatch(data:any){
-        this.socket.emit("friendlyMatch",data);
+
+    friendlyMatch(data: any) {
+        this.socket.emit("friendlyMatch", data);
     }
-    sendBoard(data:any){
+
+    sendBoard(data: any) {
         this.socket.emit("Board", data);
     }
-    getBoard(){
+
+    getBoard() {
         return this.socket.fromEvent("Board");
     }
-    getBoards(){
+
+    getBoards() {
         return this.socket.fromEvent("ListenGames");
     }
-    joinMember(){
+
+    joinMember() {
         this.socket.emit("new_member");
     }
-    disconnect(data:any){
-        this.socket.emit("quitGame",data);
+
+    disconnect(data: any) {
+        this.socket.emit("quitGame", data);
     }
-    disconnectVisitor(data:any){
-        this.socket.emit("quitVisitor",data);
+
+    disconnectVisitor(data: any) {
+        this.socket.emit("quitVisitor", data);
     }
-    listenQuit(){
+
+    listenQuit() {
         return this.socket.fromEvent("listenOpponentQuit");
     }
-    sendFriendRequest(data:any){
-        this.socket.emit("friendRequest",data);
+
+    sendFriendRequest(data: any) {
+        this.socket.emit("friendRequest", data);
     }
-    listenFriendRequest(){
+
+    listenFriendRequest() {
         return this.socket.fromEvent("friendRequest");
     }
-    sendMatchRequest(data:any){
-        this.socket.emit("matchRequest",data);
+
+    sendMatchRequest(data: any) {
+        this.socket.emit("matchRequest", data);
     }
-    listenMatchRequest(){
+
+    listenMatchRequest() {
         return this.socket.fromEvent("matchRequest");
     }
-    matchConfirm(){
+
+    matchConfirm() {
         return this.socket.fromEvent("matchConfirm");
     }
-    friendConfirm(){
+
+    friendConfirm() {
         return this.socket.fromEvent("friendConfirm");
     }
-    sendConfirmMatch(data:any){
-        this.socket.emit("matchConfirm",data);
+
+    sendConfirmMatch(data: any) {
+        this.socket.emit("matchConfirm", data);
     }
-    sendConfirmFriend(data:any){
-        this.socket.emit("friendConfirm",data);
+
+    sendConfirmFriend(data: any) {
+        this.socket.emit("friendConfirm", data);
     }
-    sendReady(data:any){
-        this.socket.emit("ready",data);
+
+    sendReady(data: any) {
+        this.socket.emit("ready", data);
     }
-    listenUpdateUsers(){
+
+    listenUpdateUsers() {
         return this.socket.fromEvent("updatePlayers");
     }
-    listenUpdateFriends(){
+
+    listenUpdateFriends() {
         return this.socket.fromEvent("updateFriends");
     }
-    listenFriendRemoved(){
+
+    listenFriendRemoved() {
         return this.socket.fromEvent("friendRemoved");
     }
-  
+
 }
