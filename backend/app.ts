@@ -544,7 +544,7 @@ io.on("connection", (socket: any) => {
                     io.to(game.id).emit("new_member", {members: game.members, gameId: game.id});
                 } else {
                     const game = new match();
-                    game.id = ;
+                    game.id =randomUUID() ;
                     game.players[game.i] = username || "";
                     game.i++;
                     game.members++;

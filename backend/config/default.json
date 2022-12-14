@@ -4,7 +4,7 @@
     "port": 6969
   },
   "mongo": {
-    "url": "mongodb://localhost:27017/battleship"
+    "url": "mongodb://mongodb:27017/battleship"
   },
   "jwtSecret": "here be dragons"
 }
