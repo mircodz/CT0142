@@ -82,7 +82,7 @@ export class AppService {
 
     // TODO refactor endpoint
     getModerators(jwt: string) {
-        return this.http.get(AppService.address + "/getModerators", AppService.getOptions(jwt));
+        return this.http.get(AppService.address + "/moderators", AppService.getOptions(jwt));
     }
 
     getMatches(jwt: string) {

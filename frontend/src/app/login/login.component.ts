@@ -46,12 +46,13 @@ export class LoginComponent implements OnInit {
             this.appService.login({username, password}).subscribe((response: any) => {
                 HomeComponent.token = JSON.parse(JSON.stringify(response)).token;
                 sessionStorage.setItem("token", JSON.parse(JSON.stringify(response)).token);
-                this.socket.login({username: this.loginForm.get("username")?.value});
 
                 // TODO create isModerator and isFirstLogin setters to avoid having to update the localStorage manually
                 AppComponent.isModerator = response.user.isModerator;
                 sessionStorage.setItem("isModerator", AppComponent.isModerator + "");
-
+               
+                this.socket.login({username: this.loginForm.get("username")?.value});
+                
                 ModeratorComponent.isFirstLogin = response.user.isFirstLogin;
                 sessionStorage.setItem("isFirstLogin", ModeratorComponent.isFirstLogin + "");
 

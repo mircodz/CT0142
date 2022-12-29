@@ -87,7 +87,8 @@
             <div class="block ">
                 <div class="select is-rounded ">
                     <select ngModel (ngModelChange)="setFriendStats($event) ">
-                        <option *ngFor="let x of FriendsComponent.friends" [ngValue]="x ">{{x}}</option>
+                        <option>-</option>
+                        <option *ngFor="let x of FriendsComponent.friends" [ngValue]="x.username">{{x.username}}</option>
                     </select>
                 </div>
             </div>

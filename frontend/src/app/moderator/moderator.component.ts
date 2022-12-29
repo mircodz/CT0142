@@ -67,6 +67,7 @@ export class ModeratorComponent implements OnInit, AfterContentChecked, OnDestro
 
         this.subs.push(
             this.chatService.listenPrivateMessage().subscribe((data: any) => {
+                console.log("RICEVUTO MESSAGGIO!")
                 if (data.username == this.player) {
                     this.messages.push({
                         message: data.msg,

@@ -148,10 +148,12 @@ app.post("/signin", (req: Request, res: Response) => {
 });
 
 const mustBeAdmin = (req: Request, res: Response, next: NextFunction) => {
-    const {username} = req.body.username;
-
+    const {username} = req.body;
+    console.log("STAMPA COMPLETA");
+    console.log(req.body.username);
     User.findOne({username})
         .then((user: UserType) => {
+            
             if (user.isModerator) {
                 next();
             } else {
@@ -206,17 +208,16 @@ const _with = <T extends Object>(obj: T | T[], fields: string[]): (Object | Obje
 };
 
 // TODO write views for all models
-const viewUser = (user: UserType) => _with(user, ["username", "matches", "wins", "loses"]);
+const viewUser = (user: UserType) => _with(user, ["username", "matches", "wins", "looses", "isModerator"]);
 
 // Return a list off all user of a given role
 // TODO refactor `isModerator` to `role` enum
 app.get("/users", mustAuth, async (req: Request, res: Response) => {
     const username = req.body.username;
-
     // TODO switch should be over enum values
     switch (req.query.role) {
-    case "admin+user":
-    case "user+admin":
+    case "admin user":
+    case "user admin":
         // TODO find a way to make this check nicer
         if (await isModerator(username)) {
             User.find({username: {$ne: username}})
@@ -265,6 +266,7 @@ app.put("/friend/:friend", mustAuth, async (req: Request, res: Response) => {
 
     await User.updateOne({_id: usernameId}, {$push: {friends: friendId}});
     await User.updateOne({_id: friendId}, {$push: {friends: usernameId}});
+    
 
     res.status(200).json({message: "ok"});
 });
@@ -272,7 +274,7 @@ app.put("/friend/:friend", mustAuth, async (req: Request, res: Response) => {
 app.delete("/friend/:friend", mustAuth, async (req: Request, res: Response) => {
     const {username} = req.body;
     const {friend} = req.params;
-
+    console.log("AMICO: "+friend);
     User.findOne({username: username})
         .then(async (user: UserType) => {
             const idFriend = user._id;
@@ -280,13 +282,13 @@ app.delete("/friend/:friend", mustAuth, async (req: Request, res: Response) => {
                 .then(async (friend: UserType) => {
                     if (friend) {
                         await User.updateOne({username: username}, {$pull: {friends: friend._id}});
-                        await User.updateOne({username: friend}, {$pull: {friends: idFriend}});
+                        await User.updateOne({username: friend.username}, {$pull: {friends: idFriend}});
                         res.status(200).json({message: "ok"});
                     } else {
-                        res.status(500);
+                        res.status(500).json({message:"not found"});
                     }
-                }).catch((error: CallbackError) => res.status(500).json({error}));
-        }).catch((error: CallbackError) => res.status(500).json({error}));
+                }).catch((error: CallbackError) => res.status(500).json({message: "Errore interno"}));
+        }).catch((error: CallbackError) => res.status(500).json({message:"Errore esterno"}));
 
     io.to(users[friend]).emit("friendRemoved", {friend: username});
 });
@@ -329,10 +331,12 @@ app.post("/firstLogin", mustAuth, (req: Request, res: Response) => {
 });
 
 // TODO more TOCCTU and ugly control flow, the entire logic could probably be archieved through a single complex query
-app.delete("/delete/:username", mustAuth, mustBeAdmin, (req: Request, res: Response) => {
-    const {username} = req.query;
+app.delete("/user/:username", mustAuth, mustBeAdmin, (req: Request, res: Response) => {
+    const {username} = req.params;
 
-    User.deleteOne({username: username}).then(() => {
+    User.deleteOne({username: username}).then((data) => {
+        console.log("ECCO COSA ARRIVA: ");
+        console.log(username);
         Match.find({player1: username}).then((matches: MatchType[]) => {
             matches.forEach((m: MatchType) => {
                 User.updateOne({username: m.player2}, {
@@ -343,7 +347,7 @@ app.delete("/delete/:username", mustAuth, mustBeAdmin, (req: Request, res: Respo
                     }
                 });
             });
-        });
+        }).catch((error: CallbackError) => res.status(500).json({error}));
 
         Match.find({player2: username}).then((matches: MatchType[]) => {
             matches.forEach((m: MatchType) => {
@@ -355,7 +359,7 @@ app.delete("/delete/:username", mustAuth, mustBeAdmin, (req: Request, res: Respo
                     }
                 });
             });
-        });
+        }).catch((error: CallbackError) => res.status(500).json({error}));
 
         Match.deleteMany({$or: [{player1: username}, {player2: username}]});
 
@@ -380,6 +384,13 @@ app.put("/moderator", mustAuth, mustBeAdmin, async (req: Request, res: Response)
 // Return a lits of all current matches
 app.get("/matches", mustAuth, (req: Request, res: Response) => {
     res.status(200).json({matches});
+});
+// Return a lits of all moderators
+app.get("/moderators", mustAuth, (req: Request, res: Response) => {
+    User.find({isModerator:true}).then((data)=>{
+        res.status(200).json({data});
+    }).catch((error: CallbackError) => res.status(500).json({error}));
+    
 });
 
 // Return a list of all historical played matches by a player

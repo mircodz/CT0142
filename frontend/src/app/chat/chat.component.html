@@ -6,7 +6,7 @@
                 <div class="select is-rounded is-fullwidth mb-5">
                     <select ngModel (ngModelChange)="chat($event)">
                         <option>-</option>
-                    <option *ngFor="let x of FriendsComponent.friends" [ngValue]="x" >{{x}}</option>
+                    <option *ngFor="let x of FriendsComponent.friends" [ngValue]="x.username" >{{x.username}}</option>
                     </select>
                 </div>
                 <div class="block" style="overflow:scroll; width: auto; height: 300px; " #chatWithFriends>

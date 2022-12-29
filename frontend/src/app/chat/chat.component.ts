@@ -77,7 +77,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
         );
 
         this.appService.getModerators(HomeComponent.token).pipe().subscribe((data: any) => {
-            this.moderators = data.sub;
+            this.moderators = data.data;
         });
 
         this.appService.friends(HomeComponent.token).pipe().subscribe((data: any) => {

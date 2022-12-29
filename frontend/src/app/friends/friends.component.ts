@@ -24,17 +24,7 @@ export class FriendsComponent implements OnInit, OnDestroy {
     }
 
     ngOnInit(): void {
-        this.appService.getUsers(HomeComponent.token, "user").subscribe((data) => {
-            // TODO type correctly `appService`, refer to `app.service.ts`
-            // @ts-ignore
-            FriendsComponent.users = JSON.parse(JSON.stringify(data)).users.map(u => u.username);
-        });
-
-        this.appService.friends(HomeComponent.token).subscribe((data: any) => {
-            // TODO type correctly `appService`, refer to `app.service.ts`
-            // @ts-ignore
-            FriendsComponent.friends = JSON.parse(JSON.stringify(data)).users;
-        });
+        
     }
 
     get FriendsComponent() {
@@ -46,7 +36,9 @@ export class FriendsComponent implements OnInit, OnDestroy {
     }
 
     setFriendStats(username: string) {
-      this.friendStats = this.friendsInfo.filter(value => value.username == username)[0];
+      this.friendStats = FriendsComponent.friends.filter(value => value.username == username)[0];
+      console.log(username)
+     
     }
 
     deleteFriend(username: string) {

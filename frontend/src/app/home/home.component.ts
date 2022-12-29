@@ -53,7 +53,18 @@ export class HomeComponent implements OnInit, OnDestroy {
                 this.toastr.info("You have received new message from " + data.username, "NEW MESSAGE!");
             })
         );
+        this.appService.getUsers(HomeComponent.token, "user").subscribe((data:any) => {
+            // TODO type correctly `appService`, refer to `app.service.ts`
+            // @ts-ignore
+            console.log(data.users);
+            FriendsComponent.users = JSON.parse(JSON.stringify(data)).users.filter((value:any) => value.isModerator ==false).map((u:any) => u.username);
+        });
 
+        this.appService.friends(HomeComponent.token).subscribe((data: any) => {
+            // TODO type correctly `appService`, refer to `app.service.ts`
+            // @ts-ignore
+            FriendsComponent.friends = JSON.parse(JSON.stringify(data)).users;
+        });
         this.subs.push(
             this.socket.listenFriendRequest().pipe().subscribe((data: any) => {
                 this.confirmationDialogService.confirm("Richiesta di amicizia da " + data.username, "Vuoi diventare mio amico?")
@@ -62,10 +73,18 @@ export class HomeComponent implements OnInit, OnDestroy {
                             if (FriendsComponent.friends == undefined) {
                                 FriendsComponent.friends = [];
                             }
-                            FriendsComponent.friends.push({username: data.username});
+                            
                             this.appService.addFriends(HomeComponent.token, data.username)
                                 .subscribe(() => {
+                                }).then(()=>{
+                                    this.appService.friends(HomeComponent.token).subscribe((data: any) => {
+                                        // TODO type correctly `appService`, refer to `app.service.ts`
+                                        // @ts-ignore
+                                        console.log(data.users)
+                                        FriendsComponent.friends = JSON.parse(JSON.stringify(data)).users;
+                                    });
                                 });
+                                
                             this.socket.sendConfirmFriend({
                                 friend: data.username,
                                 username: HomeComponent.username,
@@ -97,7 +116,11 @@ export class HomeComponent implements OnInit, OnDestroy {
         this.subs.push(
             this.socket.friendConfirm().pipe().subscribe((data: any) => {
                 if (data.confirmed) {
-                    FriendsComponent.friends.push(data.username);
+                    this.appService.friends(HomeComponent.token).subscribe((data: any) => {
+                        // TODO type correctly `appService`, refer to `app.service.ts`
+                        // @ts-ignore
+                        FriendsComponent.friends = JSON.parse(JSON.stringify(data)).users;
+                    });
                     this.toastr.success(data.username + " has accepted your friend request!", "FRIEND REQUEST ACCEPTED!");
                 } else {
                     this.toastr.error(data.username + " has rejected your friend request!", "FRIEND REQUEST REJECTED!");
@@ -122,8 +145,9 @@ export class HomeComponent implements OnInit, OnDestroy {
 
         this.subs.push(
             this.socket.listenFriendRemoved().pipe().subscribe((data: any) => {
-                if (FriendsComponent.friends.indexOf(data.friend) != -1) {
-                    FriendsComponent.friends.splice(FriendsComponent.friends.indexOf(data.friend), 1);
+                const index = FriendsComponent.friends.map(f => f.username).indexOf(data.friend);
+                if (index != -1) {
+                    FriendsComponent.friends.splice(index, 1);
                 }
 
                 this.toastr.warning(data.friend + " is not your friend!", "FRIEND REMOVED");
@@ -136,7 +160,11 @@ export class HomeComponent implements OnInit, OnDestroy {
 
         this.subs.push(
             this.socket.listenUpdateUsers().subscribe((data: any) => {
-                FriendsComponent.users = Object.keys(data);
+                this.appService.getUsers(HomeComponent.token, "user").subscribe((data) => {
+                    // TODO type correctly `appService`, refer to `app.service.ts`
+                    // @ts-ignore
+                    FriendsComponent.users = JSON.parse(JSON.stringify(data)).users.filter(value => value.isModerator ==false).map(u => u.username);
+                });
             }));
     }
 
