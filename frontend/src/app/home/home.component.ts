@@ -76,20 +76,22 @@ export class HomeComponent implements OnInit, OnDestroy {
                             
                             this.appService.addFriends(HomeComponent.token, data.username)
                                 .subscribe(() => {
-                                }).then(()=>{
                                     this.appService.friends(HomeComponent.token).subscribe((data: any) => {
                                         // TODO type correctly `appService`, refer to `app.service.ts`
                                         // @ts-ignore
                                         console.log(data.users)
                                         FriendsComponent.friends = JSON.parse(JSON.stringify(data)).users;
                                     });
-                                });
+                                    this.socket.sendConfirmFriend({
+                                        friend: data.username,
+                                        username: HomeComponent.username,
+                                        confirmed: true
+                                    });
+                                })
+                                    
                                 
-                            this.socket.sendConfirmFriend({
-                                friend: data.username,
-                                username: HomeComponent.username,
-                                confirmed: true
-                            });
+                                
+                            
                         } else {
                             this.socket.sendConfirmFriend({
                                 friend: data.username,
