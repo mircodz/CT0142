@@ -77,7 +77,7 @@ export class AppService {
     }
 
     getChat(jwt: string, data: any) {
-        return this.http.post(AppService.address + "/getChat", data, AppService.getOptions(jwt));
+        return this.http.post(AppService.address + "/chats", data, AppService.getOptions(jwt));
     }
 
     // TODO refactor endpoint

@@ -85,56 +85,10 @@ export class WatchGameComponent implements OnInit, OnDestroy, AfterContentChecke
         }
     }
 
-    watchMatch(x: any) {
-        HomeComponent.gameAsVisitor = true;
-        sessionStorage.setItem("gameAsVisitor", "true");
-        HomeComponent.gameId = x;
-        sessionStorage.setItem("gameId", x);
-
-        this.subscriptions.push(this.chatService.listenMessageBroadcast().subscribe((data: any) => {
-            this.messages.push(data);
-            sessionStorage.setItem("messages", JSON.stringify(this.messages));
-        }));
-
-        this.socket.watchMatch({gameId: HomeComponent.gameId});
-
-        this.subscriptions.push(
-            this.appService.getMatchId(HomeComponent.token, {id: HomeComponent.gameId}).pipe().subscribe((data: any) => {
-                const chiavi = Object.keys(data.match.boards);
-                this.player = chiavi[0];
-                sessionStorage.setItem("player", chiavi[0]);
-                this.opponent = chiavi[1];
-                sessionStorage.setItem("opponent", chiavi[1]);
-                this.boards[chiavi[0]] = data.match.boards[chiavi[0]];
-                this.boards[chiavi[1]] = data.match.boards[chiavi[1]];
-                sessionStorage.setItem("boards", JSON.stringify(data.match.boards));
-                this.players = 2;
-                sessionStorage.setItem("players", 2 + "");
-                this.whoPlay = data.match.whoPlay;
-                sessionStorage.setItem("whoPlay", this.whoPlay);
-            })
-        );
-
-        this.subscriptions.push(
-            this.socket.getBoards().subscribe((data: any) => {
-                const chiavi = Object.keys(data.boards);
-                this.boards[chiavi[0]] = data.boards[chiavi[0]];
-                this.boards[chiavi[1]] = data.boards[chiavi[1]];
-                sessionStorage.setItem("boards", JSON.stringify(this.boards));
-                this.whoPlay = data.whoPlay;
-                sessionStorage.setItem("whoPlay", this.whoPlay);
-            })
-        );
-    }
 
     initConnection(): WatchGameComponent {
         this.socket.watchMatch({gameId: HomeComponent.gameId});
-        this.subscriptions.push(
-            this.appService.getMatches(HomeComponent.token).pipe().subscribe((data: any) => {
-                this.matches = data.matches;
-                sessionStorage.setItem("matches", JSON.stringify(this.matches));
-            })
-        );
+       
 
         return this;
     }
@@ -193,6 +147,45 @@ export class WatchGameComponent implements OnInit, OnDestroy, AfterContentChecke
                 sessionStorage.setItem("messagesMatch", JSON.stringify(this.messagesMatch));
             })
         );
+        HomeComponent.gameAsVisitor = true;
+        sessionStorage.setItem("gameAsVisitor", "true");
+
+        this.subscriptions.push(this.chatService.listenMessageBroadcast().subscribe((data: any) => {
+            this.messages.push(data);
+            sessionStorage.setItem("messages", JSON.stringify(this.messages));
+        }));
+
+        this.socket.watchMatch({gameId: HomeComponent.gameId});
+
+        this.subscriptions.push(
+            this.appService.getMatchId(HomeComponent.token, {id: HomeComponent.gameId}).pipe().subscribe((data: any) => {
+                const chiavi = Object.keys(data.match.boards);
+                this.player = chiavi[0];
+                sessionStorage.setItem("player", chiavi[0]);
+                this.opponent = chiavi[1];
+                sessionStorage.setItem("opponent", chiavi[1]);
+                this.boards[chiavi[0]] = data.match.boards[chiavi[0]];
+                this.boards[chiavi[1]] = data.match.boards[chiavi[1]];
+                sessionStorage.setItem("boards", JSON.stringify(data.match.boards));
+                this.players = 2;
+                sessionStorage.setItem("players", 2 + "");
+                this.whoPlay = data.match.whoPlay;
+                sessionStorage.setItem("whoPlay", this.whoPlay);
+            })
+        );
+
+        this.subscriptions.push(
+            this.socket.getBoards().subscribe((data: any) => {
+                console.log("AGGIORNAMENTI PARTITA")
+                console.log(data);
+                const chiavi = Object.keys(data.boards);
+                this.boards[chiavi[0]] = data.boards[chiavi[0]];
+                this.boards[chiavi[1]] = data.boards[chiavi[1]];
+                sessionStorage.setItem("boards", JSON.stringify(this.boards));
+                this.whoPlay = data.whoPlay;
+                sessionStorage.setItem("whoPlay", this.whoPlay);
+            })
+        );
     }
 
     getKeys(): string[] {
@@ -213,8 +206,7 @@ export class WatchGameComponent implements OnInit, OnDestroy, AfterContentChecke
         this.dispose();
         this.subscriptions = [];
 
-        ["boards", "players", "opponent", "player", "gameAsVisitor", "messages", "messagesMatch"]
-            .map(sessionStorage.removeItem);
+        ["boards", "players", "opponent", "player", "gameAsVisitor", "messages", "messagesMatch"].map(sessionStorage.removeItem);
     }
 
     dispose() {

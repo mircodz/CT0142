@@ -27,7 +27,7 @@ export class AppComponent implements OnInit {
 
     ngOnInit(): void {
         if (this.logged) {
-            this.socket.login({username: HomeComponent.username});
+            this.socket.login({username: HomeComponent.username,id:HomeComponent.gameId});
         }
     }
 }

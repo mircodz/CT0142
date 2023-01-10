@@ -209,14 +209,11 @@ const _with = <T extends Object>(obj: T | T[], fields: string[]): (Object | Obje
 const viewUser = (user: UserType) => _with(user, ["username", "matches", "wins", "looses", "isModerator"]);
 
 // Return a list off all user of a given role
-// TODO refactor `isModerator` to `role` enum
 app.get("/users", mustAuth, async (req: Request, res: Response) => {
     const username = req.body.username;
-    // TODO switch should be over enum values
     switch (req.query.role) {
     case "admin user":
     case "user admin":
-        // TODO find a way to make this check nicer
         if (await isModerator(username)) {
             User.find({username: {$ne: username}})
                 .then((users: UserType[]) => res.status(200).json({users: viewUser(users)}))
@@ -298,7 +295,6 @@ app.post("/logout", mustAuth, (req: Request, res: Response) => {
 
     delete users[username];
 
-    // TODO correctly update list of online users
     io.emit("updatePlayers", users);
 
     res.status(200).json({message: "ok"});
@@ -327,8 +323,6 @@ app.post("/firstLogin", mustAuth, (req: Request, res: Response) => {
     }).then(() => res.status(200).json({message: "ok"}))
       .catch((error: CallbackError) => res.status(500).json({error}));
 });
-
-// TODO more TOCCTU and ugly control flow, the entire logic could probably be archieved through a single complex query
 app.delete("/user/:username", mustAuth, mustBeAdmin, (req: Request, res: Response) => {
     const {username} = req.params;
 
@@ -422,9 +416,7 @@ app.post("/chat", mustAuth, async (req: Request, res: Response) => {
 
     
 });
-
-// TODO better control flow
-app.post("/getChat", mustAuth, async (req: Request, res: Response) => {
+app.post("/chats", mustAuth, async (req: Request, res: Response) => {
     const {username, friend} = req.body;
 
     Message.find({
@@ -439,8 +431,6 @@ app.post("/getChat", mustAuth, async (req: Request, res: Response) => {
 });
 
 // Mark all unread messages as read
-// TODO User level "message read" policies similar to WhatsApp
-// TODO Remove this endpoint and keep "message read" logic only in `/getChat`
 app.post("/readChat", mustAuth, async (req: Request, res: Response) => {
     const {username} = req.body;
 
@@ -473,7 +463,7 @@ io.on("connection", (socket: any) => {
         }
 
         io.to(users[data.opponent]).emit("Move", data);
-        io.to("visitors" + data.gameId).emit("ListenGames", match);
+        io.to(`visitors-${data.gameId}`).emit("ListenGames", match);
     });
 
     socket.on("Board", function (data) {
@@ -519,7 +509,12 @@ io.on("connection", (socket: any) => {
         const game = matches.filter(value => value.players.includes(data.username))[0];
 
         if (game) {
+            
             socket.join(game.id);
+        }else{
+            if(data.id){
+                socket.join(`visitors-${data.gameId}`);
+            }
         }
 
         io.emit("updatePlayers", users);
@@ -548,12 +543,15 @@ io.on("connection", (socket: any) => {
             const username = waitingPlayers.pop()?.name;
             if (username) {
                 if (game) {
+                    console.log("FORMAZIONE PARTITA!")
                     game.players[game.i] = username || "";
                     game.i++;
                     game.members++;
                     io.in(users[username + ""]).socketsJoin(game.id);
                     io.to(game.id).emit("new_member", {members: game.members, gameId: game.id});
                 } else {
+                    
+                    console.log("Entra in partita "+username)
                     const game = new match();
                     game.id =randomUUID() ;
                     game.players[game.i] = username || "";
