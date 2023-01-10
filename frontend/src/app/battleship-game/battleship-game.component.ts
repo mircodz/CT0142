@@ -356,7 +356,7 @@ export class BattleshipGameComponent implements OnInit, OnDestroy, AfterContentC
     }
 
     @HostListener("unloaded")
-    ngOnDestroy() {
+    ngOnDestroy():void {
         this.canPlay = true;
         this.player = HomeComponent.username;
         BattleshipGameComponent.opponent = "";
@@ -372,8 +372,9 @@ export class BattleshipGameComponent implements OnInit, OnDestroy, AfterContentC
         BattleshipGameComponent.isInvited = false;
         this.boardService.ngOnDestroy();
 
-        ["canPlay", "connected", "boards", "players", "opponent", "isFriendly", "ready", "started", "manual"]
+        ["canPlay", "connected", "boards", "players", "opponent", "isFriendly", "ready", "started", "manual","messages"]
             .map((value)=>sessionStorage.removeItem(value));
+        
     }
 
     sendMessage() {

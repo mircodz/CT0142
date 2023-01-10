@@ -149,8 +149,6 @@ app.post("/signin", (req: Request, res: Response) => {
 
 const mustBeAdmin = (req: Request, res: Response, next: NextFunction) => {
     const {username} = req.body;
-    console.log("STAMPA COMPLETA");
-    console.log(req.body.username);
     User.findOne({username})
         .then((user: UserType) => {
             
@@ -246,7 +244,6 @@ app.get("/users", mustAuth, async (req: Request, res: Response) => {
 app.get("/friend", mustAuth, (req: Request, res: Response) => {
     const {username} = req.body;
 
-    // TODO this could probably be converted to a single chain of `then`s, refactor
     User.findOne({username})
         .then((user: UserType) => {
             User.find({_id: {$in: user.friends}})
@@ -255,40 +252,41 @@ app.get("/friend", mustAuth, (req: Request, res: Response) => {
         }).catch((error: CallbackError) => res.status(500).json({error}));
 });
 
-// TODO error handling and better control flow, as before, this can mostly likely be converted into a single chain of `then`s
-// TODO most likely a TOCTTOU, use transactions
 app.put("/friend/:friend", mustAuth, async (req: Request, res: Response) => {
     const {username} = req.body;
     const {friend} = req.params;
-
-    const usernameId = await getUserId(username);
-    const friendId = await getUserId(friend);
-
-    await User.updateOne({_id: usernameId}, {$push: {friends: friendId}});
-    await User.updateOne({_id: friendId}, {$push: {friends: usernameId}});
+    getUserId(username).then((usernameId)=>{
+        getUserId(friend).then((friendId)=>{
+            User.updateOne({_id: usernameId}, {$push: {friends: friendId}}).then(()=>{
+                User.updateOne({_id: friendId}, {$push: {friends: usernameId}}).then(()=>{
+                    res.status(200).json({message: "ok"});
+                }).catch((error: CallbackError) => res.status(500).json({error}));
+            }).catch((error: CallbackError) => res.status(500).json({error}));
+        }).catch((error: CallbackError) => res.status(500).json({error}));
+    }).catch((error: CallbackError) => res.status(500).json({error}));
     
-
-    res.status(200).json({message: "ok"});
 });
 
 app.delete("/friend/:friend", mustAuth, async (req: Request, res: Response) => {
     const {username} = req.body;
     const {friend} = req.params;
-    console.log("AMICO: "+friend);
     User.findOne({username: username})
         .then(async (user: UserType) => {
             const idFriend = user._id;
             User.findOne({username: friend})
                 .then(async (friend: UserType) => {
                     if (friend) {
-                        await User.updateOne({username: username}, {$pull: {friends: friend._id}});
-                        await User.updateOne({username: friend.username}, {$pull: {friends: idFriend}});
-                        res.status(200).json({message: "ok"});
+                        User.updateOne({username: username}, {$pull: {friends: friend._id}}).then(()=>{
+                            User.updateOne({username: friend.username}, {$pull: {friends: idFriend}}).then(()=>{
+                                res.status(200).json({message: "ok"});
+                            }).catch((error: CallbackError) => res.status(500).json({error}));
+    
+                        }).catch((error: CallbackError) => res.status(500).json({error}));
                     } else {
                         res.status(500).json({message:"not found"});
                     }
-                }).catch((error: CallbackError) => res.status(500).json({message: "Errore interno"}));
-        }).catch((error: CallbackError) => res.status(500).json({message:"Errore esterno"}));
+                }).catch((error: CallbackError) => res.status(500).json({error}));
+        }).catch((error: CallbackError) => res.status(500).json({error}));
 
     io.to(users[friend]).emit("friendRemoved", {friend: username});
 });
@@ -335,8 +333,6 @@ app.delete("/user/:username", mustAuth, mustBeAdmin, (req: Request, res: Respons
     const {username} = req.params;
 
     User.deleteOne({username: username}).then((data) => {
-        console.log("ECCO COSA ARRIVA: ");
-        console.log(username);
         Match.find({player1: username}).then((matches: MatchType[]) => {
             matches.forEach((m: MatchType) => {
                 User.updateOne({username: m.player2}, {
@@ -345,7 +341,7 @@ app.delete("/user/:username", mustAuth, mustBeAdmin, (req: Request, res: Respons
                         wins: m.winner == username ? 0 : -1,
                         looses: m.winner == username ? -1 : 0,
                     }
-                });
+                }).catch((error: CallbackError) => res.status(500).json({error}));
             });
         }).catch((error: CallbackError) => res.status(500).json({error}));
 
@@ -357,11 +353,11 @@ app.delete("/user/:username", mustAuth, mustBeAdmin, (req: Request, res: Respons
                         wins: m.winner == username ? 0 : -1,
                         looses: m.winner.username ? -1 : 0,
                     }
-                });
+                }).catch((error: CallbackError) => res.status(500).json({error}));
             });
         }).catch((error: CallbackError) => res.status(500).json({error}));
 
-        Match.deleteMany({$or: [{player1: username}, {player2: username}]});
+        Match.deleteMany({$or: [{player1: username}, {player2: username}]}).catch((error: CallbackError) => res.status(500).json({error}));
 
         User.find({isModerator: false})
             .then((users: UserType[]) => res.status(200).json({users}));
@@ -376,9 +372,11 @@ app.put("/moderator", mustAuth, mustBeAdmin, async (req: Request, res: Response)
         password: hashed(password),
         isModerator: true,
         isFirstLogin: true
-    }).save();
+    }).save().then(()=>{
+        res.status(200).json({message: "ok"});
+    }).catch((error: CallbackError) => res.status(500).json({error}));
 
-    res.status(200).json({message: "ok"});
+    
 });
 
 // Return a lits of all current matches
@@ -406,12 +404,14 @@ app.post("/chat", mustAuth, async (req: Request, res: Response) => {
     const {username, friend, msg} = req.body;
     const time = new Date().toString();
 
-    await new Message({
+    new Message({
         from: username,
         to: friend,
         message: msg,
         timestamp: time
-    }).save();
+    }).save().then(()=>{
+        res.status(200).json({message: "ok"});
+    }).catch((error: CallbackError) => res.status(500).json({error}));
 
     io.to(users[friend])
         .emit("privateMessage", {
@@ -420,7 +420,7 @@ app.post("/chat", mustAuth, async (req: Request, res: Response) => {
             timestamp: time
         });
 
-    res.status(200).json({message: "ok"});
+    
 });
 
 // TODO better control flow

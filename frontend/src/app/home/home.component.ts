@@ -56,7 +56,6 @@ export class HomeComponent implements OnInit, OnDestroy {
         this.appService.getUsers(HomeComponent.token, "user").subscribe((data:any) => {
             // TODO type correctly `appService`, refer to `app.service.ts`
             // @ts-ignore
-            console.log(data.users);
             FriendsComponent.users = JSON.parse(JSON.stringify(data)).users.filter((value:any) => value.isModerator ==false).map((u:any) => u.username);
         });
 
@@ -79,7 +78,6 @@ export class HomeComponent implements OnInit, OnDestroy {
                                     this.appService.friends(HomeComponent.token).subscribe((data: any) => {
                                         // TODO type correctly `appService`, refer to `app.service.ts`
                                         // @ts-ignore
-                                        console.log(data.users)
                                         FriendsComponent.friends = JSON.parse(JSON.stringify(data)).users;
                                     });
                                     this.socket.sendConfirmFriend({
@@ -175,8 +173,6 @@ export class HomeComponent implements OnInit, OnDestroy {
             AppComponent.logged = false;
             sessionStorage.setItem("logged", false + "");
             sessionStorage.clear();
-            console.log("Stampa la sessione del gioco dopo i logout : ");
-            console.log(JSON.parse(sessionStorage.getItem("boards") + ""));
             this.route.navigate(["/", "login"]);
         });
 

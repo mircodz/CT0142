@@ -117,8 +117,6 @@ export class WatchGameComponent implements OnInit, OnDestroy, AfterContentChecke
 
         this.subscriptions.push(
             this.socket.getBoards().subscribe((data: any) => {
-                console.log("AGGIORNAMENTI PARTIA ");
-                console.log(data);
                 const chiavi = Object.keys(data.boards);
                 this.boards[chiavi[0]] = data.boards[chiavi[0]];
                 this.boards[chiavi[1]] = data.boards[chiavi[1]];

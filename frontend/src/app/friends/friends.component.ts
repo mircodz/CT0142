@@ -37,7 +37,7 @@ export class FriendsComponent implements OnInit, OnDestroy {
 
     setFriendStats(username: string) {
       this.friendStats = FriendsComponent.friends.filter(value => value.username == username)[0];
-      console.log(username)
+  
      
     }
 

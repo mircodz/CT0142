@@ -87,6 +87,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     }
 
     chat(x: string) {
+        
         this.appService.getChat(HomeComponent.token, {
             username: HomeComponent.username,
             friend: x
@@ -103,7 +104,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
                         value.timestamp = time.toTimeString().substring(0, 5);
                     }
                 });
-            } else if (FriendsComponent.friends.filter(value => value == x)[0]) {
+            } else if (FriendsComponent.friends.filter(value => value.username == x)[0]) {
                 this.friend = x;
                 this.messages = data.messages;
                 this.messages.forEach(value => {
