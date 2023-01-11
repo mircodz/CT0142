@@ -176,8 +176,6 @@ export class WatchGameComponent implements OnInit, OnDestroy, AfterContentChecke
 
         this.subscriptions.push(
             this.socket.getBoards().subscribe((data: any) => {
-                console.log("AGGIORNAMENTI PARTITA")
-                console.log(data);
                 const chiavi = Object.keys(data.boards);
                 this.boards[chiavi[0]] = data.boards[chiavi[0]];
                 this.boards[chiavi[1]] = data.boards[chiavi[1]];
@@ -206,7 +204,7 @@ export class WatchGameComponent implements OnInit, OnDestroy, AfterContentChecke
         this.dispose();
         this.subscriptions = [];
 
-        ["boards", "players", "opponent", "player", "gameAsVisitor", "messages", "messagesMatch"].map(sessionStorage.removeItem);
+        ["boards", "players", "opponent", "player", "gameAsVisitor", "messages", "messagesMatch"].map((value) => sessionStorage.removeItem(value));
     }
 
     dispose() {

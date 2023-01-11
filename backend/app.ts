@@ -505,7 +505,6 @@ io.on("connection", (socket: any) => {
     // TODO correctly update list of online users
     socket.on("login", (data) => {
         users[data.username] = socket.id;
-
         const game = matches.filter(value => value.players.includes(data.username))[0];
 
         if (game) {
@@ -543,26 +542,25 @@ io.on("connection", (socket: any) => {
             const username = waitingPlayers.pop()?.name;
             if (username) {
                 if (game) {
-                    console.log("FORMAZIONE PARTITA!")
                     game.players[game.i] = username || "";
                     game.i++;
                     game.members++;
-                    io.in(users[username + ""]).socketsJoin(game.id);
+                    io.sockets.sockets.get(users[username + ""]).join(game.id)
                     io.to(game.id).emit("new_member", {members: game.members, gameId: game.id});
                 } else {
                     
-                    console.log("Entra in partita "+username)
                     const game = new match();
                     game.id =randomUUID() ;
                     game.players[game.i] = username || "";
                     game.i++;
                     game.members++;
                     matches.push(game);
-                    io.in(users[username + ""]).socketsJoin(game.id);
+                    io.sockets.sockets.get(users[username + ""]).join(game.id)
                     io.to(game.id).emit("new_member", {members: game.members, gameId: game.id});
                 }
             }
         }, 30000);
+        
 
         User.findOne({username: data.username})
             .then((user: UserType) => {
@@ -597,15 +595,19 @@ io.on("connection", (socket: any) => {
 
     socket.on("watchMatch", (data) => {
         if (data.gameId) {
-            matches.filter(value => value.id == data.gameId)[0].visitor++;
-            socket.join(`visitors-${data.gameId}`);
+            if(matches.filter(value => value.id == data.gameId)[0]){
+                matches.filter(value => value.id == data.gameId)[0].visitor++;
+                socket.join(`visitors-${data.gameId}`);
+            }
         }
     });
 
     socket.on("quitVisitor", (data) => {
         if (data.gameId) {
-            matches.filter(value => value.id == data.gameId)[0].visitor--;
-            socket.leave(`visitors-${data.gameId}`);
+            if(matches.filter(value => value.id == data.gameId)[0]){
+                matches.filter(value => value.id == data.gameId)[0].visitor--;
+                socket.leave(`visitors-${data.gameId}`);
+            }
         }
     });
 
@@ -620,6 +622,7 @@ io.on("connection", (socket: any) => {
 
     socket.on("quitGame", async data => {
         const match = matches.filter(value => value.id == data.gameId)[0];
+        
         if (match) {
             if (Object.keys(match.boards).length == 2) {
                 (data.username == match.players[0])
@@ -637,7 +640,7 @@ io.on("connection", (socket: any) => {
                 await User.updateOne({username: match.players[max(match.id)]}, {$inc: {matches: 1, wins: 1}});
                 await User.updateOne({username: match.players[min(match.id)]}, {$inc: {matches: 1, looses: 1}});
 
-                io.to("visitors" + match.id).emit("ListenGames", match);
+                io.to(`visitors-${data.gameId}`).emit("ListenGames", match);
                 io.to(users[match.players[max(match.id)]]).emit("Move", {
                     canPlay: true,
                     boards: match.boards,
@@ -645,11 +648,12 @@ io.on("connection", (socket: any) => {
                     opponent: data.username
                 });
             } else {
-                io.to(users[matches.filter(value => value.id = data.gameId)[0].players.filter(value => value != data.username)[0]]).emit("listenOpponentQuit");
+                io.to(users[matches.filter(value => value.id == data.gameId)[0].players.filter(value => value != data.username)[0]]).emit("listenOpponentQuit");
             }
-
+            
             const i = matches.indexOf(match);
             matches.splice(i, 1);
+           
         } else {
             const player = waitingPlayers.filter(value => value.name == data.username)[0];
             if (player) {

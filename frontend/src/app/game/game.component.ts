@@ -29,8 +29,6 @@ export class GameComponent implements OnInit {
     }
     showMatches(){
         this.appService.getMatches(HomeComponent.token).pipe().subscribe((data: any) => {
-            console.log(data.matches[0].boards.length);
-            console.log(data.matches[0].boards)
             this.matches = data.matches.filter((value: {
                 players: any; boards: any; }) => value.boards[value.players[0]] &&  value.boards[value.players[1]] );
         })
