@@ -1,0 +1,139 @@
+<section class="section ">
+    <div class="container ">
+        <div class="columns is-centered ">
+            <div class="column card is-half mx-3 px-4 py-4 ">
+                <h1 class="title is-4 pb-2 ">Friends</h1>
+                <p class="subtitle is-6 mb-2 mt-4 ">Online friends</p>
+
+                <table class="table is-fullwidth is-mobile ">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Send match request</th>
+                            <th>Remove from friends</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let x of FriendsComponent.friends" class="is-danger w-100 text-white py-3 ">
+                            <td>
+                                <strong>{{x.username}}</strong>
+                            </td>
+                            <td>
+                                <button style="border:none;" class="is-fullwidth w-100 has-background-info"
+                                    (click)="sendMatchRequest(x.username)">
+                                    <span class="icon">
+                                        <i class="fas fa-gun "></i>
+                                    </span>
+                                </button>
+                            </td>
+                            <td>
+                                <button style="border:none;" class="is-fullwidth w-100 has-background-danger"
+                                    (click)="deleteFriend(x.username)">
+                                    <span class="icon">
+                                        <i class="fas fa-x "></i>
+                                    </span>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="column card is-half mx-3 px-4 py-4 ">
+                <h1 class="title is-4 pb-2 ">Online players</h1>
+                <p class="subtitle is-6 mb-5 ">All players currently online</p>
+
+                <table class="table is-fullwidth is-mobile ">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Send match request</th>
+                            <th>Send friend request</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let x of usersNotFriends">
+                            <td>
+                                {{x}}
+                            </td>
+                            <td>
+                                <button style="border:none;" class="is-fullwidth w-100 has-background-info"
+                                    (click)="sendMatchRequest(x)">
+                                    <span class="icon">
+                                        <i class="fas fa-gun "></i>
+                                    </span>
+                                </button>
+                            </td>
+                            <td>
+                                <button style="border:none;" class="is-fullwidth w-100 has-background-success"
+                                    (click)="sendFriendsRequest(x)">
+                                    <span class="icon">
+                                        <i class="fas fa-plus "></i>
+                                    </span>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section ">
+    <div class="columns ">
+        <div class="column card mx-3 px-4 py-4 ">
+            <h1 class="title ">Statistic of players</h1>
+            <div class="block ">
+                <div class="select is-rounded ">
+                    <select ngModel (ngModelChange)="setFriendStats($event) ">
+                        <option>-</option>
+                        <option *ngFor="let x of FriendsComponent.friends" [ngValue]="x.username">{{x.username}}</option>
+                    </select>
+                </div>
+            </div>
+            <div *ngIf="friendStats " class="block ">
+                <div class="block ">
+                    <span class="icon-text ">
+                        <span class="icon ">
+                            <i class="fa-solid fa-face-smile "></i>
+                        </span>
+                        <span>
+                            <h2 class="subtitle ">Username: {{friendStats.username}}</h2>
+                        </span>
+                    </span>
+                </div>
+                <div class="block ">
+                    <span class="icon-text ">
+                        <span class="icon ">
+                            <i class="fa-solid fa-flag-checkered "></i>
+                        </span>
+                        <span>
+                            <h2 class="subtitle ">Total matches: {{friendStats.matches}}</h2>
+                        </span>
+                    </span>
+                </div>
+                <div class="block ">
+                    <span class="icon-text ">
+                        <span class="icon ">
+                            <i class="fa-solid fa-trophy "></i>
+                        </span>
+                        <span>
+                            <h2 class="subtitle ">Wins: {{friendStats.wins}}</h2>
+                        </span>
+                    </span>
+                </div>
+                <div class="block ">
+                    <span class="icon-text ">
+                        <span class="icon ">
+                            <i class="fa-solid fa-circle-xmark "></i>
+                        </span>
+                        <span>
+                            <h2 class="subtitle ">Looses: {{friendStats.looses}}</h2>
+                        </span>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

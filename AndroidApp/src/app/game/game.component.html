@@ -1,0 +1,57 @@
+<section class="section ">
+    <div class="container ">
+        <div class="columns is-centered ">
+            <div class="column card is-half mx-3 px-4 py-4 ">
+                <h1 class="title is-4 pb-2 ">Game</h1>
+                <p class="subtitle is-6 mb-5 ">Create or spectate a game</p>
+                <button class="btn btn-primary mb-3 has-text-weight-bold"(click)="showMatches()" >
+                    Visitor
+                </button>
+                <button class="btn btn-primary mb-3 has-text-weight-bold" routerLink="/playGame" routerLinkActive="activebutton" ariaCurrentWhenActive="page">
+                    Gamer
+                </button>
+            </div>
+            <div *ngIf="visitor" class="column card is-half mx-3 px-4 py-4 ">
+                <h1 class="title is-4 pb-2 ">Matches live</h1>
+                <p class="subtitle is-6 mb-5 ">List of all matches</p>
+                <table class="table is-fullwidth is-mobile ">
+                    <thead>
+                        <tr>
+                            <th>Player 1</th>
+                            <th>Player 2</th>
+                            <th>Score 1</th>
+                            <th>Score 2</th>
+                            <th>Watch</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let x of matches" class="is-danger w-100 text-white py-3 ">
+                           
+                                <td>
+                                    <strong>{{x.players[0]}}</strong>
+                                </td>
+                                <td>
+                                    <strong>{{x.players[1]}}</strong>
+                                </td>
+                                <td>
+                                    <strong>{{x.boards[x.players[0]].player.score}}</strong>
+                                </td>
+                                <td>
+                                    <strong>{{x.boards[x.players[1]].player.score}}</strong>
+                                </td>
+                                <td>
+                                    <button style="border:none;" class="is-fullwidth w-100 has-background-info"
+                                        (click)="watchMatch(x.id)">
+                                    Watch
+                                    </button>
+                                </td>
+                        
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+<router-outlet></router-outlet>
+    
